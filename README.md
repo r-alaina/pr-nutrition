@@ -1,67 +1,289 @@
-# Payload Blank Template
+# PR Nutrition - Meal Prep Ordering System
 
-This template comes configured with the bare minimum to get started on anything you need.
+A comprehensive meal prep ordering system built with Next.js 15, PayloadCMS 3.0, and PostgreSQL. This application provides a complete solution for customers to select dietary tiers, customize meal preferences, and place orders with tier-based subscription pricing.
 
-## Quick start
+## 🚀 Features
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+### Customer Features
+- **Tier-Based Meal Selection**: Choose from different calorie tiers (Pink, Blue, Green, Purple)
+- **Subscription Management**: Weekly or monthly meal plans
+- **Preference Setup**: 6-step onboarding for dietary restrictions, allergies, and meal preferences
+- **Meal Customization**: Select specific meals and quantities based on your plan
+- **Order Tracking**: View order history and status
+- **Account Management**: Update preferences and profile information
 
-## Quick Start - local setup
+### Admin Features
+- **Order Management**: View and manage all customer orders
+- **Menu Management**: Add/edit menu items with tier-based pricing
+- **Customer Management**: View customer profiles and preferences
+- **Tier Configuration**: Set up pricing for different dietary tiers
+- **Order Status Tracking**: Update order status (pending → confirmed → preparing → ready → completed)
 
-To spin up this template locally, follow these steps:
+## 🛠️ Tech Stack
 
-### Clone
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Backend**: PayloadCMS 3.0
+- **Database**: PostgreSQL
+- **Styling**: Tailwind CSS 4.0
+- **Authentication**: PayloadCMS built-in auth
+- **Package Manager**: pnpm
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+## 📋 Prerequisites
 
-### Development
+Before you begin, ensure you have the following installed:
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URI` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+- **Node.js**: Version 18.20.2 or higher (or 20.9.0+)
+- **pnpm**: Version 9 or 10
+- **PostgreSQL**: Version 12 or higher
+- **Git**: For cloning the repository
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+## 🚀 Quick Start
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+### 1. Clone the Repository
 
-#### Docker (Optional)
+```bash
+git clone <repository-url>
+cd pr-nutrition
+```
 
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
+### 2. Install Dependencies
 
-To do so, follow these steps:
+```bash
+pnpm install
+```
 
-- Modify the `MONGODB_URI` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URI` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
+### 3. Environment Setup
 
-## How it works
+Create a `.env` file in the root directory:
 
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
+```env
+# Database
+DATABASE_URI=postgresql://username:password@localhost:5432/pr_nutrition
+
+# PayloadCMS
+PAYLOAD_SECRET=your-secret-key-here
+PAYLOAD_CONFIG_PATH=src/payload.config.ts
+
+# Next.js
+NEXTAUTH_SECRET=your-nextauth-secret-here
+NEXTAUTH_URL=http://localhost:3000
+
+# Optional: Payload Cloud
+PAYLOAD_CLOUD_EMAIL=your-email@example.com
+PAYLOAD_CLOUD_PASSWORD=your-password
+```
+
+### 4. Database Setup
+
+#### Option A: Using Docker (Recommended)
+
+```bash
+# Start PostgreSQL with Docker
+docker run --name pr-nutrition-postgres \
+  -e POSTGRES_DB=pr_nutrition \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  -d postgres:15
+```
+
+#### Option B: Local PostgreSQL Installation
+
+1. Install PostgreSQL on your system
+2. Create a database named `pr_nutrition`
+3. Update the `DATABASE_URI` in your `.env` file
+
+### 5. Generate Types
+
+```bash
+pnpm run generate:types
+```
+
+### 6. Start the Development Server
+
+```bash
+pnpm run dev
+```
+
+The application will be available at `http://localhost:3000`
+
+## 🗄️ Database Schema
 
 ### Collections
 
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
+- **Users**: Admin and editor accounts
+- **Customers**: Customer profiles and preferences
+- **MenuItems**: Meal items with pricing
+- **Tiers**: Dietary tiers with subscription pricing
+- **Orders**: Customer orders and order items
+- **DietaryRestrictions**: Available dietary restrictions
+- **WeeklyMenus**: Weekly menu planning
+- **Media**: File uploads and images
 
-- #### Users (Authentication)
+### Key Relationships
 
-  Users are auth-enabled collections that have access to the admin panel.
+- Customers have a tier relationship
+- Orders belong to customers and contain menu items
+- Menu items can have tier-based pricing
+- Orders track subscription frequency and meal preferences
 
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/main/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
+## 🎯 User Flows
 
-- #### Media
+### New Customer Flow
+1. **Home Page** → View available tiers and pricing
+2. **Order Now** → 6-step preference setup
+3. **Preferences Success** → Confirmation of saved preferences
+4. **Meal Selection** → Choose meals and quantities
+5. **Order Success** → Order confirmation and receipt
 
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
+### Existing Customer Flow
+1. **Home Page** → View current plan
+2. **Meal Selection** → Choose meals for current week
+3. **Order Success** → Order confirmation
 
-### Docker
+### Admin Flow
+1. **Admin Panel** (`/admin`) → Access to all collections
+2. **Orders Management** → View and update order status
+3. **Menu Management** → Add/edit menu items
+4. **Customer Management** → View customer profiles
 
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
+## 🔧 Available Scripts
 
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
+```bash
+# Development
+pnpm run dev              # Start development server
+pnpm run devsafe         # Clean build and start dev server
 
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
+# Building
+pnpm run build           # Build for production
+pnpm run start           # Start production server
 
-## Questions
+# Database
+pnpm run generate:types  # Generate TypeScript types
+pnpm run payload         # Access Payload CLI
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+# Testing
+pnpm run test            # Run all tests
+pnpm run test:int        # Run integration tests
+pnpm run test:e2e        # Run end-to-end tests
+
+# Linting
+pnpm run lint            # Run ESLint
+```
+
+## 🏗️ Project Structure
+
+```
+src/
+├── app/
+│   ├── (frontend)/          # Public-facing pages
+│   │   ├── (auth)/          # Authenticated pages
+│   │   ├── (account)/       # Account management
+│   │   ├── components/      # Shared components
+│   │   ├── api/            # API routes
+│   │   └── globals.css     # Global styles
+│   └── (payload)/          # PayloadCMS admin
+├── collections/            # PayloadCMS collections
+├── utilities/             # Helper functions
+└── payload.config.ts      # PayloadCMS configuration
+```
+
+## 🎨 Styling
+
+This project uses **Tailwind CSS 4.0** with custom brand colors:
+
+- **Primary Green**: `#5CB85C`
+- **Hover Green**: `#4A9D4A`
+- **Orange Accent**: `#F7931E`
+- **Text Colors**: Various gray shades
+
+## 🔐 Authentication
+
+- **Admin Access**: `/admin` (PayloadCMS admin panel)
+- **Customer Authentication**: Built-in PayloadCMS auth
+- **Protected Routes**: Account settings, meal selection, order history
+
+## 📱 Responsive Design
+
+The application is fully responsive and optimized for:
+- Desktop (1024px+)
+- Tablet (768px - 1023px)
+- Mobile (320px - 767px)
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pnpm run test
+
+# Run specific test suites
+pnpm run test:int    # Integration tests
+pnpm run test:e2e    # End-to-end tests with Playwright
+```
+
+## 🚀 Deployment
+
+### Environment Variables for Production
+
+```env
+DATABASE_URI=your-production-database-url
+PAYLOAD_SECRET=your-production-secret
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=your-production-nextauth-secret
+```
+
+### Build and Deploy
+
+```bash
+# Build the application
+pnpm run build
+
+# Start production server
+pnpm run start
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Issues**
+   - Ensure PostgreSQL is running
+   - Check your `DATABASE_URI` in `.env`
+   - Verify database credentials
+
+2. **Type Generation Issues**
+   - Run `pnpm run generate:types` after database setup
+   - Ensure PayloadCMS can connect to the database
+
+3. **Build Issues**
+   - Clear `.next` folder: `rm -rf .next`
+   - Reinstall dependencies: `rm -rf node_modules && pnpm install`
+
+4. **Port Already in Use**
+   - Change the port in `package.json` scripts
+   - Kill existing processes on port 3000
+
+### Getting Help
+
+- Check the [PayloadCMS Documentation](https://payloadcms.com/docs)
+- Review [Next.js Documentation](https://nextjs.org/docs)
+- Open an issue in this repository
+
+## 🙏 Acknowledgments
+
+- Built with [PayloadCMS](https://payloadcms.com)
+- Powered by [Next.js](https://nextjs.org)
+- Styled with [Tailwind CSS](https://tailwindcss.com)
+- Database powered by [PostgreSQL](https://postgresql.org)

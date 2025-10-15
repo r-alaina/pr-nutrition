@@ -3,9 +3,6 @@
 import React, { ReactElement, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { create, type Response } from '@/app/(frontend)/(account)/create-account/actions/create'
-import { FormContainer } from '@/components/CustomerForm/FormContainer'
-import { Input } from '@/components/CustomerForm/input'
-import SubmitButton from '@/components/CustomerForm/SubmitButton'
 import Link from 'next/link'
 
 export default function CreateForm(): ReactElement {
@@ -22,55 +19,113 @@ export default function CreateForm(): ReactElement {
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    const confirmPassword = formData.get('confirmPassword') as string
-    const firstName = formData.get('firstName') as string
-    const lastName = formData.get('lastName') as string
+    const name = formData.get('name') as string
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
-    }
-
-    const result: Response = await create({ email, password, firstName, lastName })
+    const result: Response = await create({ email, password, name })
     setIsLoading(false)
 
     if (result.success) {
-      router.push(`/login?message=${encodeURIComponent('Check your email to verify your account')}`)
+      router.push(
+        `/login?message=${encodeURIComponent('Account created successfully! Please login.')}`,
+      )
     } else {
       setError(result.error || 'An error occurred.')
     }
   }
 
   return (
-    <FormContainer heading="Create an account">
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div className="flex flex-row gap-2">
-          <Input label="First Name" name="firstName" type="text" required />
-          <Input label="Last Name" name="lastName" type="text" />
+    <div className="h-screen w-full bg-gray-100 flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 relative">
+        {/* Close Button */}
+        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+          <p className="text-gray-600">Sign up to start ordering meals.</p>
         </div>
 
-        <Input label="Email" name="email" type="email" required />
-        <Input label="Password" name="password" type="password" required />
-        <Input
-          label="Confirm Password"
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm your password"
-          required
-        />
+        {/* Form */}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Full Name Field */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
+              Full Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
+              placeholder="Enter your full name"
+            />
+          </div>
 
-        {error && <div className="text-red-400">{error}</div>}
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
+              placeholder="your.email@example.com"
+            />
+          </div>
 
-        <SubmitButton loading={isLoading} text="Create account" />
-      </form>
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              minLength={6}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
+              placeholder="At least 6 characters"
+            />
+            <p className="text-sm text-gray-500 mt-1">Must be at least 6 characters long</p>
+          </div>
 
-      <div className="mt-4 text-sm text-emerald-950/60">
-        Already have an account?{' '}
-        <Link href="/login" className="underline underline-offset-4">
-          Login here.
-        </Link>
+          {/* Error Message */}
+          {error && <div className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">{error}</div>}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-[#5CB85C] text-white font-semibold py-3 px-4 rounded-xl hover:bg-[#4A9A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+
+        {/* Login Link */}
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            Already have an account?{' '}
+            <Link href="/login" className="text-[#5CB85C] hover:underline font-medium">
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
-    </FormContainer>
+    </div>
   )
 }

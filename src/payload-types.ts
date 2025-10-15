@@ -7,11 +7,6 @@
  */
 
 /**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tierProps".
- */
-export type TierProps = ('Free' | 'Basic' | 'Pro' | 'Enterprise') | null;
-/**
  * Supported timezones in IANA format.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -76,6 +71,11 @@ export interface Config {
     users: User;
     media: Media;
     customers: Customer;
+    'menu-items': MenuItem;
+    tiers: Tier;
+    'dietary-restrictions': DietaryRestriction;
+    'weekly-menus': WeeklyMenu;
+    orders: Order;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -85,6 +85,11 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
+    'menu-items': MenuItemsSelect<false> | MenuItemsSelect<true>;
+    tiers: TiersSelect<false> | TiersSelect<true>;
+    'dietary-restrictions': DietaryRestrictionsSelect<false> | DietaryRestrictionsSelect<true>;
+    'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
+    orders: OrdersSelect<false> | OrdersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -195,9 +200,52 @@ export interface Media {
  */
 export interface Customer {
   id: number;
-  firstName?: string | null;
-  lastName?: string | null;
-  tier?: TierProps;
+  name: string;
+  /**
+   * Customer pricing tier
+   */
+  tier?: (number | null) | Tier;
+  /**
+   * Current credit balance
+   */
+  credit_balance?: number | null;
+  /**
+   * Credit balance expiration date
+   */
+  credit_bal_exp?: string | null;
+  /**
+   * Customer dietary restrictions
+   */
+  dietary_restrictions?: (number | DietaryRestriction)[] | null;
+  active?: boolean | null;
+  /**
+   * Whether the customer has completed their preference setup
+   */
+  preferences_set?: boolean | null;
+  /**
+   * Weekly or monthly subscription
+   */
+  subscription_frequency?: string | null;
+  /**
+   * Number of meals per week
+   */
+  meals_per_week?: number | null;
+  /**
+   * Include breakfast in subscription
+   */
+  include_breakfast?: boolean | null;
+  /**
+   * Include snacks in subscription
+   */
+  include_snacks?: boolean | null;
+  /**
+   * Customer allergies
+   */
+  allergies?: string[] | null;
+  /**
+   * Preferred pickup time
+   */
+  preferred_pickup_time?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -205,8 +253,6 @@ export interface Customer {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -217,6 +263,130 @@ export interface Customer {
       }[]
     | null;
   password?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tiers".
+ */
+export interface Tier {
+  id: number;
+  tier_name: string;
+  description?: string | null;
+  monthly_price: number;
+  weekly_price: number;
+  single_price: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dietary-restrictions".
+ */
+export interface DietaryRestriction {
+  id: number;
+  restriction_name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu-items".
+ */
+export interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  /**
+   * Base price for this item
+   */
+  price: number;
+  category: 'lunch' | 'dinner' | 'premium' | 'breakfast-small' | 'breakfast-large' | 'dessert' | 'salad' | 'snack';
+  image?: (number | null) | Media;
+  active?: boolean | null;
+  allergens?:
+    | {
+        allergen?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  nutritionInfo?: {
+    calories?: number | null;
+    protein?: number | null;
+    carbs?: number | null;
+    fat?: number | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-menus".
+ */
+export interface WeeklyMenu {
+  id: number;
+  weekLabel: string;
+  startDate: string;
+  endDate: string;
+  active?: boolean | null;
+  firstHalfItems?:
+    | {
+        menuItem: number | MenuItem;
+        available?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  secondHalfItems?:
+    | {
+        menuItem: number | MenuItem;
+        available?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders".
+ */
+export interface Order {
+  id: number;
+  orderNumber: string;
+  customer: number | Customer;
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+  orderItems?:
+    | {
+        menuItem: number | MenuItem;
+        quantity: number;
+        /**
+         * Individual meal price (0 for tier-based subscriptions)
+         */
+        unitPrice?: number | null;
+        /**
+         * Total price for this item (0 for tier-based subscriptions)
+         */
+        totalPrice?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+  /**
+   * Customer tier at time of order
+   */
+  tier?: (number | null) | Tier;
+  subscriptionFrequency?: ('weekly' | 'monthly' | 'a_la_carte') | null;
+  /**
+   * Number of meals per week for this order
+   */
+  mealsPerWeek?: number | null;
+  /**
+   * Additional notes for this order
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -236,6 +406,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'customers';
         value: number | Customer;
+      } | null)
+    | ({
+        relationTo: 'menu-items';
+        value: number | MenuItem;
+      } | null)
+    | ({
+        relationTo: 'tiers';
+        value: number | Tier;
+      } | null)
+    | ({
+        relationTo: 'dietary-restrictions';
+        value: number | DietaryRestriction;
+      } | null)
+    | ({
+        relationTo: 'weekly-menus';
+        value: number | WeeklyMenu;
+      } | null)
+    | ({
+        relationTo: 'orders';
+        value: number | Order;
       } | null);
   globalSlug?: string | null;
   user:
@@ -337,9 +527,19 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "customers_select".
  */
 export interface CustomersSelect<T extends boolean = true> {
-  firstName?: T;
-  lastName?: T;
+  name?: T;
   tier?: T;
+  credit_balance?: T;
+  credit_bal_exp?: T;
+  dietary_restrictions?: T;
+  active?: T;
+  preferences_set?: T;
+  subscription_frequency?: T;
+  meals_per_week?: T;
+  include_breakfast?: T;
+  include_snacks?: T;
+  allergies?: T;
+  preferred_pickup_time?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -347,8 +547,6 @@ export interface CustomersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
-  _verified?: T;
-  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -358,6 +556,109 @@ export interface CustomersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu-items_select".
+ */
+export interface MenuItemsSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  price?: T;
+  category?: T;
+  image?: T;
+  active?: T;
+  allergens?:
+    | T
+    | {
+        allergen?: T;
+        id?: T;
+      };
+  nutritionInfo?:
+    | T
+    | {
+        calories?: T;
+        protein?: T;
+        carbs?: T;
+        fat?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tiers_select".
+ */
+export interface TiersSelect<T extends boolean = true> {
+  tier_name?: T;
+  description?: T;
+  monthly_price?: T;
+  weekly_price?: T;
+  single_price?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dietary-restrictions_select".
+ */
+export interface DietaryRestrictionsSelect<T extends boolean = true> {
+  restriction_name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-menus_select".
+ */
+export interface WeeklyMenusSelect<T extends boolean = true> {
+  weekLabel?: T;
+  startDate?: T;
+  endDate?: T;
+  active?: T;
+  firstHalfItems?:
+    | T
+    | {
+        menuItem?: T;
+        available?: T;
+        id?: T;
+      };
+  secondHalfItems?:
+    | T
+    | {
+        menuItem?: T;
+        available?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "orders_select".
+ */
+export interface OrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  customer?: T;
+  status?: T;
+  orderItems?:
+    | T
+    | {
+        menuItem?: T;
+        quantity?: T;
+        unitPrice?: T;
+        totalPrice?: T;
+        id?: T;
+      };
+  subtotal?: T;
+  taxAmount?: T;
+  totalAmount?: T;
+  tier?: T;
+  subscriptionFrequency?: T;
+  mealsPerWeek?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
