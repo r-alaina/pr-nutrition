@@ -27,7 +27,10 @@ interface Order {
   orderNumber: string
   status: string
   orderItems: OrderItem[]
+  allergenCharges?: any[]
+  totalAllergenCharges?: number
   subtotal: number
+  subtotalWithAllergens?: number
   taxAmount: number
   totalAmount: number
   createdAt: string
@@ -191,6 +194,34 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 </p>
               </div>
             </div>
+
+            {/* Allergen Charges Summary */}
+            {order.allergenCharges && order.allergenCharges.length > 0 && (
+              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-semibold text-yellow-900 mb-2">Allergen Accommodation Charges</h4>
+                <p className="text-sm text-yellow-700 mb-3">
+                  Additional charges for meals containing allergens you're sensitive to ($5.00 per allergen per meal)
+                </p>
+                {order.allergenCharges.map((charge: any, index: number) => (
+                  <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
+                    <p className="text-sm text-yellow-800">
+                      <strong>{charge.mealName}</strong> (Qty: {charge.quantity})
+                    </p>
+                    <p className="text-xs text-yellow-700 ml-4">
+                      Allergens: {charge.matchingAllergens.map((a: any) => a.allergen).join(', ')}
+                    </p>
+                    <p className="text-sm text-yellow-800 font-medium">
+                      Charge: ${charge.totalAllergenCharge.toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                <div className="border-t border-yellow-300 pt-2 mt-2">
+                  <p className="text-sm font-semibold text-yellow-900">
+                    Total Allergen Charges: ${order.totalAllergenCharges?.toFixed(2) || '0.00'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Order Summary */}
@@ -206,6 +237,12 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 </span>
                 <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
               </div>
+              {order.totalAllergenCharges && order.totalAllergenCharges > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Allergen Accommodation:</span>
+                  <span className="font-semibold text-orange-600">+{formatCurrency(order.totalAllergenCharges)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax (8.25%):</span>
                 <span className="font-semibold">{formatCurrency(order.taxAmount)}</span>
