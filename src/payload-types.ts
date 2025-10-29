@@ -76,6 +76,7 @@ export interface Config {
     'dietary-restrictions': DietaryRestriction;
     'weekly-menus': WeeklyMenu;
     orders: Order;
+    'kitchen-orders': KitchenOrder;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -90,6 +91,7 @@ export interface Config {
     'dietary-restrictions': DietaryRestrictionsSelect<false> | DietaryRestrictionsSelect<true>;
     'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    'kitchen-orders': KitchenOrdersSelect<false> | KitchenOrdersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -243,9 +245,9 @@ export interface Customer {
    */
   allergies?: string[] | null;
   /**
-   * Preferred pickup time
+   * Which half of the week customer prefers for pickup
    */
-  preferred_pickup_time?: string | null;
+  week_half?: ('firstHalf' | 'secondHalf') | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -297,9 +299,9 @@ export interface MenuItem {
   name: string;
   description: string;
   /**
-   * Base price for this item
+   * Price for snacks only (a la carte). Meals are priced by tier subscription.
    */
-  price: number;
+  price?: number | null;
   category: 'lunch' | 'dinner' | 'premium' | 'breakfast-small' | 'breakfast-large' | 'dessert' | 'salad' | 'snack';
   image?: (number | null) | Media;
   active?: boolean | null;
@@ -309,11 +311,12 @@ export interface MenuItem {
         id?: string | null;
       }[]
     | null;
-  nutritionInfo?: {
-    calories?: number | null;
-    protein?: number | null;
-    carbs?: number | null;
-    fat?: number | null;
+  /**
+   * Select which half of the week this menu item is available. Salads and snacks can be available for both halves.
+   */
+  availability?: {
+    firstHalf?: boolean | null;
+    secondHalf?: boolean | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -359,6 +362,10 @@ export interface Order {
         menuItem: number | MenuItem;
         quantity: number;
         /**
+         * Which half of the week this item is for
+         */
+        weekHalf?: ('firstHalf' | 'secondHalf') | null;
+        /**
          * Individual meal price (0 for tier-based subscriptions)
          */
         unitPrice?: number | null;
@@ -381,6 +388,10 @@ export interface Order {
    * Number of meals per week for this order
    */
   mealsPerWeek?: number | null;
+  /**
+   * Which half(s) of the week this order is for (both if meals from both halves)
+   */
+  weekHalf?: ('firstHalf' | 'secondHalf' | 'both') | null;
   /**
    * Additional notes for this order
    */
@@ -411,6 +422,60 @@ export interface Order {
    * Total allergen charges for entire order
    */
   totalAllergenCharges: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kitchen-orders".
+ */
+export interface KitchenOrder {
+  id: number;
+  /**
+   * Reference to original order
+   */
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  /**
+   * Customer phone number (optional)
+   */
+  customerPhone?: string | null;
+  weekHalf: 'firstHalf' | 'secondHalf' | 'both';
+  orderItems: {
+    mealName: string;
+    quantity: number;
+    allergens?:
+      | {
+          allergen?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  allergenCharges?:
+    | {
+        mealName: string;
+        allergens?:
+          | {
+              allergen: string;
+              id?: string | null;
+            }[]
+          | null;
+        charge: number;
+        id?: string | null;
+      }[]
+    | null;
+  totalAllergenCharges: number;
+  /**
+   * Calculated pickup date based on week half
+   */
+  pickupDate?: string | null;
+  status: 'pending' | 'preparing' | 'ready' | 'completed';
+  /**
+   * Additional notes for kitchen
+   */
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -452,6 +517,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: number | Order;
+      } | null)
+    | ({
+        relationTo: 'kitchen-orders';
+        value: number | KitchenOrder;
       } | null);
   globalSlug?: string | null;
   user:
@@ -565,7 +634,7 @@ export interface CustomersSelect<T extends boolean = true> {
   include_breakfast?: T;
   include_snacks?: T;
   allergies?: T;
-  preferred_pickup_time?: T;
+  week_half?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -600,13 +669,11 @@ export interface MenuItemsSelect<T extends boolean = true> {
         allergen?: T;
         id?: T;
       };
-  nutritionInfo?:
+  availability?:
     | T
     | {
-        calories?: T;
-        protein?: T;
-        carbs?: T;
-        fat?: T;
+        firstHalf?: T;
+        secondHalf?: T;
       };
   updatedAt?: T;
   createdAt?: T;
@@ -672,6 +739,7 @@ export interface OrdersSelect<T extends boolean = true> {
     | {
         menuItem?: T;
         quantity?: T;
+        weekHalf?: T;
         unitPrice?: T;
         totalPrice?: T;
         id?: T;
@@ -682,6 +750,7 @@ export interface OrdersSelect<T extends boolean = true> {
   tier?: T;
   subscriptionFrequency?: T;
   mealsPerWeek?: T;
+  weekHalf?: T;
   notes?: T;
   allergenCharges?:
     | T
@@ -700,6 +769,49 @@ export interface OrdersSelect<T extends boolean = true> {
         id?: T;
       };
   totalAllergenCharges?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kitchen-orders_select".
+ */
+export interface KitchenOrdersSelect<T extends boolean = true> {
+  orderNumber?: T;
+  customerName?: T;
+  customerEmail?: T;
+  customerPhone?: T;
+  weekHalf?: T;
+  orderItems?:
+    | T
+    | {
+        mealName?: T;
+        quantity?: T;
+        allergens?:
+          | T
+          | {
+              allergen?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  allergenCharges?:
+    | T
+    | {
+        mealName?: T;
+        allergens?:
+          | T
+          | {
+              allergen?: T;
+              id?: T;
+            };
+        charge?: T;
+        id?: T;
+      };
+  totalAllergenCharges?: T;
+  pickupDate?: T;
+  status?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

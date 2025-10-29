@@ -17,15 +17,11 @@ export default function PreferencesSuccessClient({ user }: PreferencesSuccessCli
     const tier = (user as any).tier
     const frequency = (user as any).subscription_frequency
     const mealsPerWeek = (user as any).meals_per_week
-    const includeBreakfast = (user as any).include_breakfast
-    const includeSnacks = (user as any).include_snacks
 
     return {
       tier: tier?.tier_name || 'Not selected',
       frequency: frequency || 'Not selected',
       mealsPerWeek: mealsPerWeek || 'Not selected',
-      includeBreakfast: includeBreakfast || false,
-      includeSnacks: includeSnacks || false,
     }
   }
 
@@ -62,52 +58,38 @@ export default function PreferencesSuccessClient({ user }: PreferencesSuccessCli
         </div>
 
         {/* Plan Summary */}
-        <div className="bg-white shadow-lg rounded-lg p-8 border border-gray-200 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Your Plan Summary</h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Tier:</span>
-                <span className="font-semibold text-lg">{planSummary.tier}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Frequency:</span>
-                <span className="font-semibold text-lg">{planSummary.frequency}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Meals per Week:</span>
-                <span className="font-semibold text-lg">{planSummary.mealsPerWeek}</span>
-              </div>
+        <div
+          className="p-6 border mb-8"
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(92, 184, 92, 0.08) 0%, rgba(247, 147, 30, 0.12) 25%, rgba(92, 184, 92, 0.15) 50%, rgba(247, 147, 30, 0.1) 75%, rgba(92, 184, 92, 0.08) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
+            borderColor: 'rgba(92, 184, 92, 0.2)',
+            borderWidth: '2px',
+            borderRadius: '16px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Plan Summary</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
+              <span className="text-gray-600">Tier:</span>
+              <span className="font-semibold text-gray-900">{planSummary.tier}</span>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Breakfast:</span>
-                <span
-                  className={`font-semibold text-lg ${planSummary.includeBreakfast ? 'text-green-600' : 'text-gray-500'}`}
-                >
-                  {planSummary.includeBreakfast ? 'Included' : 'Not included'}
-                </span>
-              </div>
+            <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
+              <span className="text-gray-600">Frequency:</span>
+              <span className="font-semibold text-gray-900 capitalize">
+                {planSummary.frequency === 'weekly'
+                  ? 'Weekly'
+                  : planSummary.frequency === 'monthly'
+                    ? 'Monthly'
+                    : planSummary.frequency}
+              </span>
+            </div>
 
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Snacks:</span>
-                <span
-                  className={`font-semibold text-lg ${planSummary.includeSnacks ? 'text-green-600' : 'text-gray-500'}`}
-                >
-                  {planSummary.includeSnacks ? 'Included' : 'Not included'}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-600 font-medium">Pickup Time:</span>
-                <span className="font-semibold text-lg">
-                  {(user as any).preferred_pickup_time || 'Not set'}
-                </span>
-              </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Meals per week:</span>
+              <span className="font-semibold text-gray-900">{planSummary.mealsPerWeek}</span>
             </div>
           </div>
         </div>

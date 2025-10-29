@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 import type { Customer } from '@/payload-types'
@@ -31,19 +31,24 @@ interface OrderNowClientProps {
     include_snacks?: boolean
     dietary_restrictions?: string[]
     allergies?: string[]
-    preferred_pickup_time?: string
   }
 }
 
 export default function OrderNowClient({ isNewUser, user, userPreferences }: OrderNowClientProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [currentStep, setCurrentStep] = useState(1)
 
-  // If user is authenticated and has preferences set, redirect to meal selection
-  if (user && (user as any).preferences_set) {
-    router.push('/meal-selection')
-    return <div>Redirecting to meal selection...</div>
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path
+    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
   }
+
+  const getLinkStyle = (path: string) => {
+    const isActive = pathname === path
+    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
+  }
+
   const [tiers, setTiers] = useState<Tier[]>([])
   const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(userPreferences?.tier || null)
@@ -59,11 +64,8 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     userPreferences?.dietary_restrictions || [],
   )
   const [allergies, setAllergies] = useState<string[]>(userPreferences?.allergies || [])
-  const [preferredPickupTime, setPreferredPickupTime] = useState(
-    userPreferences?.preferred_pickup_time || '',
-  )
 
-  const totalSteps = isNewUser ? 6 : 3 // New users: 6 steps, existing users: 3 steps
+  const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
 
   useEffect(() => {
     // Fetch tiers
@@ -132,10 +134,8 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         case 3:
           return 'How many meals per week?'
         case 4:
-          return 'Want to add breakfast or snacks?'
-        case 5:
           return 'Complete your preferences'
-        case 6:
+        case 5:
           return 'Review your plan'
         default:
           return 'Order Now'
@@ -164,10 +164,8 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         case 3:
           return "Select the number of meals you'd like per week."
         case 4:
-          return 'Add breakfast and snacks to your subscription for an additional cost.'
-        case 5:
           return 'Tell us about your dietary preferences and restrictions.'
-        case 6:
+        case 5:
           return 'Review your subscription details before proceeding.'
         default:
           return ''
@@ -238,11 +236,10 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             tier: selectedTier?.id || null,
             subscription_frequency: selectedPlan || null,
             meals_per_week: selectedMeals || null,
-            include_breakfast: includeBreakfast || false,
+            include_breakfast: false,
             include_snacks: includeSnacks || false,
             dietary_restrictions: dietaryRestrictionsSelected || [],
             allergies: allergies || [],
-            preferred_pickup_time: preferredPickupTime || null,
             preferences_set: true,
           }),
         })
@@ -269,7 +266,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           includeSnacks,
           dietaryRestrictions: dietaryRestrictionsSelected,
           allergies,
-          preferredPickupTime,
         },
       })
       // TODO: Submit order to backend
@@ -290,25 +286,71 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
               </div>
               <nav className="flex items-center space-x-6">
-                <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
+                <Link
+                  href="/"
+                  className={getLinkClass('/')}
+                  style={getLinkStyle('/')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
+                >
                   Home
                 </Link>
                 <Link
                   href="/menu"
-                  className="text-gray-700 font-medium"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                  className={getLinkClass('/menu')}
+                  style={getLinkStyle('/menu')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/menu') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/menu') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
                 >
                   Menu
                 </Link>
-                <Link href="/order-now" className="font-medium" style={{ color: '#5CB85C' }}>
+                <Link
+                  href="/order-now"
+                  className={getLinkClass('/order-now')}
+                  style={getLinkStyle('/order-now')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/order-now') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/order-now') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
+                >
                   Order Now
                 </Link>
                 <Link
                   href="/login"
-                  className="text-gray-700 font-medium"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                  className={getLinkClass('/login')}
+                  style={getLinkStyle('/login')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/login') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/login') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
                 >
                   Log In
                 </Link>
@@ -480,46 +522,8 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           </div>
         )}
 
-        {/* Step 4: Add-ons (New Users Only) */}
+        {/* Step 4: Preferences (New Users Only) */}
         {isNewUser && currentStep === 4 && (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold">Include Breakfast</h3>
-                  <p className="text-sm text-gray-600">Add breakfast items to your subscription</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-orange-500 font-semibold">+$15/week</span>
-                  <input
-                    type="checkbox"
-                    checked={includeBreakfast}
-                    onChange={(e) => setIncludeBreakfast(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <h3 className="font-semibold">Include Snacks</h3>
-                  <p className="text-sm text-gray-600">Add healthy snacks to your subscription</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-orange-500 font-semibold">+$10/week</span>
-                  <input
-                    type="checkbox"
-                    checked={includeSnacks}
-                    onChange={(e) => setIncludeSnacks(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Preferences (New Users Only) */}
-        {isNewUser && currentStep === 5 && (
           <div className="space-y-8">
             {/* Dietary Restrictions */}
             <div>
@@ -560,85 +564,60 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 ))}
               </div>
             </div>
-
-            {/* Preferred Pickup Time */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Preferred Pickup Time</h3>
-              <select
-                value={preferredPickupTime}
-                onChange={(e) => setPreferredPickupTime(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              >
-                <option value="">Select pickup time</option>
-                <option value="morning">Morning (8:00 AM - 10:00 AM)</option>
-                <option value="afternoon">Afternoon (12:00 PM - 2:00 PM)</option>
-                <option value="evening">Evening (4:00 PM - 6:00 PM)</option>
-              </select>
-            </div>
           </div>
         )}
 
-        {/* Step 6: Review Plan (New Users Only) */}
-        {isNewUser && currentStep === 6 && (
+        {/* Step 5: Review Plan (New Users Only) */}
+        {isNewUser && currentStep === 5 && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Your Subscription Plan</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Tier:</span>
-                  <span className="font-semibold">{selectedTier?.tier_name}</span>
+            <div
+              className="p-6 border"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(92, 184, 92, 0.08) 0%, rgba(247, 147, 30, 0.12) 25%, rgba(92, 184, 92, 0.15) 50%, rgba(247, 147, 30, 0.1) 75%, rgba(92, 184, 92, 0.08) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
+                borderColor: 'rgba(92, 184, 92, 0.2)',
+                borderWidth: '2px',
+                borderRadius: '16px',
+                boxSizing: 'border-box',
+              }}
+            >
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Subscription Plan</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
+                  <span className="text-gray-600">Tier:</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedTier?.tier_name || 'Not selected'}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
+                  <span className="text-gray-600">Frequency:</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedPlan === 'weekly'
+                      ? 'Weekly'
+                      : selectedPlan === 'monthly'
+                        ? 'Monthly'
+                        : selectedPlan || 'Not selected'}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
+                  <span className="text-gray-600">Meals per week:</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedMeals || 'Not selected'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Frequency:</span>
-                  <span className="font-semibold capitalize">{selectedPlan}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Meals per week:</span>
-                  <span className="font-semibold">{selectedMeals}</span>
-                </div>
-                {includeBreakfast && (
-                  <div className="flex justify-between text-orange-600">
-                    <span>Breakfast:</span>
-                    <span className="font-semibold">+$15/week</span>
-                  </div>
-                )}
-                {includeSnacks && (
-                  <div className="flex justify-between text-orange-600">
-                    <span>Snacks:</span>
-                    <span className="font-semibold">+$10/week</span>
-                  </div>
-                )}
-                <div className="border-t pt-2 mt-4">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total:</span>
-                    <span>
-                      $
-                      {selectedPlan === 'weekly'
-                        ? (selectedTier?.weekly_price || 0) +
-                          (includeBreakfast ? 15 : 0) +
-                          (includeSnacks ? 10 : 0)
-                        : (selectedTier?.monthly_price || 0) +
-                          (includeBreakfast ? 60 : 0) +
-                          (includeSnacks ? 40 : 0)}
-                      /{selectedPlan === 'weekly' ? 'week' : 'month'}
-                    </span>
-                  </div>
+                  <span className="text-gray-600">Allergens:</span>
+                  <span className="font-semibold text-gray-900">
+                    {allergies.length > 0 ? allergies.join(', ') : 'None'}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-900 mb-2">Preferences Summary</h4>
-              <div className="text-sm text-blue-800 space-y-1">
-                <div>
-                  Dietary Restrictions:{' '}
-                  {dietaryRestrictionsSelected.length > 0
-                    ? dietaryRestrictionsSelected.join(', ')
-                    : 'None'}
-                </div>
-                <div>Allergies: {allergies.length > 0 ? allergies.join(', ') : 'None'}</div>
-                <div>Pickup Time: {preferredPickupTime || 'Not selected'}</div>
-              </div>
+              <p className="text-sm text-blue-800">
+                When completing, your account will be set up and able to choose meals!
+              </p>
             </div>
           </div>
         )}
@@ -652,7 +631,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 <div>Tier: {selectedTier?.tier_name || 'Not set'}</div>
                 <div>Frequency: {selectedPlan || 'Not set'}</div>
                 <div>Meals per week: {selectedMeals}</div>
-                <div>Breakfast: {includeBreakfast ? 'Yes' : 'No'}</div>
                 <div>Snacks: {includeSnacks ? 'Yes' : 'No'}</div>
                 <div>
                   Dietary Restrictions:{' '}
@@ -661,7 +639,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                     : 'None'}
                 </div>
                 <div>Allergies: {allergies.length > 0 ? allergies.join(', ') : 'None'}</div>
-                <div>Pickup Time: {preferredPickupTime || 'Not set'}</div>
               </div>
               <Link
                 href="/account-settings"

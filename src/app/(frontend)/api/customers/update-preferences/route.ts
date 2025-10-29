@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       include_snacks,
       dietary_restrictions,
       allergies,
-      preferred_pickup_time,
+      week_half,
       preferences_set,
     } = body
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         include_snacks: include_snacks || false,
         dietary_restrictions: dietary_restrictions || [],
         allergies: allergies || [],
-        preferred_pickup_time: preferred_pickup_time || null,
+        week_half: week_half || null,
         preferences_set: preferences_set || false,
       },
     })

@@ -20,8 +20,20 @@ export default async function MealSelectionPage() {
 
   const payload = await getPayload({ config })
 
+  // Get active weekly menu
+  const weeklyMenus = await payload.find({
+    collection: 'weekly-menus',
+    where: {
+      active: {
+        equals: true,
+      },
+    },
+    limit: 1,
+    sort: '-startDate',
+  })
+
   // Get all active menu items
-  const menuItems = await payload.find({
+  const allMenuItems = await payload.find({
     collection: 'menu-items',
     where: {
       active: {
@@ -30,8 +42,80 @@ export default async function MealSelectionPage() {
     },
   })
 
-  // Group menu items by category
-  const groupedItems = menuItems.docs.reduce(
+  // Separate items for first half, second half, and both halves
+  let firstHalfItems: MenuItem[] = []
+  let secondHalfItems: MenuItem[] = []
+
+  // If there's an active weekly menu, filter by it
+  if (weeklyMenus.docs.length > 0) {
+    const activeWeeklyMenu = weeklyMenus.docs[0]
+    const firstHalfMenuItems = activeWeeklyMenu.firstHalfItems || []
+    const secondHalfMenuItems = activeWeeklyMenu.secondHalfItems || []
+
+    const firstHalfIds = new Set(
+      firstHalfMenuItems
+        .filter((item: any) => item.available !== false)
+        .map((item: any) =>
+          String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
+        ),
+    )
+
+    const secondHalfIds = new Set(
+      secondHalfMenuItems
+        .filter((item: any) => item.available !== false)
+        .map((item: any) =>
+          String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
+        ),
+    )
+
+    // Filter items for first half
+    firstHalfItems = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (firstHalfIds.has(String(item.id))) return true
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.firstHalf) return true
+      return false
+    })
+
+    // Filter items for second half
+    secondHalfItems = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (secondHalfIds.has(String(item.id))) return true
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.secondHalf) return true
+      return false
+    })
+  } else {
+    // No weekly menu - filter by availability settings only
+    firstHalfItems = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true
+      if (item.availability?.firstHalf) return true
+      return false
+    })
+
+    secondHalfItems = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true
+      if (item.availability?.secondHalf) return true
+      return false
+    })
+  }
+
+  // Group menu items by category for each half
+  const groupedFirstHalf = firstHalfItems.reduce(
+    (acc, item) => {
+      const category = item.category
+      if (!acc[category]) {
+        acc[category] = []
+      }
+      acc[category].push(item)
+      return acc
+    },
+    {} as Record<string, MenuItem[]>,
+  )
+
+  const groupedSecondHalf = secondHalfItems.reduce(
     (acc, item) => {
       const category = item.category
       if (!acc[category]) {
@@ -56,6 +140,11 @@ export default async function MealSelectionPage() {
   ]
 
   return (
-    <MealSelectionClient groupedItems={groupedItems} categoryOrder={categoryOrder} user={user} />
+    <MealSelectionClient
+      groupedFirstHalf={groupedFirstHalf}
+      groupedSecondHalf={groupedSecondHalf}
+      categoryOrder={categoryOrder}
+      user={user}
+    />
   )
 }

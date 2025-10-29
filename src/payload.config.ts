@@ -15,6 +15,7 @@ import { Tiers } from './collections/Tiers/config'
 import { DietaryRestrictions } from './collections/DietaryRestrictions/config'
 import { WeeklyMenus } from './collections/WeeklyMenus/config'
 import { Orders } from './collections/Orders/config'
+import { KitchenOrders } from './collections/KitchenOrders/config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -24,6 +25,9 @@ export default buildConfig({
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    meta: {
+      titleSuffix: '- PR Meal Preps Admin',
     },
   },
   collections: [
@@ -35,6 +39,7 @@ export default buildConfig({
     DietaryRestrictions,
     WeeklyMenus,
     Orders,
+    KitchenOrders,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

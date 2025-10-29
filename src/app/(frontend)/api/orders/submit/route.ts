@@ -46,65 +46,107 @@ export async function POST(request: NextRequest) {
     // Generate order number
     const orderNumber = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
 
-    // Calculate allergen charges
+    // Separate snacks from meals
+    const meals = selectedMeals.filter((item: { meal: any }) => item.meal.category !== 'snack')
+    const snacks = selectedMeals.filter((item: { meal: any }) => item.meal.category === 'snack')
+
+    // Calculate allergen charges for all items (meals + snacks)
     const userAllergies = (user as any).allergies || []
-    const { allergenCharges, totalAllergenCharges } = calculateAllergenCharges(selectedMeals, userAllergies)
+    const { allergenCharges, totalAllergenCharges } = calculateAllergenCharges(
+      selectedMeals,
+      userAllergies,
+    )
 
     // Calculate totals based on user's tier and subscription frequency
     const tier = (user as any).tier
     const subscriptionFrequency = (user as any).subscription_frequency
 
-    let subtotal = 0
-    let tierPrice = 0
+    // Determine week_half from selected meals - if meals from both halves, store as combined
+    // Otherwise, use the week_half from the meals
+    const mealWeeks = new Set(
+      selectedMeals.map((item: { meal: any; weekHalf?: string }) => item.weekHalf || 'firstHalf'),
+    )
+    const weekHalf =
+      mealWeeks.size > 1 ? 'both' : mealWeeks.has('secondHalf') ? 'secondHalf' : 'firstHalf'
 
-    if (tier && subscriptionFrequency) {
+    let mealSubtotal = 0
+    let snackSubtotal = 0
+
+    // Calculate meal pricing (tier-based or a la carte)
+    if (tier && subscriptionFrequency && meals.length > 0) {
       // Get the tier pricing based on subscription frequency
       if (subscriptionFrequency === 'weekly') {
-        tierPrice = tier.weekly_price || 0
+        mealSubtotal = tier.weekly_price || 0
       } else if (subscriptionFrequency === 'monthly') {
-        tierPrice = tier.monthly_price || 0
+        mealSubtotal = tier.monthly_price || 0
       } else {
         // Fallback to weekly pricing
-        tierPrice = tier.weekly_price || 0
+        mealSubtotal = tier.weekly_price || 0
       }
-      subtotal = tierPrice
-    } else {
-      // Fallback: calculate based on individual meal prices (a la carte)
-      selectedMeals.forEach((item: { meal: any; quantity: number }) => {
-        const unitPrice = item.meal.price || 0
-        subtotal += unitPrice * item.quantity
-      })
     }
+    // Meals are not available a la carte - require tier subscription
+
+    // Snacks are always a la carte
+    snacks.forEach((item: { meal: any; quantity: number }) => {
+      const unitPrice = item.meal.price || 0
+      snackSubtotal += unitPrice * item.quantity
+    })
+
+    const subtotal = mealSubtotal + snackSubtotal
 
     // Create order items for display purposes
-    const orderItems = selectedMeals.map((item: { meal: any; quantity: number }) => {
-      // For tier-based pricing, calculate a per-meal price based on the tier pricing
-      // This helps admins understand the value of each meal in the subscription
-      let unitPrice = 0
-      if (tier && subscriptionFrequency) {
-        const totalMealsPerWeek = (user as any).meals_per_week || 10
-        if (subscriptionFrequency === 'weekly') {
-          unitPrice = (tier.weekly_price || 0) / totalMealsPerWeek
-        } else if (subscriptionFrequency === 'monthly') {
-          // For monthly, calculate weekly equivalent then divide by meals per week
-          const weeklyEquivalent = (tier.monthly_price || 0) / 4 // Approximate 4 weeks per month
-          unitPrice = weeklyEquivalent / totalMealsPerWeek
+    const orderItems = selectedMeals.map(
+      (item: { meal: any; quantity: number; weekHalf?: string }) => {
+        const isSnack = item.meal.category === 'snack'
+        const itemWeekHalf = item.weekHalf || 'firstHalf'
+
+        // Snacks always use individual pricing
+        if (isSnack) {
+          const unitPrice = item.meal.price || 0
+          const totalPrice = unitPrice * item.quantity
+          return {
+            menuItem: {
+              id: item.meal.id,
+              name: item.meal.name,
+              description: item.meal.description,
+            },
+            quantity: item.quantity,
+            weekHalf: itemWeekHalf,
+            unitPrice: Math.round(unitPrice * 100) / 100,
+            totalPrice: Math.round(totalPrice * 100) / 100,
+          }
         }
-      }
 
-      const totalPrice = unitPrice * item.quantity
+        // Meals are priced by tier subscription, not individually
+        // Calculate a per-meal price based on the tier pricing for order tracking
+        let unitPrice = 0
+        if (tier && subscriptionFrequency) {
+          const totalMealsPerWeek = (user as any).meals_per_week || 10
+          if (subscriptionFrequency === 'weekly') {
+            unitPrice = (tier.weekly_price || 0) / totalMealsPerWeek
+          } else if (subscriptionFrequency === 'monthly') {
+            // For monthly, calculate weekly equivalent then divide by meals per week
+            const weeklyEquivalent = (tier.monthly_price || 0) / 4 // Approximate 4 weeks per month
+            unitPrice = weeklyEquivalent / totalMealsPerWeek
+          }
+        }
+        // Meals are not available a la carte - require tier subscription
 
-      return {
-        menuItem: {
-          id: item.meal.id,
-          name: item.meal.name,
-          description: item.meal.description,
-        },
-        quantity: item.quantity,
-        unitPrice: Math.round(unitPrice * 100) / 100, // Round to 2 decimal places
-        totalPrice: Math.round(totalPrice * 100) / 100, // Round to 2 decimal places
-      }
-    })
+        const totalPrice = unitPrice * item.quantity
+
+        return {
+          menuItem: {
+            id: item.meal.id,
+            name: item.meal.name,
+            description: item.meal.description,
+          },
+          quantity: item.quantity,
+          weekHalf: itemWeekHalf,
+          unitPrice: Math.round(unitPrice * 100) / 100, // Round to 2 decimal places
+          totalPrice: Math.round(totalPrice * 100) / 100, // Round to 2 decimal places
+        }
+      },
+    )
 
     // Calculate tax (8.25%) on subtotal + allergen charges
     const taxRate = 0.0825
@@ -129,6 +171,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Save the order to the database
+    // Create a proper req object for Payload with user and payload context
+    const reqObj = {
+      user,
+      payload,
+    } as any
+
     const savedOrder = await payload.create({
       collection: 'orders',
       data: {
@@ -138,6 +186,10 @@ export async function POST(request: NextRequest) {
         orderItems: orderItems.map((item) => ({
           menuItem: item.menuItem.id,
           quantity: item.quantity,
+          weekHalf:
+            item.weekHalf === 'firstHalf' || item.weekHalf === 'secondHalf'
+              ? item.weekHalf
+              : 'firstHalf',
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice,
         })),
@@ -149,18 +201,31 @@ export async function POST(request: NextRequest) {
         tier: tier?.id || null,
         subscriptionFrequency: subscriptionFrequency || null,
         mealsPerWeek: (user as any).meals_per_week || null,
-        notes: `Order placed by ${user.name || user.email}`,
+        weekHalf: weekHalf,
+        notes: `Order placed by ${(user as any).name || user.email}`,
       },
+      req: reqObj,
     })
 
     console.log('Order saved to database:', savedOrder.id)
+    console.log('Kitchen order should be created automatically via afterChange hook')
 
+    // Return success with order data
     return NextResponse.json({
       message: 'Order submitted successfully',
-      order: orderResponse,
+      order: {
+        ...orderResponse,
+        id: savedOrder.id,
+        orderNumber: savedOrder.orderNumber || orderNumber,
+      },
     })
   } catch (error) {
     console.error('Error submitting order:', error)
-    return NextResponse.json({ message: 'Failed to submit order' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error('Full error details:', error)
+    return NextResponse.json(
+      { message: 'Failed to submit order', error: errorMessage },
+      { status: 500 },
+    )
   }
 }

@@ -7,7 +7,7 @@ export const MenuItems: CollectionConfig = {
   slug: 'menu-items',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'price', 'category', 'active'],
+    defaultColumns: ['name', 'category', 'active'],
   },
   access: {
     read: () => true,
@@ -38,10 +38,11 @@ export const MenuItems: CollectionConfig = {
     {
       name: 'price',
       type: 'number',
-      required: true,
+      required: false,
       admin: {
         step: 0.01,
-        description: 'Base price for this item',
+        description: 'Price for snacks only (a la carte). Meals are priced by tier subscription.',
+        condition: (data) => data.category === 'snack',
       },
     },
     {
@@ -80,31 +81,22 @@ export const MenuItems: CollectionConfig = {
       ],
     },
     {
-      name: 'nutritionInfo',
-      type: 'group',
-      fields: [
-        { name: 'calories', type: 'number' },
-        { name: 'protein', type: 'number' },
-        { name: 'carbs', type: 'number' },
-        { name: 'fat', type: 'number' },
-      ],
-    },
-    {
       name: 'availability',
       type: 'group',
       admin: {
-        description: 'Select when this menu item is available.',
+        description:
+          'Select which half of the week this menu item is available. Salads and snacks can be available for both halves.',
       },
       fields: [
         {
           name: 'firstHalf',
-          label: 'Available in First Half (Sunday Pickup)',
+          label: 'Available in First Half (Sunday 3pm-6pm & Monday 10am-6pm)',
           type: 'checkbox',
           defaultValue: false,
         },
         {
           name: 'secondHalf',
-          label: 'Available in Second Half (Wednesday Pickup)',
+          label: 'Available in Second Half (Wednesday 3pm-6pm & Thursday 10am-6pm)',
           type: 'checkbox',
           defaultValue: false,
         },

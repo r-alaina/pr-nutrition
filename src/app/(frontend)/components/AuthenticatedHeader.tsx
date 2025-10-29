@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import type { Customer } from '@/payload-types'
 
 interface AuthenticatedHeaderProps {
@@ -9,8 +10,19 @@ interface AuthenticatedHeaderProps {
 }
 
 export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) {
+  const pathname = usePathname()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path
+    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
+  }
+
+  const getLinkStyle = (path: string) => {
+    const isActive = pathname === path
+    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -34,24 +46,64 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
             <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
           </div>
           <nav className="flex items-center space-x-6">
-            <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
+            <Link
+              href="/"
+              className={getLinkClass('/')}
+              style={getLinkStyle('/')}
+              onMouseEnter={(e) => {
+                if (pathname !== '/') {
+                  e.currentTarget.style.color = '#5CB85C'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pathname !== '/') {
+                  e.currentTarget.style.color = '#6B7280'
+                }
+              }}
+            >
               Home
             </Link>
             <Link
               href="/menu"
-              className="text-gray-700 font-medium"
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+              className={getLinkClass('/menu')}
+              style={getLinkStyle('/menu')}
+              onMouseEnter={(e) => {
+                if (pathname !== '/menu') {
+                  e.currentTarget.style.color = '#5CB85C'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pathname !== '/menu') {
+                  e.currentTarget.style.color = '#6B7280'
+                }
+              }}
             >
               Menu
             </Link>
             <Link
               href={(user as any)?.preferences_set ? '/meal-selection' : '/order-now'}
-              className="text-gray-700 font-medium"
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+              className={`font-medium transition-colors ${
+                pathname === '/meal-selection' || pathname === '/order-now'
+                  ? 'text-[#5CB85C]'
+                  : 'text-gray-700'
+              }`}
+              style={
+                pathname === '/meal-selection' || pathname === '/order-now'
+                  ? { color: '#5CB85C' }
+                  : { color: '#6B7280' }
+              }
+              onMouseEnter={(e) => {
+                if (pathname !== '/meal-selection' && pathname !== '/order-now') {
+                  e.currentTarget.style.color = '#5CB85C'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pathname !== '/meal-selection' && pathname !== '/order-now') {
+                  e.currentTarget.style.color = '#6B7280'
+                }
+              }}
             >
-              {(user as any)?.preferences_set ? 'Order Meals' : 'Order Now'}
+              Order Now
             </Link>
             <div className="relative" ref={dropdownRef}>
               <button

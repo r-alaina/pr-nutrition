@@ -1,9 +1,20 @@
 // src/app/(frontend)/order-now/page.tsx
 import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
+import { redirect } from 'next/navigation'
 import OrderNowClient from './OrderNowClient'
 
 export default async function OrderNowPage() {
   const user = await getUser()
+
+  // Require authentication to proceed with order
+  if (!user) {
+    redirect('/login?redirect=/order-now')
+  }
+
+  // If user has preferences set, redirect to meal selection
+  if (user.preferences_set) {
+    redirect('/meal-selection')
+  }
 
   // Check if user has preferences set up
   const isNewUser = !user?.preferences_set
@@ -18,7 +29,7 @@ export default async function OrderNowPage() {
         include_snacks: user.include_snacks || false,
         dietary_restrictions: user.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
         allergies: user.allergies || [],
-        preferred_pickup_time: user.preferred_pickup_time || undefined,
+        week_half: user.week_half || undefined,
       }
     : undefined
 

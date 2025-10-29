@@ -1,8 +1,21 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function UnauthenticatedHome() {
+  const pathname = usePathname()
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path
+    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
+  }
+
+  const getLinkStyle = (path: string) => {
+    const isActive = pathname === path
+    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -13,22 +26,71 @@ export default function UnauthenticatedHome() {
               <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
             </div>
             <nav className="flex items-center space-x-6">
-              <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
+              <Link
+                href="/"
+                className={getLinkClass('/')}
+                style={getLinkStyle('/')}
+                onMouseEnter={(e) => {
+                  if (pathname !== '/') {
+                    e.currentTarget.style.color = '#5CB85C'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== '/') {
+                    e.currentTarget.style.color = '#6B7280'
+                  }
+                }}
+              >
                 Home
               </Link>
               <Link
                 href="/menu"
-                className="text-gray-700 font-medium"
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                className={getLinkClass('/menu')}
+                style={getLinkStyle('/menu')}
+                onMouseEnter={(e) => {
+                  if (pathname !== '/menu') {
+                    e.currentTarget.style.color = '#5CB85C'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== '/menu') {
+                    e.currentTarget.style.color = '#6B7280'
+                  }
+                }}
               >
                 Menu
               </Link>
               <Link
+                href="/order-now"
+                className={getLinkClass('/order-now')}
+                style={getLinkStyle('/order-now')}
+                onMouseEnter={(e) => {
+                  if (pathname !== '/order-now') {
+                    e.currentTarget.style.color = '#5CB85C'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== '/order-now') {
+                    e.currentTarget.style.color = '#6B7280'
+                  }
+                }}
+              >
+                Order Now
+              </Link>
+              <Link
                 href="/login"
-                className="text-gray-700 font-medium"
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                className={getLinkClass('/login')}
+                style={getLinkStyle('/login')}
+                onMouseEnter={(e) => {
+                  if (pathname !== '/login') {
+                    e.currentTarget.style.color = '#5CB85C'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (pathname !== '/login') {
+                    e.currentTarget.style.color = '#6B7280'
+                  }
+                }}
               >
                 Log In
               </Link>
@@ -93,10 +155,14 @@ export default function UnauthenticatedHome() {
             </Link>
             <Link
               href="/menu"
-              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg"
-              style={{ backgroundColor: '#5CB85C' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg border-2 border-white"
+              style={{ backgroundColor: 'transparent' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
             >
               View Menu
             </Link>

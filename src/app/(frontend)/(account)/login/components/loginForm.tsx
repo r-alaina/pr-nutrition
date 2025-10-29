@@ -1,14 +1,20 @@
 'use client'
 
 import React, { ReactElement, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { login, LoginResponse } from '../../login/actions/login'
 import Link from 'next/link'
 
-export default function LoginForm(): ReactElement {
+interface LoginFormProps {
+  redirectPath?: string
+}
+
+export default function LoginForm({ redirectPath }: LoginFormProps): ReactElement {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = redirectPath || searchParams.get('redirect')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,7 +30,12 @@ export default function LoginForm(): ReactElement {
     setIsLoading(false)
 
     if (result.success) {
-      router.push('/?message=login')
+      // Redirect to the specified path or home
+      if (redirect) {
+        router.push(redirect)
+      } else {
+        router.push('/?message=login')
+      }
     } else {
       setError(result.error || 'An error occurred.')
     }
@@ -100,7 +111,14 @@ export default function LoginForm(): ReactElement {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
-            <Link href="/create-account" className="text-[#5CB85C] hover:underline font-medium">
+            <Link
+              href={
+                redirect
+                  ? `/create-account?redirect=${encodeURIComponent(redirect)}`
+                  : '/create-account'
+              }
+              className="text-[#5CB85C] hover:underline font-medium"
+            >
               Sign up
             </Link>
           </p>

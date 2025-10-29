@@ -29,7 +29,7 @@ interface User {
   include_snacks?: boolean
   dietary_restrictions?: any[]
   allergies?: string[]
-  preferred_pickup_time?: string
+  week_half?: string
   preferences_set?: boolean
 }
 
@@ -51,11 +51,10 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
     user?.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
   )
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
-  const [preferredPickupTime, setPreferredPickupTime] = useState(user?.preferred_pickup_time || '')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const totalSteps = 6
+  const totalSteps = 5
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -137,10 +136,8 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
       case 3:
         return 'How many meals per week?'
       case 4:
-        return 'Want to add breakfast or snacks?'
-      case 5:
         return 'Complete your preferences'
-      case 6:
+      case 5:
         return 'Review your plan'
       default:
         return 'Update Preferences'
@@ -156,10 +153,8 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
       case 3:
         return "Select the number of meals you'd like per week."
       case 4:
-        return 'Add breakfast and snacks to your subscription for an additional cost.'
-      case 5:
         return 'Tell us about your dietary preferences and restrictions.'
-      case 6:
+      case 5:
         return 'Review your subscription details before proceeding.'
       default:
         return ''
@@ -210,11 +205,10 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         tier: selectedTier,
         subscription_frequency: selectedPlan,
         meals_per_week: selectedMeals,
-        include_breakfast: includeBreakfast,
+        include_breakfast: false,
         include_snacks: includeSnacks,
         dietary_restrictions: dietaryRestrictionsSelected,
         allergies,
-        preferred_pickup_time: preferredPickupTime,
       })
 
       // Save preferences to the database
@@ -227,11 +221,10 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           tier: selectedTier?.id,
           subscription_frequency: selectedPlan,
           meals_per_week: selectedMeals,
-          include_breakfast: includeBreakfast,
+          include_breakfast: false,
           include_snacks: includeSnacks,
           dietary_restrictions: dietaryRestrictionsSelected,
           allergies,
-          preferred_pickup_time: preferredPickupTime,
           preferences_set: true,
         }),
       })
@@ -490,52 +483,8 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           </div>
         )}
 
-        {/* Step 4: Add-ons */}
+        {/* Step 4: Dietary Preferences */}
         {currentStep === 4 && (
-          <div className="space-y-6">
-            <div className="space-y-4">
-              <div
-                onClick={() => setIncludeBreakfast(!includeBreakfast)}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  includeBreakfast
-                    ? 'border-emerald-500 bg-emerald-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Breakfast</h3>
-                    <p className="text-gray-600">Add breakfast to your meal plan</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-emerald-600">+$15/week</p>
-                  </div>
-                </div>
-              </div>
-              <div
-                onClick={() => setIncludeSnacks(!includeSnacks)}
-                className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  includeSnacks
-                    ? 'border-emerald-500 bg-emerald-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Snacks</h3>
-                    <p className="text-gray-600">Add healthy snacks to your meal plan</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-emerald-600">+$10/week</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Dietary Preferences */}
-        {currentStep === 5 && (
           <div className="space-y-8">
             {/* Dietary Restrictions */}
             <div>
@@ -576,58 +525,52 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                 ))}
               </div>
             </div>
-
-            {/* Preferred Pickup Time */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferred Pickup Time</h3>
-              <select
-                value={preferredPickupTime}
-                onChange={(e) => setPreferredPickupTime(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="">Select pickup time</option>
-                <option value="sunday-3pm-6pm">Sunday 3pm-6pm</option>
-                <option value="monday-10am-6pm">Monday 10am-6pm</option>
-                <option value="wednesday-3pm-6pm">Wednesday 3pm-6pm</option>
-                <option value="thursday-10am-6pm">Thursday 10am-6pm</option>
-              </select>
-            </div>
           </div>
         )}
 
-        {/* Step 6: Review Plan */}
-        {currentStep === 6 && (
+        {/* Step 5: Review Plan */}
+        {currentStep === 5 && (
           <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Plan Summary</h3>
+            <div
+              className="p-6 border"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(92, 184, 92, 0.08) 0%, rgba(247, 147, 30, 0.12) 25%, rgba(92, 184, 92, 0.15) 50%, rgba(247, 147, 30, 0.1) 75%, rgba(92, 184, 92, 0.08) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
+                borderColor: 'rgba(92, 184, 92, 0.2)',
+                borderWidth: '2px',
+                borderRadius: '16px',
+                boxSizing: 'border-box',
+              }}
+            >
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Plan Summary</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
                   <span className="text-gray-600">Tier:</span>
-                  <span className="font-semibold">{selectedTier?.tier_name}</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedTier?.tier_name || 'Not selected'}
+                  </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
                   <span className="text-gray-600">Frequency:</span>
-                  <span className="font-semibold capitalize">{selectedPlan}</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedPlan === 'weekly'
+                      ? 'Weekly'
+                      : selectedPlan === 'monthly'
+                        ? 'Monthly'
+                        : selectedPlan || 'Not selected'}
+                  </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between border-b border-dashed border-gray-300 pb-3">
                   <span className="text-gray-600">Meals per week:</span>
-                  <span className="font-semibold">{selectedMeals}</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedMeals || 'Not selected'}
+                  </span>
                 </div>
-                {includeBreakfast && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Breakfast:</span>
-                    <span className="font-semibold text-emerald-600">+$15/week</span>
-                  </div>
-                )}
-                {includeSnacks && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Snacks:</span>
-                    <span className="font-semibold text-emerald-600">+$10/week</span>
-                  </div>
-                )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Pickup time:</span>
-                  <span className="font-semibold">{preferredPickupTime || 'Not selected'}</span>
+                  <span className="text-gray-600">Allergens:</span>
+                  <span className="font-semibold text-gray-900">
+                    {allergies.length > 0 ? allergies.join(', ') : 'None'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -663,7 +606,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           <button
             onClick={currentStep === totalSteps ? handleSubmit : nextStep}
             disabled={currentStep === 1 && !selectedTier}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold transition-colors flex items-center ${
               currentStep === 1 && !selectedTier
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'text-white'
@@ -683,7 +626,12 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
             }}
           >
             {currentStep === totalSteps ? 'Update Preferences' : 'Next'}
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 ml-2 inline"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
