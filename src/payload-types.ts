@@ -385,6 +385,32 @@ export interface Order {
    * Additional notes for this order
    */
   notes?: string | null;
+  allergenCharges?:
+    | {
+        mealId: string;
+        mealName: string;
+        quantity: number;
+        matchingAllergens?:
+          | {
+              allergen: string;
+              /**
+               * Charge per allergen per meal ($5.00)
+               */
+              charge: number;
+              id?: string | null;
+            }[]
+          | null;
+        /**
+         * Total allergen charge for this meal
+         */
+        totalAllergenCharge: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Total allergen charges for entire order
+   */
+  totalAllergenCharges: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -657,6 +683,23 @@ export interface OrdersSelect<T extends boolean = true> {
   subscriptionFrequency?: T;
   mealsPerWeek?: T;
   notes?: T;
+  allergenCharges?:
+    | T
+    | {
+        mealId?: T;
+        mealName?: T;
+        quantity?: T;
+        matchingAllergens?:
+          | T
+          | {
+              allergen?: T;
+              charge?: T;
+              id?: T;
+            };
+        totalAllergenCharge?: T;
+        id?: T;
+      };
+  totalAllergenCharges?: T;
   updatedAt?: T;
   createdAt?: T;
 }

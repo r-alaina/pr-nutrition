@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { cookies } from 'next/headers'
+import { calculateAllergenCharges } from '@/utilities/allergenCharges'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest) {
 
     // Generate order number
     const orderNumber = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+
+    // Calculate allergen charges
+    const userAllergies = (user as any).allergies || []
+    const { allergenCharges, totalAllergenCharges } = calculateAllergenCharges(selectedMeals, userAllergies)
 
     // Calculate totals based on user's tier and subscription frequency
     const tier = (user as any).tier
@@ -101,10 +106,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Calculate tax (8.25%)
+    // Calculate tax (8.25%) on subtotal + allergen charges
     const taxRate = 0.0825
-    const taxAmount = subtotal * taxRate
-    const totalAmount = subtotal + taxAmount
+    const subtotalWithAllergens = subtotal + totalAllergenCharges
+    const taxAmount = subtotalWithAllergens * taxRate
+    const totalAmount = subtotalWithAllergens + taxAmount
 
     // For now, just return the order data without saving to database
     // This avoids any database migration issues
@@ -113,7 +119,10 @@ export async function POST(request: NextRequest) {
       orderNumber,
       status: 'pending',
       orderItems,
+      allergenCharges,
+      totalAllergenCharges,
       subtotal: Math.round(subtotal * 100) / 100,
+      subtotalWithAllergens: Math.round(subtotalWithAllergens * 100) / 100,
       taxAmount: Math.round(taxAmount * 100) / 100,
       totalAmount: Math.round(totalAmount * 100) / 100,
       createdAt: new Date().toISOString(),
@@ -132,6 +141,8 @@ export async function POST(request: NextRequest) {
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice,
         })),
+        allergenCharges,
+        totalAllergenCharges,
         subtotal: orderResponse.subtotal,
         taxAmount: orderResponse.taxAmount,
         totalAmount: orderResponse.totalAmount,

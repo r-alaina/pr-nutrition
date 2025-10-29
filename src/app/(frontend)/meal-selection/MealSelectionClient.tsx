@@ -5,6 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { MenuItem, Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
+import {
+  calculateTotalAllergenCharges,
+  hasAllergenConflict,
+  getMatchingAllergens,
+} from '@/utilities/allergenCharges'
 
 interface MealSelectionClientProps {
   groupedItems: Record<string, MenuItem[]>
@@ -20,6 +25,9 @@ export default function MealSelectionClient({
   const router = useRouter()
   const [selectedMeals, setSelectedMeals] = useState<{ meal: MenuItem; quantity: number }[]>([])
   const mealsPerWeek = user.meals_per_week || 10
+
+  // Calculate allergen charges for display
+  const allergenCharges = calculateTotalAllergenCharges(selectedMeals, user.allergies || [])
 
   // Get the meal price (temporarily using single price field)
   const getMealPrice = (meal: MenuItem) => {
@@ -43,7 +51,7 @@ export default function MealSelectionClient({
     })
   }
 
-  const handleQuantityChange = (mealId: string, quantity: number) => {
+  const handleQuantityChange = (mealId: number, quantity: number) => {
     if (quantity <= 0) {
       // Remove meal if quantity is 0 or negative
       setSelectedMeals((prev) => prev.filter((item) => item.meal.id !== mealId))
@@ -168,15 +176,39 @@ export default function MealSelectionClient({
                           <div className="mb-4">
                             <p className="text-sm text-gray-500 mb-1">Allergens:</p>
                             <div className="flex flex-wrap gap-1">
-                              {item.allergens.map((allergen, index) => (
-                                <span
-                                  key={index}
-                                  className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded"
-                                >
-                                  {allergen.allergen}
-                                </span>
-                              ))}
+                              {item.allergens.map((allergen, index) => {
+                                const isUserAllergic = user.allergies?.includes(
+                                  allergen.allergen || '',
+                                )
+                                return (
+                                  <span
+                                    key={index}
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      isUserAllergic
+                                        ? 'bg-red-100 text-red-800 border border-red-300 font-medium'
+                                        : 'bg-gray-100 text-gray-600'
+                                    }`}
+                                  >
+                                    {allergen.allergen}
+                                  </span>
+                                )
+                              })}
                             </div>
+                            {hasAllergenConflict(item, user.allergies || []) && (
+                              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                <p className="text-xs text-yellow-800 font-medium">
+                                  Contains {getMatchingAllergens(item, user.allergies || []).length}{' '}
+                                  allergen(s) you're sensitive to
+                                </p>
+                                <p className="text-xs text-yellow-700 mt-1">
+                                  Additional $
+                                  {(
+                                    getMatchingAllergens(item, user.allergies || []).length * 5
+                                  ).toFixed(2)}{' '}
+                                  charge per meal
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -275,6 +307,21 @@ export default function MealSelectionClient({
               </p>
             </div>
           </div>
+
+          {/* Allergen Charges Summary */}
+          {allergenCharges > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-300">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-gray-600">Allergen Accommodation Charges</p>
+                  <p className="text-xs text-gray-500">$5.00 per allergen per meal</p>
+                </div>
+                <p className="font-semibold text-lg text-orange-600">
+                  +${allergenCharges.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -323,7 +370,9 @@ export default function MealSelectionClient({
                 router.push(`/order-success?order=${orderData}`)
               } catch (error) {
                 console.error('Error submitting order:', error)
-                alert(`Failed to submit order: ${error.message}`)
+                const errorMessage =
+                  error instanceof Error ? error.message : 'Unknown error occurred'
+                alert(`Failed to submit order: ${errorMessage}`)
               }
             }}
             disabled={getTotalSelectedMeals() !== mealsPerWeek}

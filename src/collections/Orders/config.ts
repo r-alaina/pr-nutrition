@@ -145,5 +145,65 @@ export const Orders: CollectionConfig = {
         description: 'Additional notes for this order',
       },
     },
+    {
+      name: 'allergenCharges',
+      type: 'array',
+      fields: [
+        {
+          name: 'mealId',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'mealName',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'quantity',
+          type: 'number',
+          required: true,
+        },
+        {
+          name: 'matchingAllergens',
+          type: 'array',
+          fields: [
+            {
+              name: 'allergen',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'charge',
+              type: 'number',
+              required: true,
+              admin: {
+                step: 0.01,
+                description: 'Charge per allergen per meal ($5.00)',
+              },
+            },
+          ],
+        },
+        {
+          name: 'totalAllergenCharge',
+          type: 'number',
+          required: true,
+          admin: {
+            step: 0.01,
+            description: 'Total allergen charge for this meal',
+          },
+        },
+      ],
+    },
+    {
+      name: 'totalAllergenCharges',
+      type: 'number',
+      required: true,
+      defaultValue: 0,
+      admin: {
+        step: 0.01,
+        description: 'Total allergen charges for entire order',
+      },
+    },
   ],
 }
