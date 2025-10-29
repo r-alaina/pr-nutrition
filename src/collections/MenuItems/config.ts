@@ -89,5 +89,18 @@ export const MenuItems: CollectionConfig = {
         { name: 'fat', type: 'number' },
       ],
     },
+    {
+      name: 'weekHalf',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'First Half (6 Meals)', value: 'first' },
+        { label: 'Second Half (4 Meals)', value: 'second' },
+        { label: 'Snack (A la carte)', value: 'snack' },
+      ],
+      admin: {
+        description: 'Select which half of the week this menu item belongs to.',
+      },
+    },
   ],
 }
