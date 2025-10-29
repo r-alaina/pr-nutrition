@@ -90,17 +90,25 @@ export const MenuItems: CollectionConfig = {
       ],
     },
     {
-      name: 'weekHalf',
-      type: 'select',
-      required: true,
-      options: [
-        { label: 'First Half (6 Meals)', value: 'first' },
-        { label: 'Second Half (4 Meals)', value: 'second' },
-        { label: 'Snack (A la carte)', value: 'snack' },
-      ],
+      name: 'availability',
+      type: 'group',
       admin: {
-        description: 'Select which half of the week this menu item belongs to.',
+        description: 'Select when this menu item is available.',
       },
+      fields: [
+        {
+          name: 'firstHalf',
+          label: 'Available in First Half (Sunday Pickup)',
+          type: 'checkbox',
+          defaultValue: false,
+        },
+        {
+          name: 'secondHalf',
+          label: 'Available in Second Half (Wednesday Pickup)',
+          type: 'checkbox',
+          defaultValue: false,
+        },
+      ],
     },
   ],
 }
