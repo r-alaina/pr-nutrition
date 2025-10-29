@@ -1,20 +1,54 @@
-import type { CollectionConfig } from 'payload';
-import { protectRoles } from './hooks/protectRoles';
-import editor from './access/editor';
-import user from './access/user';
-import admin from './access/admin';
-import { checkRole } from './access/checkRole';
+import type { CollectionConfig } from 'payload'
+import { protectRoles } from './hooks/protectRoles'
+import editor from './access/editor'
+import user from './access/user'
+import admin from './access/admin'
+import { checkRole } from './access/checkRole'
 import type { User } from '@/payload-types'
-
-
 
 const Users: CollectionConfig = {
   slug: 'users',
-  access : {
-  create: editor,
-  read: user,
-  update: user,
-  delete: admin,
+  access: {
+    // Allow public creation for admin signup, but enforce 'user' role only
+    create: ({ req: { user }, data }) => {
+      try {
+        // If user is editor/admin, allow any role
+        if (user && checkRole(['admin', 'editor'], user)) {
+          return true
+        }
+        // For public signups, only allow 'user' role
+        if (data?.roles) {
+          const roles = Array.isArray(data.roles) ? data.roles : [data.roles]
+          return roles.every((role: string) => role === 'user')
+        }
+        // Allow if no roles specified (will default to 'user')
+        return true
+      } catch (error) {
+        console.error('Users create access error:', error)
+        return false
+      }
+    },
+    read: ({ req: { user } }) => {
+      try {
+        if (user) {
+          if (checkRole(['admin', 'editor'], user)) {
+            return true
+          }
+          // Users can only read their own data
+          return {
+            id: {
+              equals: typeof user.id === 'string' ? parseInt(user.id, 10) : user.id,
+            },
+          }
+        }
+        return false
+      } catch (error) {
+        console.error('Users read access error:', error)
+        return false
+      }
+    },
+    update: user,
+    delete: admin,
   },
   admin: {
     useAsTitle: 'email',
@@ -33,16 +67,16 @@ const Users: CollectionConfig = {
       saveToJWT: true,
       defaultValue: ['user'],
       options: [
-        { label: 'Admin',  value: 'admin'  },
+        { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },
-        { label: 'User',   value: 'user'   },
+        { label: 'User', value: 'user' },
       ],
       hooks: {
-        beforeChange: [protectRoles]
+        beforeChange: [protectRoles],
       },
       access: {
-        update: ({req: {user}}) => checkRole(['admin'], user as User)
-      }
+        update: ({ req: { user } }) => checkRole(['admin'], user as User),
+      },
     },
     {
       name: 'active',
@@ -50,6 +84,6 @@ const Users: CollectionConfig = {
       defaultValue: false,
     },
   ],
-};
+}
 
-export default Users;
+export default Users

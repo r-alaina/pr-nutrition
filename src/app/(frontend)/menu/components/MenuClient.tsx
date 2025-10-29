@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { MenuItem, Customer } from '@/payload-types'
 import AuthenticatedHeader from '../../components/AuthenticatedHeader'
 
@@ -11,9 +12,16 @@ interface MenuClientProps {
 }
 
 export default function MenuClient({ groupedItems, categoryOrder, user }: MenuClientProps) {
-  // Get the meal price (temporarily using single price field)
-  const getMealPrice = (meal: MenuItem) => {
-    return meal.price || 0
+  const pathname = usePathname()
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path
+    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
+  }
+
+  const getLinkStyle = (path: string) => {
+    const isActive = pathname === path
+    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
   }
 
   return (
@@ -29,25 +37,71 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                 <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
               </div>
               <nav className="flex items-center space-x-6">
-                <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
+                <Link
+                  href="/"
+                  className={getLinkClass('/')}
+                  style={getLinkStyle('/')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
+                >
                   Home
                 </Link>
-                <Link href="/menu" className="font-medium" style={{ color: '#5CB85C' }}>
+                <Link
+                  href="/menu"
+                  className={getLinkClass('/menu')}
+                  style={getLinkStyle('/menu')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/menu') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/menu') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
+                >
                   Menu
                 </Link>
                 <Link
-                  href={(user as any)?.preferences_set ? '/meal-selection' : '/order-now'}
-                  className="text-gray-700 font-medium"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                  href="/order-now"
+                  className={getLinkClass('/order-now')}
+                  style={getLinkStyle('/order-now')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/order-now') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/order-now') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
                 >
-                  {user?.preferences_set ? 'Order Meals' : 'Order Now'}
+                  Order Now
                 </Link>
                 <Link
                   href="/login"
-                  className="text-gray-700 font-medium"
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#5CB85C')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+                  className={getLinkClass('/login')}
+                  style={getLinkStyle('/login')}
+                  onMouseEnter={(e) => {
+                    if (pathname !== '/login') {
+                      e.currentTarget.style.color = '#5CB85C'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (pathname !== '/login') {
+                      e.currentTarget.style.color = '#6B7280'
+                    }
+                  }}
                 >
                   Log In
                 </Link>
@@ -130,46 +184,6 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                       </div>
                       <p className="text-gray-600 mb-4 leading-relaxed">{item.description}</p>
 
-                      {/* Nutrition Info */}
-                      {item.nutritionInfo && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded-md">
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            {item.nutritionInfo.calories && (
-                              <div>
-                                <span className="font-semibold text-gray-700">Calories:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {item.nutritionInfo.calories}
-                                </span>
-                              </div>
-                            )}
-                            {item.nutritionInfo.protein && (
-                              <div>
-                                <span className="font-semibold text-gray-700">Protein:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {item.nutritionInfo.protein}g
-                                </span>
-                              </div>
-                            )}
-                            {item.nutritionInfo.carbs && (
-                              <div>
-                                <span className="font-semibold text-gray-700">Carbs:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {item.nutritionInfo.carbs}g
-                                </span>
-                              </div>
-                            )}
-                            {item.nutritionInfo.fat && (
-                              <div>
-                                <span className="font-semibold text-gray-700">Fat:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {item.nutritionInfo.fat}g
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
                       {/* Allergens */}
                       {item.allergens && item.allergens.length > 0 && (
                         <div className="mb-4">
@@ -188,17 +202,25 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                       )}
 
                       <div className="flex justify-between items-center">
-                        <span className="text-2xl font-bold" style={{ color: '#5CB85C' }}>
-                          ${getMealPrice(item).toFixed(2)}
-                        </span>
+                        {item.category === 'snack' && item.price ? (
+                          <span className="text-2xl font-bold" style={{ color: '#5CB85C' }}>
+                            ${(item.price || 0).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-lg text-gray-600">
+                            {item.category === 'snack' ? 'A la carte' : 'Included in subscription'}
+                          </span>
+                        )}
                         <Link
-                          href={(user as any)?.preferences_set ? '/meal-selection' : '/order-now'}
+                          href={
+                            user && (user as any).preferences_set ? '/meal-selection' : '/order-now'
+                          }
                           className="text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
                           style={{ backgroundColor: '#5CB85C' }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
                         >
-                          {(user as any)?.preferences_set ? 'Order Meals' : 'Order Now'}
+                          {user && (user as any).preferences_set ? 'Order Meals' : 'Order Now'}
                         </Link>
                       </div>
                     </div>

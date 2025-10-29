@@ -14,7 +14,7 @@ interface User {
   include_snacks?: boolean
   dietary_restrictions?: any[]
   allergies?: string[]
-  preferred_pickup_time?: string
+  week_half?: string
   preferences_set?: boolean
 }
 
@@ -119,7 +119,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           include_snacks: user.include_snacks || false,
           dietary_restrictions: user.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
           allergies: user.allergies || [],
-          preferred_pickup_time: user.preferred_pickup_time || null,
+          week_half: user.week_half || null,
           preferences_set: true,
         }),
       })
@@ -365,9 +365,13 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Week Half</label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                  {user.preferred_pickup_time || 'Not selected'}
+                  {user.week_half === 'firstHalf'
+                    ? 'First Half (Sunday & Monday)'
+                    : user.week_half === 'secondHalf'
+                      ? 'Second Half (Wednesday & Thursday)'
+                      : 'Not selected'}
                 </div>
               </div>
             </div>
@@ -375,7 +379,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
               (user.tier ||
                 user.subscription_frequency ||
                 user.meals_per_week ||
-                user.preferred_pickup_time ||
+                user.week_half ||
                 (user.dietary_restrictions && user.dietary_restrictions.length > 0) ||
                 (user.allergies && user.allergies.length > 0)) && (
                 <div className="pt-4">

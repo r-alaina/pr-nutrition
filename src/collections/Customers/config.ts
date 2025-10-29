@@ -121,10 +121,14 @@ export const Customers: CollectionConfig = {
       },
     },
     {
-      name: 'preferred_pickup_time',
-      type: 'text',
+      name: 'week_half',
+      type: 'select',
+      options: [
+        { label: 'First Half (Sunday & Monday Pickup)', value: 'firstHalf' },
+        { label: 'Second Half (Wednesday & Thursday Pickup)', value: 'secondHalf' },
+      ],
       admin: {
-        description: 'Preferred pickup time',
+        description: 'Which half of the week customer prefers for pickup',
       },
     },
   ],

@@ -141,9 +141,13 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   Pickup Information
                 </label>
                 <p className="text-sm text-gray-600">
-                  Your preferred pickup time:{' '}
+                  Week Half:{' '}
                   <span className="font-semibold">
-                    {(user as any).preferred_pickup_time || 'Not set'}
+                    {(user as any).week_half === 'firstHalf'
+                      ? 'First Half (Sunday & Monday)'
+                      : (user as any).week_half === 'secondHalf'
+                        ? 'Second Half (Wednesday & Thursday)'
+                        : 'Not set'}
                   </span>
                 </p>
               </div>

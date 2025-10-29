@@ -1,20 +1,14 @@
 'use client'
 
 import React, { ReactElement, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { create, type Response } from '@/app/(frontend)/(account)/create-account/actions/create'
+import { useRouter } from 'next/navigation'
+import { createAdmin, type AdminSignupResponse } from '@/app/(frontend)/admin-signup/actions/create'
 import Link from 'next/link'
 
-interface CreateFormProps {
-  redirectPath?: string
-}
-
-export default function CreateForm({ redirectPath }: CreateFormProps): ReactElement {
+export default function AdminSignupForm(): ReactElement {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = redirectPath || searchParams.get('redirect')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
@@ -25,64 +19,48 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    const name = formData.get('name') as string
 
-    const result: Response = await create({ email, password, name })
+    const result: AdminSignupResponse = await createAdmin({ email, password })
     setIsLoading(false)
 
     if (result.success) {
-      // Redirect to login with redirect parameter if specified
-      const loginUrl = redirect
-        ? `/login?message=${encodeURIComponent('Account created successfully! Please login.')}&redirect=${encodeURIComponent(redirect)}`
-        : `/login?message=${encodeURIComponent('Account created successfully! Please login.')}`
-      router.push(loginUrl)
+      router.push(
+        '/admin/login?message=' + encodeURIComponent('Account created successfully! Please login.'),
+      )
     } else {
       setError(result.error || 'An error occurred.')
     }
   }
 
   return (
-    <div className="h-screen w-full bg-gray-100 flex items-center justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background: 'linear-gradient(135deg, #5CB85C 0%, #4A9D4A 100%)',
+      }}
+    >
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 relative">
-        {/* Close Button */}
-        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+        {/* Logo */}
+        <div className="flex items-center justify-center mb-6">
+          <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-16 w-auto" />
+        </div>
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-600">Sign up to start ordering meals.</p>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Sign Up</h1>
+          <p className="text-gray-600">Create an account for admin access</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Note: You will be assigned the "User" role. An existing admin can upgrade your role
+            later.
+          </p>
         </div>
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Full Name Field */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
-              Full Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
-              placeholder="Enter your full name"
-            />
-          </div>
-
           {/* Email Field */}
           <div>
             <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
-              Email
+              Email <span className="text-red-500">*</span>
             </label>
             <input
               id="email"
@@ -97,7 +75,7 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
           {/* Password Field */}
           <div>
             <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
-              Password
+              Password <span className="text-red-500">*</span>
             </label>
             <input
               id="password"
@@ -118,7 +96,7 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#5CB85C] text-white font-semibold py-3 px-4 rounded-xl hover:bg-[#4A9A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#5CB85C] text-white font-semibold py-3 px-4 rounded-xl hover:bg-[#4A9D4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </button>
@@ -127,12 +105,15 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
         {/* Login Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Already have an account?{' '}
-            <Link
-              href={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
-              className="text-[#5CB85C] hover:underline font-medium"
-            >
+            Already have an admin account?{' '}
+            <Link href="/admin/login" className="text-[#5CB85C] hover:underline font-medium">
               Log in
+            </Link>
+          </p>
+          <p className="text-gray-600 mt-2 text-sm">
+            Looking for customer account?{' '}
+            <Link href="/create-account" className="text-[#5CB85C] hover:underline font-medium">
+              Sign up as customer
             </Link>
           </p>
         </div>

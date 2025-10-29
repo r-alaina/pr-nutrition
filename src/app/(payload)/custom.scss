@@ -1,0 +1,171 @@
+// Custom styles for Payload CMS admin
+// Only targeting the login page - be conservative to avoid breaking admin UI
+
+// ============================================================================
+// LOGIN PAGE ONLY STYLING
+// ============================================================================
+
+// Only apply green background to login page (when class is added by JS)
+html.payload-login-page {
+  background: linear-gradient(135deg, #5CB85C 0%, #4A9D4A 100%) !important;
+}
+
+// Apply green background to body only when on login page
+body.payload-login-page {
+  background: linear-gradient(135deg, #5CB85C 0%, #4A9D4A 100%) !important;
+  min-height: 100vh !important;
+}
+
+// Target ONLY the login form on login page
+body.payload-login-page form,
+html.payload-login-page form {
+  background: white !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  padding: 2.5rem !important;
+  max-width: 450px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  
+  // Add logo
+  &::before {
+    content: '';
+    display: block;
+    width: 100px;
+    height: 50px;
+    margin: 0 auto 2rem auto;
+    background-image: url('/images/brand/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  
+  // Style inputs only within login form
+  input[type='email'],
+  input[type='password'] {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.75rem !important;
+    background-color: #f9fafb !important;
+    font-size: 1rem !important;
+    transition: all 0.2s !important;
+    box-sizing: border-box !important;
+    
+    &:focus {
+      outline: none !important;
+      border-color: #5CB85C !important;
+      box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.1) !important;
+      background-color: white !important;
+    }
+  }
+  
+  // Style labels only within login form
+  label {
+    color: #1f2937 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    margin-bottom: 0.5rem !important;
+    display: block !important;
+  }
+  
+  // Style submit button only within login form
+  button[type='submit'],
+  button {
+    background-color: #5CB85C !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #4A9D4A !important;
+    }
+    
+    &:disabled {
+      opacity: 0.6 !important;
+      cursor: not-allowed !important;
+    }
+  }
+}
+
+// Style the injected signup link (only on login page)
+[data-admin-signup-link] {
+  margin-top: 1.5rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid #e5e7eb !important;
+  text-align: center !important;
+  color: #6b7280 !important;
+  font-size: 0.875rem !important;
+  
+  a {
+    color: #5CB85C !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    margin-left: 0.25rem !important;
+    
+    &:hover {
+      color: #4A9D4A !important;
+      text-decoration: underline !important;
+    }
+  }
+}
+
+// ============================================================================
+// GENERAL ADMIN PANEL FIXES (All Pages)
+// ============================================================================
+
+// Fix horizontal overflow issues
+html {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Ensure all containers respect viewport width
+#app,
+#__next,
+[data-payload-base],
+[data-payload-base] > div {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+// Fix any elements that might cause horizontal scroll
+* {
+  box-sizing: border-box;
+}
+
+// Prevent horizontal overflow from fixed/absolute positioned elements
+[style*='position: fixed'],
+[style*='position: absolute'] {
+  max-width: 100vw !important;
+}
+
+// ============================================================================
+// CSS VARIABLES FOR BRAND COLORS (Subtle touches only)
+// ============================================================================
+
+:root {
+  // Keep Payload's existing theme variables, just update green colors
+  --color-success-500: #5CB85C;
+  --color-success-600: #4A9D4A;
+  --theme-success-500: #5CB85C;
+  --theme-success-600: #4A9D4A;
+}
