@@ -9,6 +9,7 @@ import React from 'react'
 import { importMap } from './admin/importMap.js'
 import './custom.scss'
 import AdminLoginSignup from './components/AdminLoginSignup'
+import KitchenReportButton from './components/KitchenReportButton'
 
 type Args = {
   children: React.ReactNode
@@ -26,6 +27,7 @@ const serverFunction: ServerFunctionClient = async function (args) {
 const Layout = ({ children }: Args) => (
   <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
     <AdminLoginSignup />
+    <KitchenReportButton />
     {children}
   </RootLayout>
 )

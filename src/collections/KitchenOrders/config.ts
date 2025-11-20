@@ -160,5 +160,92 @@ export const KitchenOrders: CollectionConfig = {
         description: 'Additional notes for kitchen',
       },
     },
+    {
+      name: 'tierAggregation',
+      type: 'array',
+      admin: {
+        description: 'Aggregated meal quantities by tier',
+        readOnly: true,
+      },
+      fields: [
+        {
+          name: 'tierName',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'tierId',
+          type: 'text',
+        },
+        {
+          name: 'meals',
+          type: 'array',
+          fields: [
+            {
+              name: 'mealName',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'quantity',
+              type: 'number',
+              required: true,
+            },
+            {
+              name: 'category',
+              type: 'text',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'allergenAdjustments',
+      type: 'array',
+      admin: {
+        description: 'Customer-specific allergen adjustments',
+        readOnly: true,
+      },
+      fields: [
+        {
+          name: 'customerName',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'allergens',
+          type: 'array',
+          fields: [
+            {
+              name: 'allergen',
+              type: 'text',
+            },
+          ],
+        },
+        {
+          name: 'meals',
+          type: 'array',
+          fields: [
+            {
+              name: 'mealName',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'adjustment',
+              type: 'text',
+              admin: {
+                description: 'Description of allergen adjustment (e.g., "without cheese")',
+              },
+            },
+            {
+              name: 'quantity',
+              type: 'number',
+              required: true,
+            },
+          ],
+        },
+      ],
+    },
   ],
 }
