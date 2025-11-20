@@ -476,6 +476,50 @@ export interface KitchenOrder {
    * Additional notes for kitchen
    */
   notes?: string | null;
+  /**
+   * Aggregated meal quantities by tier
+   */
+  tierAggregation?:
+    | {
+        tierName: string;
+        tierId?: string | null;
+        meals?:
+          | {
+              mealName: string;
+              quantity: number;
+              category?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Customer-specific allergen adjustments
+   */
+  allergenAdjustments?:
+    | {
+        customerName: string;
+        allergens?:
+          | {
+              allergen?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        meals?:
+          | {
+              mealName: string;
+              /**
+               * Description of allergen adjustment (e.g., "without cheese")
+               */
+              adjustment?: string | null;
+              quantity: number;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -812,6 +856,41 @@ export interface KitchenOrdersSelect<T extends boolean = true> {
   pickupDate?: T;
   status?: T;
   notes?: T;
+  tierAggregation?:
+    | T
+    | {
+        tierName?: T;
+        tierId?: T;
+        meals?:
+          | T
+          | {
+              mealName?: T;
+              quantity?: T;
+              category?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  allergenAdjustments?:
+    | T
+    | {
+        customerName?: T;
+        allergens?:
+          | T
+          | {
+              allergen?: T;
+              id?: T;
+            };
+        meals?:
+          | T
+          | {
+              mealName?: T;
+              adjustment?: T;
+              quantity?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
