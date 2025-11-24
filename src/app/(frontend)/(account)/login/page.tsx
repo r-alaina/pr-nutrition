@@ -23,5 +23,9 @@ export default async function Page({
     redirect('/?message=already_logged_in')
   }
 
-  return <LoginForm redirectPath={redirectPath as string | undefined} />
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <LoginForm redirectPath={redirectPath as string | undefined} />
+    </div>
+  )
 }

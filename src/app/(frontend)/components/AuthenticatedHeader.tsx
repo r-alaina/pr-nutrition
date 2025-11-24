@@ -43,7 +43,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center">
-            <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
+            <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-20 w-auto" />
           </div>
           <nav className="flex items-center space-x-6">
             <Link
