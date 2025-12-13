@@ -42,16 +42,24 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [includeBreakfast, setIncludeBreakfast] = useState(user?.include_breakfast || false)
   const [includeSnacks, setIncludeSnacks] = useState(user?.include_snacks || false)
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
+  const desktopDropdownRef = useRef<HTMLDivElement>(null)
+  const mobileDropdownRef = useRef<HTMLDivElement>(null)
 
   const totalSteps = 5
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
+      if (
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDesktopDropdownOpen(false)
+      }
+      if (mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target as Node)) {
+        setIsMobileDropdownOpen(false)
       }
     }
 
@@ -226,14 +234,16 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
               >
                 Order Now
               </Link>
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={desktopDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsDesktopDropdownOpen(!isDesktopDropdownOpen)}
                   className="flex items-center space-x-2 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+                  aria-expanded={isDesktopDropdownOpen}
+                  aria-haspopup="true"
                 >
                   <span>{user?.name || 'User'}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -247,26 +257,26 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isDesktopDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -274,7 +284,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Logout
                     </Link>
@@ -285,14 +295,16 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
             {/* Mobile Menu Button */}
             <div className="flex items-center space-x-3 lg:hidden">
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={mobileDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
                   className="flex items-center space-x-1 text-gray-700 font-medium text-sm"
+                  aria-expanded={isMobileDropdownOpen}
+                  aria-haspopup="true"
                 >
                   <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -306,26 +318,26 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isMobileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -333,7 +345,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Logout
                     </Link>
