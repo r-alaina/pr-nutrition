@@ -13,11 +13,6 @@ interface Tier {
   single_price: number
 }
 
-interface DietaryRestriction {
-  id: string
-  name: string
-}
-
 interface User {
   id: string
   name?: string
@@ -27,7 +22,6 @@ interface User {
   meals_per_week?: number
   include_breakfast?: boolean
   include_snacks?: boolean
-  dietary_restrictions?: any[]
   allergies?: string[]
   week_half?: string
   preferences_set?: boolean
@@ -40,16 +34,13 @@ interface PreferencesClientProps {
 export default function PreferencesClient({ user }: PreferencesClientProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
   const [includeBreakfast, setIncludeBreakfast] = useState(user?.include_breakfast || false)
   const [includeSnacks, setIncludeSnacks] = useState(user?.include_snacks || false)
-  const [dietaryRestrictionsSelected, setDietaryRestrictionsSelected] = useState<string[]>(
-    user?.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
-  )
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -91,40 +82,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         console.error('Error fetching tiers:', err)
         setTiers([])
       })
-
-    // Fetch dietary restrictions
-    fetch('/api/dietary-restrictions')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        if (data && data.docs) {
-          setDietaryRestrictions(data.docs)
-        } else {
-          // Mock data for development
-          setDietaryRestrictions([
-            { id: '1', name: 'Vegetarian' },
-            { id: '2', name: 'Vegan' },
-            { id: '3', name: 'Gluten-Free' },
-            { id: '4', name: 'Dairy-Free' },
-            { id: '5', name: 'Keto' },
-          ])
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching dietary restrictions:', err)
-        // Mock data for development
-        setDietaryRestrictions([
-          { id: '1', name: 'Vegetarian' },
-          { id: '2', name: 'Vegan' },
-          { id: '3', name: 'Gluten-Free' },
-          { id: '4', name: 'Dairy-Free' },
-          { id: '5', name: 'Keto' },
-        ])
-      })
   }, [])
 
   const getStepTitle = () => {
@@ -147,13 +104,13 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const getStepSubtitle = () => {
     switch (currentStep) {
       case 1:
-        return 'Choose the tier that matches your nutritional needs. Not sure which tier is right for you? We highly recommend calling us at (956) 424-2247 or stopping by our office so Peggy, our registered dietitian, can help determine the best tier for your specific goals and needs.'
+        return 'Choose the tier that matches your nutritional needs.'
       case 2:
         return "Choose how often you'd like to receive your meals."
       case 3:
         return "Select the number of meals you'd like per week."
       case 4:
-        return 'Tell us about your dietary preferences and restrictions.'
+        return 'Tell us about your allergies and dietary preferences.'
       case 5:
         return 'Review your subscription details before proceeding.'
       default:
@@ -171,14 +128,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
   const handleMealsSelect = (meals: number) => {
     setSelectedMeals(meals)
-  }
-
-  const handleDietaryRestrictionToggle = (restrictionId: string) => {
-    setDietaryRestrictionsSelected((prev) =>
-      prev.includes(restrictionId)
-        ? prev.filter((id) => id !== restrictionId)
-        : [...prev, restrictionId],
-    )
   }
 
   const handleAllergyToggle = (allergy: string) => {
@@ -207,7 +156,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         meals_per_week: selectedMeals,
         include_breakfast: false,
         include_snacks: includeSnacks,
-        dietary_restrictions: dietaryRestrictionsSelected,
         allergies,
       })
 
@@ -223,7 +171,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           meals_per_week: selectedMeals,
           include_breakfast: false,
           include_snacks: includeSnacks,
-          dietary_restrictions: dietaryRestrictionsSelected,
           allergies,
           preferences_set: true,
         }),
@@ -247,11 +194,19 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
-              <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
+              <Link href="/">
+                <img
+                  src="/images/brand/logo.png"
+                  alt="Meal PREPS Logo"
+                  className="h-10 sm:h-12 w-auto"
+                />
+              </Link>
             </div>
-            <nav className="flex items-center space-x-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
                 Home
               </Link>
@@ -327,7 +282,120 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                 )}
               </div>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center space-x-3 lg:hidden">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-1 text-gray-700 font-medium text-sm"
+                >
+                  <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <Link
+                      href="/account-settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Account Settings
+                    </Link>
+                    <Link
+                      href="/preferences"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Manage Preferences
+                    </Link>
+                    <Link
+                      href="/order-history"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Order History
+                    </Link>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <Link
+                      href="/logout"
+                      className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Logout
+                    </Link>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-gray-700 hover:text-gray-900 focus:outline-none"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden border-t border-gray-200 py-4">
+              <nav className="flex flex-col space-y-3">
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-[#5CB85C] bg-green-50"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/menu"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-gray-700 hover:bg-gray-50"
+                >
+                  Menu
+                </Link>
+                <Link
+                  href="/order-now"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-gray-700 hover:bg-gray-50"
+                >
+                  Order Now
+                </Link>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
@@ -381,27 +449,12 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   <div
                     key={tier.id}
                     onClick={() => handleTierSelect(tier)}
-                    className={`p-8 border-2 rounded-lg cursor-pointer transition-all text-center relative ${
+                    className={`p-8 border-2 rounded-lg cursor-pointer transition-all text-center flex flex-col items-center justify-center ${
                       selectedTier?.id === tier.id
                         ? 'border-emerald-500 bg-emerald-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {selectedTier?.id === tier.id && (
-                      <div className="absolute top-3 right-3">
-                        <svg
-                          className="w-6 h-6 text-emerald-600"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                    )}
                     <div className="text-xl font-semibold text-gray-900 mb-3">{tier.tier_name}</div>
                     <div className="text-xl font-bold text-emerald-600">{tier.description}</div>
                   </div>
@@ -459,7 +512,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                 <div
                   key={meals}
                   onClick={() => handleMealsSelect(meals)}
-                  className={`p-4 border-2 rounded-lg cursor-pointer transition-all text-center relative ${
+                  className={`p-6 border-2 rounded-lg cursor-pointer transition-all text-center relative ${
                     selectedMeals === meals
                       ? 'border-emerald-500 bg-emerald-50'
                       : 'border-gray-200 hover:border-gray-300'
@@ -475,8 +528,8 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                       </span>
                     </div>
                   )}
-                  <div className="text-2xl font-bold text-gray-900">{meals}</div>
-                  <div className="text-sm text-gray-600">meals per week</div>
+                  <div className="text-3xl font-bold text-gray-900">{meals}</div>
+                  <div className="text-base text-gray-600">meals per week</div>
                 </div>
               ))}
             </div>
@@ -486,26 +539,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         {/* Step 4: Dietary Preferences */}
         {currentStep === 4 && (
           <div className="space-y-8">
-            {/* Dietary Restrictions */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Dietary Restrictions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {dietaryRestrictions.map((restriction) => (
-                  <button
-                    key={restriction.id}
-                    onClick={() => handleDietaryRestrictionToggle(restriction.id)}
-                    className={`p-3 text-left border rounded-lg transition-all ${
-                      dietaryRestrictionsSelected.includes(restriction.id)
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    {restriction.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Allergies */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Allergies</h3>
@@ -578,31 +611,38 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              currentStep === 1
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <svg
-              className="w-4 h-4 mr-2 inline"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="flex justify-between items-center mt-8">
+          {currentStep === 1 ? (
+            <Link
+              href="/"
+              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back
-          </button>
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              Back to Home
+            </Link>
+          ) : (
+            <button
+              onClick={prevStep}
+              className="px-6 py-3 rounded-lg font-semibold transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              Back
+            </button>
+          )}
           <button
             onClick={currentStep === totalSteps ? handleSubmit : nextStep}
             disabled={currentStep === 1 && !selectedTier}

@@ -61,11 +61,6 @@ export const MenuItems: CollectionConfig = {
       ],
     },
     {
-      name: 'image',
-      type: 'upload',
-      relationTo: 'media',
-    },
-    {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import type { MenuItem, Customer } from '@/payload-types'
 import AuthenticatedHeader from '../../components/AuthenticatedHeader'
 
@@ -13,6 +14,7 @@ interface MenuClientProps {
 
 export default function MenuClient({ groupedItems, categoryOrder, user }: MenuClientProps) {
   const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const getLinkClass = (path: string) => {
     const isActive = pathname === path
@@ -24,6 +26,13 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
     return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
   }
 
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/menu', label: 'Menu' },
+    { href: '/order-now', label: 'Order Now' },
+    { href: '/login', label: 'Log In' },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -32,82 +41,42 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
       ) : (
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
+            <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
-                <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
+                <Link href="/">
+                  <img
+                    src="/images/brand/logo.png"
+                    alt="Meal PREPS Logo"
+                    className="h-10 sm:h-12 w-auto"
+                  />
+                </Link>
               </div>
-              <nav className="flex items-center space-x-6">
-                <Link
-                  href="/"
-                  className={getLinkClass('/')}
-                  style={getLinkStyle('/')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/menu"
-                  className={getLinkClass('/menu')}
-                  style={getLinkStyle('/menu')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/menu') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/menu') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Menu
-                </Link>
-                <Link
-                  href="/order-now"
-                  className={getLinkClass('/order-now')}
-                  style={getLinkStyle('/order-now')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/order-now') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/order-now') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Order Now
-                </Link>
-                <Link
-                  href="/login"
-                  className={getLinkClass('/login')}
-                  style={getLinkStyle('/login')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/login') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/login') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Log In
-                </Link>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center space-x-6">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={getLinkClass(link.href)}
+                    style={getLinkStyle(link.href)}
+                    onMouseEnter={(e) => {
+                      if (pathname !== link.href) {
+                        e.currentTarget.style.color = '#5CB85C'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (pathname !== link.href) {
+                        e.currentTarget.style.color = '#6B7280'
+                      }
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
                 <Link
                   href="/create-account"
-                  className="text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                  className="text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm sm:text-base"
                   style={{ backgroundColor: '#5CB85C' }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
@@ -115,7 +84,67 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                   Sign Up
                 </Link>
               </nav>
+
+              {/* Mobile Menu Button */}
+              <div className="flex items-center space-x-3 lg:hidden">
+                <Link
+                  href="/create-account"
+                  className="text-white px-3 py-1.5 rounded-lg transition-colors font-medium text-sm"
+                  style={{ backgroundColor: '#5CB85C' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+                >
+                  Sign Up
+                </Link>
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="text-gray-700 hover:text-gray-900 focus:outline-none"
+                  aria-label="Toggle menu"
+                >
+                  {isMobileMenuOpen ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+              <div className="lg:hidden border-t border-gray-200 py-4">
+                <nav className="flex flex-col space-y-3">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        pathname === link.href
+                          ? 'text-[#5CB85C] bg-green-50'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            )}
           </div>
         </header>
       )}
@@ -171,18 +200,22 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                     className="bg-white rounded-lg shadow-md overflow-hidden border hover:shadow-lg transition-shadow"
                   >
                     <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
-                        {item.category === 'premium' && (
-                          <span
-                            className="text-white text-xs font-semibold px-2 py-1 rounded"
-                            style={{ backgroundColor: '#F7931E' }}
-                          >
-                            Premium
-                          </span>
-                        )}
+                      <div className="text-center mb-4">
+                        <div className="flex justify-center items-center gap-2 mb-2">
+                          <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
+                          {item.category === 'premium' && (
+                            <span
+                              className="text-white text-xs font-semibold px-2 py-1 rounded"
+                              style={{ backgroundColor: '#F7931E' }}
+                            >
+                              Premium
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-gray-600 mb-4 leading-relaxed">{item.description}</p>
+                      <p className="text-gray-600 mb-4 leading-relaxed text-center">
+                        {item.description}
+                      </p>
 
                       {/* Allergens */}
                       {item.allergens && item.allergens.length > 0 && (
@@ -201,15 +234,19 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                         </div>
                       )}
 
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col items-center space-y-3">
                         {item.category === 'snack' && item.price ? (
                           <span className="text-2xl font-bold" style={{ color: '#5CB85C' }}>
                             ${(item.price || 0).toFixed(2)}
                           </span>
                         ) : (
-                          <span className="text-lg text-gray-600">
-                            {item.category === 'snack' ? 'A la carte' : 'Included in subscription'}
-                          </span>
+                          user && (
+                            <span className="text-lg text-gray-600">
+                              {item.category === 'snack'
+                                ? 'A la carte'
+                                : 'Included in subscription'}
+                            </span>
+                          )
                         )}
                         <Link
                           href={

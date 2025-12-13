@@ -61,15 +61,6 @@ export const Customers: CollectionConfig = {
       },
     },
     {
-      name: 'dietary_restrictions',
-      type: 'relationship',
-      relationTo: 'dietary-restrictions',
-      hasMany: true,
-      admin: {
-        description: 'Customer dietary restrictions',
-      },
-    },
-    {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,

@@ -15,11 +15,6 @@ interface Tier {
   single_price: number
 }
 
-interface DietaryRestriction {
-  id: string
-  name: string
-}
-
 interface OrderNowClientProps {
   isNewUser: boolean
   user?: Customer
@@ -29,7 +24,6 @@ interface OrderNowClientProps {
     meals_per_week?: number
     include_breakfast?: boolean
     include_snacks?: boolean
-    dietary_restrictions?: string[]
     allergies?: string[]
   }
 }
@@ -38,6 +32,7 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   const router = useRouter()
   const pathname = usePathname()
   const [currentStep, setCurrentStep] = useState(1)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const getLinkClass = (path: string) => {
     const isActive = pathname === path
@@ -49,8 +44,14 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
   }
 
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/menu', label: 'Menu' },
+    { href: '/order-now', label: 'Order Now' },
+    { href: '/login', label: 'Log In' },
+  ]
+
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(userPreferences?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(
     userPreferences?.subscription_frequency || '',
@@ -60,9 +61,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     userPreferences?.include_breakfast || false,
   )
   const [includeSnacks, setIncludeSnacks] = useState(userPreferences?.include_snacks || false)
-  const [dietaryRestrictionsSelected, setDietaryRestrictionsSelected] = useState<string[]>(
-    userPreferences?.dietary_restrictions || [],
-  )
   const [allergies, setAllergies] = useState<string[]>(userPreferences?.allergies || [])
 
   const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
@@ -87,40 +85,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
       .catch((err) => {
         console.error('Error fetching tiers:', err)
         setTiers([])
-      })
-
-    // Fetch dietary restrictions
-    fetch('/api/dietary-restrictions')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        if (data && data.docs) {
-          setDietaryRestrictions(data.docs)
-        } else {
-          // Mock data for development
-          setDietaryRestrictions([
-            { id: '1', name: 'Vegetarian' },
-            { id: '2', name: 'Vegan' },
-            { id: '3', name: 'Gluten-Free' },
-            { id: '4', name: 'Dairy-Free' },
-            { id: '5', name: 'Keto' },
-          ])
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching dietary restrictions:', err)
-        // Mock data for development
-        setDietaryRestrictions([
-          { id: '1', name: 'Vegetarian' },
-          { id: '2', name: 'Vegan' },
-          { id: '3', name: 'Gluten-Free' },
-          { id: '4', name: 'Dairy-Free' },
-          { id: '5', name: 'Keto' },
-        ])
       })
   }, [])
 
@@ -209,14 +173,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     setSelectedMeals(meals)
   }
 
-  const handleDietaryRestrictionToggle = (restrictionId: string) => {
-    setDietaryRestrictionsSelected((prev) =>
-      prev.includes(restrictionId)
-        ? prev.filter((id) => id !== restrictionId)
-        : [...prev, restrictionId],
-    )
-  }
-
   const handleAllergyToggle = (allergy: string) => {
     setAllergies((prev) =>
       prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy],
@@ -238,7 +194,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             meals_per_week: selectedMeals || null,
             include_breakfast: false,
             include_snacks: includeSnacks || false,
-            dietary_restrictions: dietaryRestrictionsSelected || [],
             allergies: allergies || [],
             preferences_set: true,
           }),
@@ -264,7 +219,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           plan: selectedPlan,
           includeBreakfast,
           includeSnacks,
-          dietaryRestrictions: dietaryRestrictionsSelected,
           allergies,
         },
       })
@@ -281,82 +235,42 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
       ) : (
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
+            <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
-                <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
+                <Link href="/">
+                  <img
+                    src="/images/brand/logo.png"
+                    alt="Meal PREPS Logo"
+                    className="h-10 sm:h-12 w-auto"
+                  />
+                </Link>
               </div>
-              <nav className="flex items-center space-x-6">
-                <Link
-                  href="/"
-                  className={getLinkClass('/')}
-                  style={getLinkStyle('/')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/menu"
-                  className={getLinkClass('/menu')}
-                  style={getLinkStyle('/menu')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/menu') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/menu') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Menu
-                </Link>
-                <Link
-                  href="/order-now"
-                  className={getLinkClass('/order-now')}
-                  style={getLinkStyle('/order-now')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/order-now') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/order-now') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Order Now
-                </Link>
-                <Link
-                  href="/login"
-                  className={getLinkClass('/login')}
-                  style={getLinkStyle('/login')}
-                  onMouseEnter={(e) => {
-                    if (pathname !== '/login') {
-                      e.currentTarget.style.color = '#5CB85C'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (pathname !== '/login') {
-                      e.currentTarget.style.color = '#6B7280'
-                    }
-                  }}
-                >
-                  Log In
-                </Link>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center space-x-6">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={getLinkClass(link.href)}
+                    style={getLinkStyle(link.href)}
+                    onMouseEnter={(e) => {
+                      if (pathname !== link.href) {
+                        e.currentTarget.style.color = '#5CB85C'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (pathname !== link.href) {
+                        e.currentTarget.style.color = '#6B7280'
+                      }
+                    }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
                 <Link
                   href="/create-account"
-                  className="text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                  className="text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm sm:text-base"
                   style={{ backgroundColor: '#5CB85C' }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
@@ -364,7 +278,67 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                   Sign Up
                 </Link>
               </nav>
+
+              {/* Mobile Menu Button */}
+              <div className="flex items-center space-x-3 lg:hidden">
+                <Link
+                  href="/create-account"
+                  className="text-white px-3 py-1.5 rounded-lg transition-colors font-medium text-sm"
+                  style={{ backgroundColor: '#5CB85C' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+                >
+                  Sign Up
+                </Link>
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="text-gray-700 hover:text-gray-900 focus:outline-none"
+                  aria-label="Toggle menu"
+                >
+                  {isMobileMenuOpen ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16M4 18h16"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+              <div className="lg:hidden border-t border-gray-200 py-4">
+                <nav className="flex flex-col space-y-3">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        pathname === link.href
+                          ? 'text-[#5CB85C] bg-green-50'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            )}
           </div>
         </header>
       )}
@@ -525,26 +499,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         {/* Step 4: Preferences (New Users Only) */}
         {isNewUser && currentStep === 4 && (
           <div className="space-y-8">
-            {/* Dietary Restrictions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Dietary Restrictions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {dietaryRestrictions.map((restriction) => (
-                  <button
-                    key={restriction.id}
-                    onClick={() => handleDietaryRestrictionToggle(restriction.id)}
-                    className={`p-3 border rounded-lg text-sm transition-all ${
-                      dietaryRestrictionsSelected.includes(restriction.id)
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    {restriction.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Allergies */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Allergies</h3>
@@ -632,12 +586,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 <div>Frequency: {selectedPlan || 'Not set'}</div>
                 <div>Meals per week: {selectedMeals}</div>
                 <div>Snacks: {includeSnacks ? 'Yes' : 'No'}</div>
-                <div>
-                  Dietary Restrictions:{' '}
-                  {dietaryRestrictionsSelected.length > 0
-                    ? dietaryRestrictionsSelected.join(', ')
-                    : 'None'}
-                </div>
                 <div>Allergies: {allergies.length > 0 ? allergies.join(', ') : 'None'}</div>
               </div>
               <Link

@@ -69,11 +69,9 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
-    media: Media;
     customers: Customer;
     'menu-items': MenuItem;
     tiers: Tier;
-    'dietary-restrictions': DietaryRestriction;
     'weekly-menus': WeeklyMenu;
     orders: Order;
     'kitchen-orders': KitchenOrder;
@@ -84,11 +82,9 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     'menu-items': MenuItemsSelect<false> | MenuItemsSelect<true>;
     tiers: TiersSelect<false> | TiersSelect<true>;
-    'dietary-restrictions': DietaryRestrictionsSelect<false> | DietaryRestrictionsSelect<true>;
     'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'kitchen-orders': KitchenOrdersSelect<false> | KitchenOrdersSelect<true>;
@@ -156,7 +152,6 @@ export interface CustomerAuthOperations {
  */
 export interface User {
   id: number;
-  avatar?: (number | null) | Media;
   roles?: ('admin' | 'editor' | 'user')[] | null;
   active?: boolean | null;
   updatedAt: string;
@@ -179,25 +174,6 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media".
- */
-export interface Media {
-  id: number;
-  alt: string;
-  updatedAt: string;
-  createdAt: string;
-  url?: string | null;
-  thumbnailURL?: string | null;
-  filename?: string | null;
-  mimeType?: string | null;
-  filesize?: number | null;
-  width?: number | null;
-  height?: number | null;
-  focalX?: number | null;
-  focalY?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customers".
  */
 export interface Customer {
@@ -215,10 +191,6 @@ export interface Customer {
    * Credit balance expiration date
    */
   credit_bal_exp?: string | null;
-  /**
-   * Customer dietary restrictions
-   */
-  dietary_restrictions?: (number | DietaryRestriction)[] | null;
   active?: boolean | null;
   /**
    * Whether the customer has completed their preference setup
@@ -282,16 +254,6 @@ export interface Tier {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dietary-restrictions".
- */
-export interface DietaryRestriction {
-  id: number;
-  restriction_name: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "menu-items".
  */
 export interface MenuItem {
@@ -303,7 +265,6 @@ export interface MenuItem {
    */
   price?: number | null;
   category: 'lunch' | 'dinner' | 'premium' | 'breakfast-small' | 'breakfast-large' | 'dessert' | 'salad' | 'snack';
-  image?: (number | null) | Media;
   active?: boolean | null;
   allergens?:
     | {
@@ -405,7 +366,7 @@ export interface Order {
           | {
               allergen: string;
               /**
-               * Charge per allergen per meal ($5.00)
+               * Allergen charge (for tracking purposes, actual charge is $5.00 per order)
                */
               charge: number;
               id?: string | null;
@@ -476,6 +437,50 @@ export interface KitchenOrder {
    * Additional notes for kitchen
    */
   notes?: string | null;
+  /**
+   * Aggregated meal quantities by tier
+   */
+  tierAggregation?:
+    | {
+        tierName: string;
+        tierId?: string | null;
+        meals?:
+          | {
+              mealName: string;
+              quantity: number;
+              category?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Customer-specific allergen adjustments
+   */
+  allergenAdjustments?:
+    | {
+        customerName: string;
+        allergens?:
+          | {
+              allergen?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        meals?:
+          | {
+              mealName: string;
+              /**
+               * Description of allergen adjustment (e.g., "without cheese")
+               */
+              adjustment?: string | null;
+              quantity: number;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -491,10 +496,6 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
-    | ({
         relationTo: 'customers';
         value: number | Customer;
       } | null)
@@ -505,10 +506,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tiers';
         value: number | Tier;
-      } | null)
-    | ({
-        relationTo: 'dietary-restrictions';
-        value: number | DietaryRestriction;
       } | null)
     | ({
         relationTo: 'weekly-menus';
@@ -579,7 +576,6 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  avatar?: T;
   roles?: T;
   active?: T;
   updatedAt?: T;
@@ -601,24 +597,6 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
- */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customers_select".
  */
 export interface CustomersSelect<T extends boolean = true> {
@@ -626,7 +604,6 @@ export interface CustomersSelect<T extends boolean = true> {
   tier?: T;
   credit_balance?: T;
   credit_bal_exp?: T;
-  dietary_restrictions?: T;
   active?: T;
   preferences_set?: T;
   subscription_frequency?: T;
@@ -661,7 +638,6 @@ export interface MenuItemsSelect<T extends boolean = true> {
   description?: T;
   price?: T;
   category?: T;
-  image?: T;
   active?: T;
   allergens?:
     | T
@@ -688,15 +664,6 @@ export interface TiersSelect<T extends boolean = true> {
   monthly_price?: T;
   weekly_price?: T;
   single_price?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dietary-restrictions_select".
- */
-export interface DietaryRestrictionsSelect<T extends boolean = true> {
-  restriction_name?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -812,6 +779,41 @@ export interface KitchenOrdersSelect<T extends boolean = true> {
   pickupDate?: T;
   status?: T;
   notes?: T;
+  tierAggregation?:
+    | T
+    | {
+        tierName?: T;
+        tierId?: T;
+        meals?:
+          | T
+          | {
+              mealName?: T;
+              quantity?: T;
+              category?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  allergenAdjustments?:
+    | T
+    | {
+        customerName?: T;
+        allergens?:
+          | T
+          | {
+              allergen?: T;
+              id?: T;
+            };
+        meals?:
+          | T
+          | {
+              mealName?: T;
+              adjustment?: T;
+              quantity?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
