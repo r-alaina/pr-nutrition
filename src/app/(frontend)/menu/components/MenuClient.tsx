@@ -240,7 +240,8 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                             ${(item.price || 0).toFixed(2)}
                           </span>
                         ) : (
-                          user && (
+                          user &&
+                          (user as any).preferences_set && (
                             <span className="text-lg text-gray-600">
                               {item.category === 'snack'
                                 ? 'A la carte'
