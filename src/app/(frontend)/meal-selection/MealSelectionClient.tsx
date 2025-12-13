@@ -339,7 +339,7 @@ export default function MealSelectionClient({
                         )}
 
                         <div className="flex justify-between items-center">
-                          <div className="text-right">
+                          <div>
                             <div className="text-sm text-gray-500">Included in your plan</div>
                             <div className="text-lg font-semibold" style={{ color: '#5CB85C' }}>
                               {user.subscription_frequency === 'weekly'
@@ -453,7 +453,7 @@ export default function MealSelectionClient({
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm text-gray-600">Allergen Accommodation Charges</p>
-                  <p className="text-xs text-gray-500">$5.00 per allergen per meal</p>
+                  <p className="text-xs text-gray-500">$5.00 per order if any allergens</p>
                 </div>
                 <p className="font-semibold text-lg text-orange-600">
                   +${allergenCharges.toFixed(2)}
@@ -464,7 +464,7 @@ export default function MealSelectionClient({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-between items-center">
           <Link
             href="/"
             className="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"

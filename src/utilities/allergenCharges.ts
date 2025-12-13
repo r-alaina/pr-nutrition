@@ -16,48 +16,50 @@ export interface AllergenChargeResult {
   totalAllergenCharges: number
 }
 
-const ALLERGEN_CHARGE_PER_MEAL = 5.00
+const ALLERGEN_CHARGE_PER_ORDER = 5.0
 
 /**
  * Calculates allergen charges for selected meals based on customer allergies
+ * Charges $5 total per order if customer has any allergens, regardless of quantity
  * @param selectedMeals - Array of selected meals with quantities
  * @param userAllergies - Array of customer's allergies
  * @returns Object containing allergen charges breakdown and total
  */
 export function calculateAllergenCharges(
   selectedMeals: { meal: MenuItem; quantity: number }[],
-  userAllergies: string[]
+  userAllergies: string[],
 ): AllergenChargeResult {
   const allergenCharges: AllergenCharge[] = []
-  let totalAllergenCharges = 0
+  let hasAnyAllergenConflict = false
 
+  // First pass: Check if there are any allergen conflicts across all meals
   selectedMeals.forEach((item) => {
     const mealAllergens = item.meal.allergens || []
-    
-    // Find allergens in the meal that match the customer's allergies
     const matchingAllergens = mealAllergens.filter((mealAllergen) =>
-      userAllergies.includes(mealAllergen.allergen)
+      userAllergies.includes(mealAllergen.allergen),
     )
 
     if (matchingAllergens.length > 0) {
+      hasAnyAllergenConflict = true
+
+      // Track which meals have allergens for reporting purposes
       const allergensWithCharges = matchingAllergens.map((allergen) => ({
         allergen: allergen.allergen,
-        charge: ALLERGEN_CHARGE_PER_MEAL,
+        charge: 0, // Individual allergen charge is 0, charge is per order
       }))
-
-      // Calculate total charge for this meal: $5 per allergen × quantity
-      const totalChargeForMeal = matchingAllergens.length * ALLERGEN_CHARGE_PER_MEAL * item.quantity
-      totalAllergenCharges += totalChargeForMeal
 
       allergenCharges.push({
         mealId: item.meal.id.toString(),
         mealName: item.meal.name,
         quantity: item.quantity,
         matchingAllergens: allergensWithCharges,
-        totalAllergenCharge: totalChargeForMeal,
+        totalAllergenCharge: 0, // Per-meal charge is 0, charge is per order
       })
     }
   })
+
+  // If there are any allergen conflicts, charge $5 total for the entire order
+  const totalAllergenCharges = hasAnyAllergenConflict ? ALLERGEN_CHARGE_PER_ORDER : 0
 
   return { allergenCharges, totalAllergenCharges }
 }
@@ -94,7 +96,7 @@ export function getMatchingAllergens(meal: MenuItem, userAllergies: string[]): s
  */
 export function calculateTotalAllergenCharges(
   selectedMeals: { meal: MenuItem; quantity: number }[],
-  userAllergies: string[]
+  userAllergies: string[],
 ): number {
   const { totalAllergenCharges } = calculateAllergenCharges(selectedMeals, userAllergies)
   return totalAllergenCharges

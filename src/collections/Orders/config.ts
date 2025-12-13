@@ -237,7 +237,8 @@ export const Orders: CollectionConfig = {
               required: true,
               admin: {
                 step: 0.01,
-                description: 'Charge per allergen per meal ($5.00)',
+                description:
+                  'Allergen charge (for tracking purposes, actual charge is $5.00 per order)',
               },
             },
           ],

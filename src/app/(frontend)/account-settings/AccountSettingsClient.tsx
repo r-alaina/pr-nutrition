@@ -25,6 +25,7 @@ interface AccountSettingsClientProps {
 export default function AccountSettingsClient({ user: initialUser }: AccountSettingsClientProps) {
   const [user, setUser] = useState(initialUser)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isEditingPreferences, setIsEditingPreferences] = useState(false)
   const [profileData, setProfileData] = useState({
@@ -145,11 +146,19 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
-              <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-12 w-auto" />
+              <Link href="/">
+                <img
+                  src="/images/brand/logo.png"
+                  alt="Meal PREPS Logo"
+                  className="h-10 sm:h-12 w-auto"
+                />
+              </Link>
             </div>
-            <nav className="flex items-center space-x-6">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-6">
               <Link href="/" className="font-medium" style={{ color: '#5CB85C' }}>
                 Home
               </Link>
@@ -225,25 +234,128 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                 )}
               </div>
             </nav>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center space-x-3 lg:hidden">
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-1 text-gray-700 font-medium text-sm"
+                >
+                  <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <Link
+                      href="/account-settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Account Settings
+                    </Link>
+                    <Link
+                      href="/preferences"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Manage Preferences
+                    </Link>
+                    <Link
+                      href="/order-history"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Order History
+                    </Link>
+                    <div className="border-t border-gray-200 my-1"></div>
+                    <Link
+                      href="/logout"
+                      className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      Logout
+                    </Link>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-gray-700 hover:text-gray-900 focus:outline-none"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden border-t border-gray-200 py-4">
+              <nav className="flex flex-col space-y-3">
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-[#5CB85C] bg-green-50"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/menu"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-gray-700 hover:bg-gray-50"
+                >
+                  Menu
+                </Link>
+                <Link
+                  href="/order-now"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-4 py-2 rounded-lg font-medium transition-colors text-gray-700 hover:bg-gray-50"
+                >
+                  Order Now
+                </Link>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
-              <p className="text-gray-600">Manage your account information and preferences</p>
-            </div>
-            <button
-              onClick={refreshUserData}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Refresh Data
-            </button>
-          </div>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
+          <p className="text-gray-600">Manage your account information and preferences</p>
         </div>
 
         {/* Message Display */}
@@ -334,7 +446,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
             <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
             <Link
               href="/preferences"
-              className="px-4 py-2 text-white rounded-md transition-colors"
+              className="px-4 py-2 text-white rounded-md transition-colors whitespace-nowrap"
               style={{ backgroundColor: '#5CB85C' }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
@@ -353,7 +465,10 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                  {user.subscription_frequency || 'Not selected'}
+                  {user.subscription_frequency
+                    ? user.subscription_frequency.charAt(0).toUpperCase() +
+                      user.subscription_frequency.slice(1)
+                    : 'Not selected'}
                 </div>
               </div>
               <div>
@@ -364,22 +479,11 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                   {user.meals_per_week || 'Not selected'}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Week Half</label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                  {user.week_half === 'firstHalf'
-                    ? 'First Half (Sunday & Monday)'
-                    : user.week_half === 'secondHalf'
-                      ? 'Second Half (Wednesday & Thursday)'
-                      : 'Not selected'}
-                </div>
-              </div>
             </div>
             {!user.preferences_set &&
               (user.tier ||
                 user.subscription_frequency ||
                 user.meals_per_week ||
-                user.week_half ||
                 (user.dietary_restrictions && user.dietary_restrictions.length > 0) ||
                 (user.allergies && user.allergies.length > 0)) && (
                 <div className="pt-4">
@@ -407,7 +511,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
             <h2 className="text-lg font-medium text-gray-900">Dietary Information</h2>
             <Link
               href="/preferences"
-              className="px-4 py-2 text-white rounded-md transition-colors"
+              className="px-4 py-2 text-white rounded-md transition-colors whitespace-nowrap"
               style={{ backgroundColor: '#5CB85C' }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
@@ -415,23 +519,25 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
               Update Dietary Information
             </Link>
           </div>
-          <div className="px-6 py-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Dietary Restrictions
-              </label>
-              <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">
-                {user.dietary_restrictions && user.dietary_restrictions.length > 0
-                  ? user.dietary_restrictions.map((dr: any) => dr.name || dr).join(', ')
-                  : 'None selected'}
+          <div className="px-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dietary Restrictions
+                </label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">
+                  {user.dietary_restrictions && user.dietary_restrictions.length > 0
+                    ? user.dietary_restrictions.map((dr: any) => dr.name || dr).join(', ')
+                    : 'None selected'}
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
-              <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">
-                {user.allergies && user.allergies.length > 0
-                  ? user.allergies.join(', ')
-                  : 'None listed'}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
+                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">
+                  {user.allergies && user.allergies.length > 0
+                    ? user.allergies.join(', ')
+                    : 'None listed'}
+                </div>
               </div>
             </div>
           </div>

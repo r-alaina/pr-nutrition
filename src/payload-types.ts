@@ -405,7 +405,7 @@ export interface Order {
           | {
               allergen: string;
               /**
-               * Charge per allergen per meal ($5.00)
+               * Allergen charge (for tracking purposes, actual charge is $5.00 per order)
                */
               charge: number;
               id?: string | null;
