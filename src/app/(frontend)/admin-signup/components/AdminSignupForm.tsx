@@ -49,10 +49,6 @@ export default function AdminSignupForm(): ReactElement {
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Sign Up</h1>
           <p className="text-gray-600">Create an account for admin access</p>
-          <p className="text-sm text-gray-500 mt-2">
-            Note: You will be assigned the "User" role. An existing admin can upgrade your role
-            later.
-          </p>
         </div>
 
         {/* Form */}
@@ -108,12 +104,6 @@ export default function AdminSignupForm(): ReactElement {
             Already have an admin account?{' '}
             <Link href="/admin/login" className="text-[#5CB85C] hover:underline font-medium">
               Log in
-            </Link>
-          </p>
-          <p className="text-gray-600 mt-2 text-sm">
-            Looking for customer account?{' '}
-            <Link href="/create-account" className="text-[#5CB85C] hover:underline font-medium">
-              Sign up as customer
             </Link>
           </p>
         </div>

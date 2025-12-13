@@ -12,7 +12,6 @@ interface User {
   meals_per_week?: number
   include_breakfast?: boolean
   include_snacks?: boolean
-  dietary_restrictions?: any[]
   allergies?: string[]
   week_half?: string
   preferences_set?: boolean
@@ -118,7 +117,6 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           meals_per_week: user.meals_per_week || null,
           include_breakfast: user.include_breakfast || false,
           include_snacks: user.include_snacks || false,
-          dietary_restrictions: user.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
           allergies: user.allergies || [],
           week_half: user.week_half || null,
           preferences_set: true,
@@ -484,7 +482,6 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
               (user.tier ||
                 user.subscription_frequency ||
                 user.meals_per_week ||
-                (user.dietary_restrictions && user.dietary_restrictions.length > 0) ||
                 (user.allergies && user.allergies.length > 0)) && (
                 <div className="pt-4">
                   <button
@@ -521,16 +518,6 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           </div>
           <div className="px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dietary Restrictions
-                </label>
-                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">
-                  {user.dietary_restrictions && user.dietary_restrictions.length > 0
-                    ? user.dietary_restrictions.map((dr: any) => dr.name || dr).join(', ')
-                    : 'None selected'}
-                </div>
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md min-h-[40px]">

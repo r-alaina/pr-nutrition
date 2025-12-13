@@ -8,11 +8,9 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import Users from './collections/Users/config'
-import { Media } from './collections/Media'
 import { Customers } from './collections/Customers/config'
 import { MenuItems } from './collections/MenuItems/config'
 import { Tiers } from './collections/Tiers/config'
-import { DietaryRestrictions } from './collections/DietaryRestrictions/config'
 import { WeeklyMenus } from './collections/WeeklyMenus/config'
 import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
@@ -30,17 +28,7 @@ export default buildConfig({
       titleSuffix: '- PR Meal Preps Admin',
     },
   },
-  collections: [
-    Users,
-    Media,
-    Customers,
-    MenuItems,
-    Tiers,
-    DietaryRestrictions,
-    WeeklyMenus,
-    Orders,
-    KitchenOrders,
-  ],
+  collections: [Users, Customers, MenuItems, Tiers, WeeklyMenus, Orders, KitchenOrders],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

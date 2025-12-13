@@ -13,11 +13,6 @@ interface Tier {
   single_price: number
 }
 
-interface DietaryRestriction {
-  id: string
-  name: string
-}
-
 interface User {
   id: string
   name?: string
@@ -27,7 +22,6 @@ interface User {
   meals_per_week?: number
   include_breakfast?: boolean
   include_snacks?: boolean
-  dietary_restrictions?: any[]
   allergies?: string[]
   week_half?: string
   preferences_set?: boolean
@@ -42,15 +36,11 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
   const [includeBreakfast, setIncludeBreakfast] = useState(user?.include_breakfast || false)
   const [includeSnacks, setIncludeSnacks] = useState(user?.include_snacks || false)
-  const [dietaryRestrictionsSelected, setDietaryRestrictionsSelected] = useState<string[]>(
-    user?.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
-  )
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -91,40 +81,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
       .catch((err) => {
         console.error('Error fetching tiers:', err)
         setTiers([])
-      })
-
-    // Fetch dietary restrictions
-    fetch('/api/dietary-restrictions')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        if (data && data.docs) {
-          setDietaryRestrictions(data.docs)
-        } else {
-          // Mock data for development
-          setDietaryRestrictions([
-            { id: '1', name: 'Vegetarian' },
-            { id: '2', name: 'Vegan' },
-            { id: '3', name: 'Gluten-Free' },
-            { id: '4', name: 'Dairy-Free' },
-            { id: '5', name: 'Keto' },
-          ])
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching dietary restrictions:', err)
-        // Mock data for development
-        setDietaryRestrictions([
-          { id: '1', name: 'Vegetarian' },
-          { id: '2', name: 'Vegan' },
-          { id: '3', name: 'Gluten-Free' },
-          { id: '4', name: 'Dairy-Free' },
-          { id: '5', name: 'Keto' },
-        ])
       })
   }, [])
 
@@ -172,14 +128,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
   const handleMealsSelect = (meals: number) => {
     setSelectedMeals(meals)
-  }
-
-  const handleDietaryRestrictionToggle = (restrictionId: string) => {
-    setDietaryRestrictionsSelected((prev) =>
-      prev.includes(restrictionId)
-        ? prev.filter((id) => id !== restrictionId)
-        : [...prev, restrictionId],
-    )
   }
 
   const handleAllergyToggle = (allergy: string) => {

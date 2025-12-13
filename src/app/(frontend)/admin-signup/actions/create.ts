@@ -47,16 +47,14 @@ export async function createAdmin({
       return { success: false, error: 'An account with this email already exists' }
     }
 
-    // Create admin user with 'user' role (default)
-    // Admins can promote to 'admin' or 'editor' role later
+    // Create admin user with 'admin' role (full privileges)
     try {
       await payload.create({
         collection: 'users',
         data: {
           email,
           password,
-          // Email field name might be different, let me check payload structure
-          roles: ['user'], // Default to 'user' role, admins can upgrade later
+          roles: ['admin'], // Full admin privileges
           active: true,
         },
       })

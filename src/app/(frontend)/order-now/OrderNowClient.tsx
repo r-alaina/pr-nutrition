@@ -15,11 +15,6 @@ interface Tier {
   single_price: number
 }
 
-interface DietaryRestriction {
-  id: string
-  name: string
-}
-
 interface OrderNowClientProps {
   isNewUser: boolean
   user?: Customer
@@ -29,7 +24,6 @@ interface OrderNowClientProps {
     meals_per_week?: number
     include_breakfast?: boolean
     include_snacks?: boolean
-    dietary_restrictions?: string[]
     allergies?: string[]
   }
 }
@@ -58,7 +52,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   ]
 
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<DietaryRestriction[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(userPreferences?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(
     userPreferences?.subscription_frequency || '',
@@ -68,9 +61,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     userPreferences?.include_breakfast || false,
   )
   const [includeSnacks, setIncludeSnacks] = useState(userPreferences?.include_snacks || false)
-  const [dietaryRestrictionsSelected, setDietaryRestrictionsSelected] = useState<string[]>(
-    userPreferences?.dietary_restrictions || [],
-  )
   const [allergies, setAllergies] = useState<string[]>(userPreferences?.allergies || [])
 
   const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
@@ -95,40 +85,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
       .catch((err) => {
         console.error('Error fetching tiers:', err)
         setTiers([])
-      })
-
-    // Fetch dietary restrictions
-    fetch('/api/dietary-restrictions')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        if (data && data.docs) {
-          setDietaryRestrictions(data.docs)
-        } else {
-          // Mock data for development
-          setDietaryRestrictions([
-            { id: '1', name: 'Vegetarian' },
-            { id: '2', name: 'Vegan' },
-            { id: '3', name: 'Gluten-Free' },
-            { id: '4', name: 'Dairy-Free' },
-            { id: '5', name: 'Keto' },
-          ])
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching dietary restrictions:', err)
-        // Mock data for development
-        setDietaryRestrictions([
-          { id: '1', name: 'Vegetarian' },
-          { id: '2', name: 'Vegan' },
-          { id: '3', name: 'Gluten-Free' },
-          { id: '4', name: 'Dairy-Free' },
-          { id: '5', name: 'Keto' },
-        ])
       })
   }, [])
 
@@ -217,14 +173,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     setSelectedMeals(meals)
   }
 
-  const handleDietaryRestrictionToggle = (restrictionId: string) => {
-    setDietaryRestrictionsSelected((prev) =>
-      prev.includes(restrictionId)
-        ? prev.filter((id) => id !== restrictionId)
-        : [...prev, restrictionId],
-    )
-  }
-
   const handleAllergyToggle = (allergy: string) => {
     setAllergies((prev) =>
       prev.includes(allergy) ? prev.filter((a) => a !== allergy) : [...prev, allergy],
@@ -246,7 +194,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             meals_per_week: selectedMeals || null,
             include_breakfast: false,
             include_snacks: includeSnacks || false,
-            dietary_restrictions: dietaryRestrictionsSelected || [],
             allergies: allergies || [],
             preferences_set: true,
           }),
@@ -272,7 +219,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           plan: selectedPlan,
           includeBreakfast,
           includeSnacks,
-          dietaryRestrictions: dietaryRestrictionsSelected,
           allergies,
         },
       })
@@ -553,26 +499,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         {/* Step 4: Preferences (New Users Only) */}
         {isNewUser && currentStep === 4 && (
           <div className="space-y-8">
-            {/* Dietary Restrictions */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Dietary Restrictions</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {dietaryRestrictions.map((restriction) => (
-                  <button
-                    key={restriction.id}
-                    onClick={() => handleDietaryRestrictionToggle(restriction.id)}
-                    className={`p-3 border rounded-lg text-sm transition-all ${
-                      dietaryRestrictionsSelected.includes(restriction.id)
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    {restriction.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Allergies */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Allergies</h3>
@@ -660,12 +586,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 <div>Frequency: {selectedPlan || 'Not set'}</div>
                 <div>Meals per week: {selectedMeals}</div>
                 <div>Snacks: {includeSnacks ? 'Yes' : 'No'}</div>
-                <div>
-                  Dietary Restrictions:{' '}
-                  {dietaryRestrictionsSelected.length > 0
-                    ? dietaryRestrictionsSelected.join(', ')
-                    : 'None'}
-                </div>
                 <div>Allergies: {allergies.length > 0 ? allergies.join(', ') : 'None'}</div>
               </div>
               <Link

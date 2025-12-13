@@ -4,15 +4,26 @@ import { useEffect } from 'react'
 
 export default function KitchenReportButton() {
   useEffect(() => {
-    // Check if we're on the kitchen-orders collection page
-    const isKitchenOrdersPage =
-      window.location.pathname.includes('/admin/collections/kitchen-orders') ||
-      window.location.pathname === '/admin/collections/kitchen-orders'
-
-    if (!isKitchenOrdersPage) return
+    // Function to check if we're on the kitchen-orders collection page
+    const isKitchenOrdersPage = () => {
+      return (
+        window.location.pathname.includes('/admin/collections/kitchen-orders') ||
+        window.location.pathname === '/admin/collections/kitchen-orders'
+      )
+    }
 
     // Function to inject the button
     const injectButton = () => {
+      // Check if we're on the right page
+      if (!isKitchenOrdersPage()) {
+        // Remove button if we're not on the right page
+        const existingButton = document.querySelector('[data-kitchen-report-button]')
+        if (existingButton) {
+          existingButton.remove()
+        }
+        return
+      }
+
       // Check if button already exists
       const existingButton = document.querySelector('[data-kitchen-report-button]')
       if (existingButton) return
@@ -49,6 +60,17 @@ export default function KitchenReportButton() {
           const htmlEl = el as HTMLElement
           if (htmlEl.textContent?.includes('Kitchen Orders')) {
             targetContainer = htmlEl.parentElement
+            break
+          }
+        }
+      }
+
+      // If still no container, try to find any container with buttons
+      if (!targetContainer) {
+        const buttons = document.querySelectorAll('button')
+        for (const btn of Array.from(buttons)) {
+          if (btn.textContent?.includes('Create New')) {
+            targetContainer = btn.closest('div, section, header') as HTMLElement
             break
           }
         }
@@ -114,20 +136,47 @@ export default function KitchenReportButton() {
       }
     }
 
-    // Wait for DOM to be ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', injectButton)
-    } else {
-      // DOM is already ready, but wait a bit for PayloadCMS to render
-      setTimeout(injectButton, 500)
+    // Run immediately
+    injectButton()
+
+    // Run after multiple delays to catch late-rendered content
+    const timers = [
+      setTimeout(injectButton, 100),
+      setTimeout(injectButton, 500),
+      setTimeout(injectButton, 1000),
+      setTimeout(injectButton, 2000),
+    ]
+
+    // Use MutationObserver to watch for DOM changes
+    const observer = new MutationObserver(() => {
+      injectButton()
+    })
+
+    // Observe the entire document for changes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+    })
+
+    // Also watch for navigation changes (Payload CMS uses client-side routing)
+    let lastPathname = window.location.pathname
+    const checkPathname = () => {
+      if (window.location.pathname !== lastPathname) {
+        lastPathname = window.location.pathname
+        // Small delay to let the page render
+        setTimeout(injectButton, 100)
+      }
     }
 
-    // Also try after a delay in case PayloadCMS loads slowly
-    const timeoutId = setTimeout(injectButton, 1000)
+    // Check pathname periodically
+    const pathnameInterval = setInterval(checkPathname, 500)
 
     // Cleanup
     return () => {
-      clearTimeout(timeoutId)
+      timers.forEach((timer) => clearTimeout(timer))
+      clearInterval(pathnameInterval)
+      observer.disconnect()
       const button = document.querySelector('[data-kitchen-report-button]')
       if (button) {
         button.remove()

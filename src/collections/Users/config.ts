@@ -9,17 +9,18 @@ import type { User } from '@/payload-types'
 const Users: CollectionConfig = {
   slug: 'users',
   access: {
-    // Allow public creation for admin signup, but enforce 'user' role only
+    // Allow public creation for admin signup with 'admin' role
     create: ({ req: { user }, data }) => {
       try {
         // If user is editor/admin, allow any role
         if (user && checkRole(['admin', 'editor'], user)) {
           return true
         }
-        // For public signups, only allow 'user' role
+        // For public signups (admin signup page), allow 'admin' role
         if (data?.roles) {
           const roles = Array.isArray(data.roles) ? data.roles : [data.roles]
-          return roles.every((role: string) => role === 'user')
+          // Allow 'admin' or 'user' role for public signups
+          return roles.every((role: string) => role === 'admin' || role === 'user')
         }
         // Allow if no roles specified (will default to 'user')
         return true
@@ -55,11 +56,6 @@ const Users: CollectionConfig = {
   },
   auth: true,
   fields: [
-    {
-      name: 'avatar',
-      type: 'upload',
-      relationTo: 'media', // make sure you have a 'media' collection
-    },
     {
       name: 'roles',
       type: 'select',
