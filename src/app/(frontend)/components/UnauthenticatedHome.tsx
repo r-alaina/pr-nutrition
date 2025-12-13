@@ -497,8 +497,7 @@ export default function UnauthenticatedHome() {
                 <p>8025 N. 10th Street, Suite 160</p>
                 <p>McAllen, Texas 78504</p>
                 <p>(956) 424-2274</p>
-                <p>(956) 483-4050</p>
-                <p>support@prmealpreps.com</p>
+                <p>prnc@prdietitian.com</p>
               </div>
             </div>
 

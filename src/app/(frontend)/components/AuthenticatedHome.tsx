@@ -363,10 +363,10 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
               </p>
               <div className="space-y-2">
                 <p className="text-gray-300">
-                  <span className="font-semibold">Phone:</span> (956) 424-2247
+                  <span className="font-semibold">Phone:</span> (956) 424-2274
                 </p>
                 <p className="text-gray-300">
-                  <span className="font-semibold">Email:</span> info@prnutrition.com
+                  <span className="font-semibold">Email:</span> prnc@prdietitian.com
                 </p>
                 <p className="text-gray-300">
                   <span className="font-semibold">Address:</span> 123 Main St, McAllen, TX 78501
