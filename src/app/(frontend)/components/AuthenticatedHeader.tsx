@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import type { Customer } from '@/payload-types'
@@ -53,7 +54,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
     }
   }, [])
 
-  const orderNowHref = (user as any)?.preferences_set ? '/meal-selection' : '/order-now'
+  const orderNowHref = user?.preferences_set ? '/meal-selection' : '/order-now'
   const navLinks = [
     { href: '/', label: 'Home', isOrderNow: false },
     { href: '/menu', label: 'Menu', isOrderNow: false },
@@ -66,10 +67,13 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
         <div className="flex justify-between items-center py-3 md:py-4">
           <div className="flex items-center">
             <Link href="/">
-              <img
+              <Image
                 src="/images/brand/logo.png"
                 alt="Meal PREPS Logo"
+                width={150}
+                height={48}
                 className="h-10 sm:h-12 w-auto"
+                priority
               />
             </Link>
           </div>
@@ -109,7 +113,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
                 aria-expanded={isDesktopDropdownOpen}
                 aria-haspopup="true"
               >
-                <span>{user?.name || 'User'}</span>
+                <span>{user?.firstName} {user?.lastName || ''}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
@@ -170,7 +174,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
                 aria-expanded={isMobileDropdownOpen}
                 aria-haspopup="true"
               >
-                <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                <span className="text-xs sm:text-sm">{user?.firstName} {user?.lastName || ''}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -22,12 +22,18 @@ interface OrderItem {
   totalPrice: number
 }
 
+interface AllergenCharge {
+  mealName: string
+  quantity: number
+  matchingAllergens: { allergen: string }[]
+}
+
 interface Order {
   id: string
   orderNumber: string
   status: string
   orderItems: OrderItem[]
-  allergenCharges?: any[]
+  allergenCharges?: AllergenCharge[]
   totalAllergenCharges?: number
   subtotal: number
   subtotalWithAllergens?: number
@@ -37,7 +43,7 @@ interface Order {
 }
 
 export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
-  const router = useRouter()
+
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -78,7 +84,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Order Not Found</h1>
             <p className="text-xl text-gray-600 mb-8">
-              We couldn't find your order details. Please try again.
+              We couldn&apos;t find your order details. Please try again.
             </p>
             <Link
               href="/meal-selection"
@@ -138,7 +144,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Order Submitted Successfully!</h1>
           <p className="text-xl text-gray-600 mb-2">
-            Thank you for your order! We'll start preparing your meals.
+            Thank you for your order! We&apos;ll start preparing your meals.
           </p>
           <p className="text-lg text-gray-500">Order #{order.orderNumber}</p>
         </div>
@@ -184,7 +190,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
               <div className="text-sm text-blue-800">
                 <p>
-                  <strong>Tier:</strong> {(user.tier as any)?.tier_name || 'Not specified'}
+                  <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
                 </p>
                 <p>
                   <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
@@ -202,16 +208,16 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                   Allergen Accommodation Charges
                 </h4>
                 <p className="text-sm text-yellow-700 mb-3">
-                  Additional charge for meals containing allergens you're sensitive to ($5.00 per
+                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
                   order)
                 </p>
-                {order.allergenCharges.map((charge: any, index: number) => (
+                {order.allergenCharges.map((charge, index) => (
                   <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
                     <p className="text-sm text-yellow-800">
                       <strong>{charge.mealName}</strong> (Qty: {charge.quantity})
                     </p>
                     <p className="text-xs text-yellow-700 ml-4">
-                      Allergens: {charge.matchingAllergens.map((a: any) => a.allergen).join(', ')}
+                      Allergens: {charge.matchingAllergens.map((a) => a.allergen).join(', ')}
                     </p>
                   </div>
                 ))}
@@ -266,19 +272,19 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
 
         {/* Next Steps */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">What's Next?</h3>
+          <h3 className="text-lg font-semibold text-green-900 mb-3">What&apos;s Next?</h3>
           <ul className="space-y-2 text-green-800">
             <li className="flex items-start">
               <span className="text-green-600 mr-2">•</span>
-              <span>You'll receive a confirmation email shortly</span>
+              <span>You&apos;ll receive a confirmation email shortly</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-600 mr-2">•</span>
-              <span>We'll start preparing your meals according to your preferences</span>
+              <span>We&apos;ll start preparing your meals according to your preferences</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-600 mr-2">•</span>
-              <span>We'll notify you when your order is ready for pickup</span>
+              <span>We&apos;ll notify you when your order is ready for pickup</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-600 mr-2">•</span>

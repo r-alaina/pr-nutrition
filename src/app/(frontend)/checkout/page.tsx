@@ -1,6 +1,6 @@
 import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
 import CheckoutClient from './CheckoutClient'
-import type { Customer } from '@/payload-types'
+
 
 export default async function CheckoutPage() {
   const user = await getUser()

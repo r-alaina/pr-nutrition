@@ -16,7 +16,7 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
   const searchParams = useSearchParams()
   const redirect = redirectPath || searchParams.get('redirect')
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
     setIsLoading(true)
     setError(null)
@@ -25,9 +25,10 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-    const name = formData.get('name') as string
+    const firstName = formData.get('firstName') as string
+    const lastName = formData.get('lastName') as string
 
-    const result: Response = await create({ email, password, name })
+    const result: Response = await create({ email, password, firstName, lastName })
     setIsLoading(false)
 
     if (result.success) {
@@ -67,18 +68,33 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Full Name Field */}
+          {/* First Name Field */}
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
-              Full Name
+            <label htmlFor="firstName" className="block text-sm font-semibold text-gray-900 mb-2">
+              First Name
             </label>
             <input
-              id="name"
-              name="name"
+              id="firstName"
+              name="firstName"
               type="text"
               required
               className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
-              placeholder="Enter your full name"
+              placeholder="First Name"
+            />
+          </div>
+
+          {/* Last Name Field */}
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-semibold text-gray-900 mb-2">
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              required
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#5CB85C] focus:border-transparent"
+              placeholder="Last Name"
             />
           </div>
 

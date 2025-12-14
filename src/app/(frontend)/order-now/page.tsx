@@ -22,12 +22,11 @@ export default async function OrderNowPage() {
   // Get user preferences if they exist
   const userPreferences = user
     ? {
-        tier: user.tier as any,
+        tier: user.tier,
         subscription_frequency: user.subscription_frequency || undefined,
         meals_per_week: user.meals_per_week || undefined,
         include_breakfast: user.include_breakfast || false,
         include_snacks: user.include_snacks || false,
-        dietary_restrictions: user.dietary_restrictions?.map((dr: any) => dr.id || dr) || [],
         allergies: user.allergies || [],
         week_half: user.week_half || undefined,
       }

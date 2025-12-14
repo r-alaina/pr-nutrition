@@ -1,6 +1,6 @@
 import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
 import OrderSuccessClient from './OrderSuccessClient'
-import type { Customer } from '@/payload-types'
+
 
 export default async function OrderSuccessPage() {
   const user = await getUser()

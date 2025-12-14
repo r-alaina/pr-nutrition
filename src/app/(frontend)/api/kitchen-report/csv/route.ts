@@ -1,32 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { normalizeAllergen } from '@/utilities/allergens'
+import type { Where } from 'payload'
 
 // Helper function to generate allergen adjustment description
 function generateAdjustmentDescription(
-  mealAllergens: Array<{ allergen: string }>,
+  mealAllergens: string[],
   customerAllergens: string[],
 ): string {
-  const matchingAllergens = mealAllergens
-    .map((a) => a.allergen)
-    .filter((allergen) => customerAllergens.includes(allergen))
+  const normalizedMealAllergens = mealAllergens.map(normalizeAllergen)
+  const normalizedCustomerAllergens = customerAllergens.map(normalizeAllergen)
+
+  const matchingAllergens = normalizedMealAllergens
+    .filter((allergen) => normalizedCustomerAllergens.includes(allergen))
 
   if (matchingAllergens.length === 0) return ''
 
   const adjustments: string[] = []
-  if (matchingAllergens.includes('Dairy') || matchingAllergens.includes('dairy')) {
+  
+  if (matchingAllergens.includes('lactose')) {
     adjustments.push('without cheese')
   }
-  if (matchingAllergens.includes('Gluten') || matchingAllergens.includes('gluten')) {
+  if (matchingAllergens.includes('gluten')) {
     adjustments.push('gluten-free')
   }
-  if (matchingAllergens.includes('Nuts') || matchingAllergens.includes('nuts')) {
+  if (matchingAllergens.includes('nuts')) {
     adjustments.push('no nuts')
   }
-  if (matchingAllergens.includes('Corn') || matchingAllergens.includes('corn')) {
+  if (matchingAllergens.includes('corn')) {
     adjustments.push('no corn')
   }
-  if (matchingAllergens.includes('Beans') || matchingAllergens.includes('beans')) {
+  if (matchingAllergens.includes('beans')) {
     adjustments.push('no beans')
   }
 
@@ -56,7 +61,7 @@ export async function GET(request: NextRequest) {
     const weekHalf = searchParams.get('weekHalf') || undefined
 
     // Build query for orders
-    const orderQuery: any = {
+    const orderQuery: Where = {
       status: {
         in: ['confirmed', 'preparing', 'ready', 'pending'],
       },
@@ -121,7 +126,9 @@ export async function GET(request: NextRequest) {
 
       const customerId = typeof customer === 'object' ? customer.id : customer
       const customerName =
-        typeof customer === 'object' ? customer.name || customer.email : 'Unknown'
+        typeof customer === 'object' 
+          ? (customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.email)
+          : 'Unknown'
       const customerAllergens =
         typeof customer === 'object' && Array.isArray(customer.allergies) ? customer.allergies : []
 
@@ -178,8 +185,12 @@ export async function GET(request: NextRequest) {
             continue
           }
 
+          const mealAllergens = (Array.isArray(menuItemFull.allergens) ? menuItemFull.allergens : [])
+            .map((a) => a.allergen)
+            .filter((a): a is string => typeof a === 'string')
+
           const adjustment = generateAdjustmentDescription(
-            Array.isArray(menuItemFull.allergens) ? menuItemFull.allergens : [],
+            mealAllergens,
             customerAllergens,
           )
 
@@ -236,7 +247,7 @@ export async function GET(request: NextRequest) {
 
     // Data rows: one row per tier (only include tiers with at least one order)
     const sortedTiers = Array.from(tierMap.entries())
-      .filter(([tierId, mealMap]) => {
+      .filter(([_tierId, mealMap]) => {
         // Check if tier has any orders (at least one meal with quantity > 0)
         for (const data of mealMap.values()) {
           if (data.quantity > 0) {

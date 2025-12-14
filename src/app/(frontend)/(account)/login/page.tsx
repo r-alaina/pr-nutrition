@@ -11,7 +11,7 @@ export default async function Page({
   searchParams: Promise<SearchParams>
 }): Promise<React.ReactElement> {
   const params = await searchParams
-  const { message, redirect: redirectPath } = params
+  const { redirect: redirectPath } = params
 
   // Check if user is already logged in
   const user = await getUser()

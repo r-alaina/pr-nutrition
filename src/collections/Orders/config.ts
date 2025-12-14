@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CollectionConfig } from 'payload'
 import { checkRole } from '../Users/access/checkRole'
 import type { User } from '@/payload-types'
@@ -309,7 +310,7 @@ export const Orders: CollectionConfig = {
               collection: 'kitchen-orders',
               data: {
                 orderNumber: doc.orderNumber,
-                customerName: customer.name || customer.email || 'Unknown',
+                customerName: customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.email || 'Unknown',
                 customerEmail: customer.email,
                 customerPhone: null, // Can be added if phone field exists
                 weekHalf: doc.weekHalf || 'firstHalf',

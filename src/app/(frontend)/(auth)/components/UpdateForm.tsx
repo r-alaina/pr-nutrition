@@ -14,17 +14,15 @@ export default function UpdateForm({ user, tiers }: { user: Customer, tiers: Cus
   const [error, setError] = useState<string | null>(null)  
   const router = useRouter()  
   
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {  
-    event.preventDefault()  
-    setIsLoading(true)  
-    setError(null)  
-  
-  
-    const formData = new FormData(event.currentTarget)  
-  
-    const email = formData.get('email') as string  
-    const firstName = formData.get('firstName') as string  
-    const lastName = formData.get('lastName') as string  
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    setIsLoading(true)
+    setError(null)
+
+    const formData = new FormData(event.currentTarget)
+    const email = formData.get('email') as string
+    const firstName = formData.get('firstName') as string
+    const lastName = formData.get('lastName') as string
   
     const result: Response = await update({ email, lastName, firstName })  
   
@@ -46,13 +44,18 @@ export default function UpdateForm({ user, tiers }: { user: Customer, tiers: Cus
         <Input label={'Email'} name={'email'} type={'email'} defaultValue={user.email} />  
         <fieldset className={`flex flex-wrap gap-4 justify-around items-center`}>  
           <legend>Your tier:</legend>  
-          {tiers.map((tier, index) => (  
+          {tiers.map((tier, index) => {
+            const tierId = typeof tier === 'object' && tier !== null ? tier.id : tier
+            const tierName = typeof tier === 'object' && tier !== null ? tier.tier_name : tier
+            const userTierId = typeof user.tier === 'object' && user.tier !== null ? user.tier.id : user.tier
+            
+            return (
             <div className={`text-emerald-950/30`} key={index}>  
-              <input className={`inert:opacity-60`} inert id={tier!} readOnly type={'radio'}  
-                     checked={tier === user.tier} />  
-              <label className={`ms-2`} htmlFor={tier!}>{tier}</label>  
+              <input className={`inert:opacity-60`} inert id={String(tierId)} readOnly type={'radio'}  
+                     checked={tierId === userTierId} />  
+              <label className={`ms-2`} htmlFor={String(tierId)}>{String(tierName)}</label>  
             </div>  
-          ))}  
+          )})}  
         </fieldset>  
         {error && <div className={`text-red-400`}>{error}</div>}  
         <SubmitButton loading={isLoading} text={`Update account`} />  
