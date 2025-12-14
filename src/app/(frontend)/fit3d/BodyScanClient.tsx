@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -50,9 +51,11 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
             <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
                 <Link href="/">
-                  <img
+                  <Image
                     src="/images/brand/logo.png"
                     alt="Meal PREPS Logo"
+                    width={150}
+                    height={48}
                     className="h-10 sm:h-12 w-auto"
                   />
                 </Link>
@@ -168,7 +171,7 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
         {/* What You'll Get Section */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 md:p-12 mb-12 shadow-lg">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-            What You'll Get from Your 3D Body Scan
+            What You&apos;ll Get from Your 3D Body Scan
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-md">

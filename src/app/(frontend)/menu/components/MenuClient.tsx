@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { useState } from 'react'
 import type { MenuItem, Customer } from '@/payload-types'
 import AuthenticatedHeader from '../../components/AuthenticatedHeader'
@@ -44,9 +45,11 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
             <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
                 <Link href="/">
-                  <img
+                  <Image
                     src="/images/brand/logo.png"
                     alt="Meal PREPS Logo"
+                    width={150}
+                    height={48}
                     className="h-10 sm:h-12 w-auto"
                   />
                 </Link>

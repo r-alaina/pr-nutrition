@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import AuthenticatedHeader from './AuthenticatedHeader'
 import type { Customer } from '@/payload-types'
 
@@ -24,10 +25,13 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white rounded-2xl p-8 max-w-3xl mx-auto mb-12 shadow-lg">
             <div className="flex items-center justify-center">
-              <img
+              <Image
                 src="/images/brand/logo.png"
                 alt="Meal PREPS Logo"
+                width={400}
+                height={160}
                 className="h-40 md:h-48 w-auto"
+                priority
               />
             </div>
           </div>
@@ -39,7 +43,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
           <p className="text-xl text-white mb-12 max-w-4xl mx-auto leading-relaxed">
             PR Meal Preps specializes in providing you the most delicious and perfectly portioned
             meals. Our dietitian, Peggy, will ensure your tailored nutrient tier is precise for you
-            to help meet your goals. Whether you'd like to work on managing your diabetes,
+            to help meet your goals. Whether you&apos;d like to work on managing your diabetes,
             maintaining your gains, slimming down, or just being the healthiest version of yourself,
             feel confident knowing you have an experienced registered dietitian managing your food
             intake.
@@ -289,7 +293,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
                     Dietary Accommodations
                   </h3>
                   <p className="text-gray-600">
-                    Set your allergies and dietary restrictions. We'll flag them on every order and
+                    Set your allergies and dietary restrictions. We&apos;ll flag them on every order and
                     customize accordingly.
                   </p>
                 </div>
@@ -355,7 +359,13 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2">
               <div className="flex items-center mb-4">
-                <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-16 w-auto" />
+                <Image
+                  src="/images/brand/logo.png"
+                  alt="Meal PREPS Logo"
+                  width={200}
+                  height={64}
+                  className="h-16 w-auto"
+                />
               </div>
               <p className="text-gray-300 mb-4 max-w-md">
                 Fresh, healthy meals prepared with care by our registered dietitian. Your journey to

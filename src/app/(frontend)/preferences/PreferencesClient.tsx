@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Tier {
   id: string
@@ -39,8 +40,8 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
-  const [includeBreakfast, setIncludeBreakfast] = useState(user?.include_breakfast || false)
-  const [includeSnacks, setIncludeSnacks] = useState(user?.include_snacks || false)
+  const [includeBreakfast, _setIncludeBreakfast] = useState(user?.include_breakfast || false)
+  const [includeSnacks, _setIncludeSnacks] = useState(user?.include_snacks || false)
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
   const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
@@ -191,7 +192,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
       // Redirect to success page
       router.push('/preferences-success')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving preferences:', error)
       alert(`Failed to save preferences: ${error.message}`)
     }
@@ -205,9 +206,11 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
               <Link href="/">
-                <img
+                <Image
                   src="/images/brand/logo.png"
                   alt="Meal PREPS Logo"
+                  width={150}
+                  height={48}
                   className="h-10 sm:h-12 w-auto"
                 />
               </Link>

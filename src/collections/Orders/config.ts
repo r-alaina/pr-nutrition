@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CollectionConfig } from 'payload'
 import { checkRole } from '../Users/access/checkRole'
 import type { User } from '@/payload-types'

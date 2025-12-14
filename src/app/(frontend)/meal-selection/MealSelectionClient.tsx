@@ -46,7 +46,7 @@ export default function MealSelectionClient({
 
   const handleMealToggle = (meal: MenuItem, half: 'firstHalf' | 'secondHalf') => {
     const setter = half === 'firstHalf' ? setSelectedFirstHalfMeals : setSelectedSecondHalfMeals
-    const currentMeals = half === 'firstHalf' ? selectedFirstHalfMeals : selectedSecondHalfMeals
+
 
     setter((prev) => {
       const existingIndex = prev.findIndex((item) => item.meal.id === meal.id)
@@ -145,13 +145,14 @@ export default function MealSelectionClient({
         .filter((item) => item.meal.category !== 'snack')
         .reduce((total, item) => total + item.quantity, 0)
     }
-    const firstHalfTotal = selectedFirstHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
-      .reduce((total, item) => total + item.quantity, 0)
-    const secondHalfTotal = selectedSecondHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
-      .reduce((total, item) => total + item.quantity, 0)
-    return firstHalfTotal + secondHalfTotal
+    return (
+      selectedFirstHalfMeals
+        .filter((item) => item.meal.category !== 'snack')
+        .reduce((total, item) => total + item.quantity, 0) +
+      selectedSecondHalfMeals
+        .filter((item) => item.meal.category !== 'snack')
+        .reduce((total, item) => total + item.quantity, 0)
+    )
   }
 
   const getTotalSelectedSnacks = () => {
@@ -474,8 +475,7 @@ export default function MealSelectionClient({
           <button
             onClick={async () => {
               // Check if both halves have meals or at least one half is complete
-              const firstHalfTotal = getTotalSelectedMeals('firstHalf')
-              const secondHalfTotal = getTotalSelectedMeals('secondHalf')
+              // Check if both halves have meals or at least one half is complete
 
               if (selectedMeals.length === 0) {
                 alert('Please select at least one meal before proceeding.')

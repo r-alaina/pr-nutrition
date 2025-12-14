@@ -38,6 +38,7 @@ export default function KitchenReportView() {
 
   useEffect(() => {
     fetchReport()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekHalf])
 
   const fetchReport = async () => {

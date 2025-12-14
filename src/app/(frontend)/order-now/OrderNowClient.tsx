@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 import type { Customer } from '@/payload-types'
 
@@ -57,10 +58,11 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     userPreferences?.subscription_frequency || '',
   )
   const [selectedMeals, setSelectedMeals] = useState<number>(userPreferences?.meals_per_week || 10)
-  const [includeBreakfast, setIncludeBreakfast] = useState(
+  const [includeBreakfast, _setIncludeBreakfast] = useState(
     userPreferences?.include_breakfast || false,
   )
-  const [includeSnacks, setIncludeSnacks] = useState(userPreferences?.include_snacks || false)
+
+  const [includeSnacks, _setIncludeSnacks] = useState(userPreferences?.include_snacks || false)
   const [allergies, setAllergies] = useState<string[]>(userPreferences?.allergies || [])
 
   const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
@@ -238,9 +240,11 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
                 <Link href="/">
-                  <img
+                  <Image
                     src="/images/brand/logo.png"
                     alt="Meal PREPS Logo"
+                    width={150}
+                    height={48}
                     className="h-10 sm:h-12 w-auto"
                   />
                 </Link>
