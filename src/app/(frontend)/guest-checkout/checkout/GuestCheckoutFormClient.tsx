@@ -274,12 +274,12 @@ export default function GuestCheckoutFormClient() {
       </header>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col items-center gap-8">
           {/* Order Summary */}
-          <div className="lg:col-span-2">
+          <div className="w-full max-w-2xl">
             <div
               className="p-6 mb-6"
               style={{
@@ -350,7 +350,7 @@ export default function GuestCheckoutFormClient() {
             {/* Customer Information Form */}
             <form
               onSubmit={handleSubmit}
-              className="bg-white shadow-lg rounded-lg p-6 border border-gray-200"
+              className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-6 border border-gray-200"
             >
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Information</h2>
 

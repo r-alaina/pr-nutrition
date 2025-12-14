@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -47,7 +46,6 @@ interface Order {
 export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
   const router = useRouter()
   const pathname = usePathname()
-
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -304,7 +302,10 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
                 <div className="text-sm text-blue-800">
                   <p>
-                    <strong>Tier:</strong> {(user.tier as any)?.tier_name || 'Not specified'}
+                    <strong>Tier:</strong>{' '}
+                    {typeof user.tier === 'object' && user.tier !== null
+                      ? user.tier.tier_name
+                      : 'Not specified'}
                   </p>
                   <p>
                     <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
@@ -313,19 +314,6 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                     <strong>Meals per Week:</strong> {user.meals_per_week || 0}
                   </p>
                 </div>
-            {/* Subscription Details */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
-              <div className="text-sm text-blue-800">
-                <p>
-                  <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Meals per Week:</strong> {user.meals_per_week || 0}
-                </p>
               </div>
             )}
 
@@ -336,8 +324,8 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                   Allergen Accommodation Charges
                 </h4>
                 <p className="text-sm text-yellow-700 mb-3">
-                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
-                  order)
+                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00
+                  per order)
                 </p>
                 {order.allergenCharges.map((charge, index) => (
                   <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
@@ -435,29 +423,10 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               </p>
             )}
             <p className="text-sm text-green-700 mt-4">
-              We'll start preparing your meals according to your preferences and have them ready for
-              pickup.
+              We&apos;ll start preparing your meals according to your preferences and have them
+              ready for pickup.
             </p>
           </div>
-          <h3 className="text-lg font-semibold text-green-900 mb-3">What&apos;s Next?</h3>
-          <ul className="space-y-2 text-green-800">
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>You&apos;ll receive a confirmation email shortly</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>We&apos;ll start preparing your meals according to your preferences</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>We&apos;ll notify you when your order is ready for pickup</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>Order details have been logged and will be processed by our team</span>
-            </li>
-          </ul>
         </div>
 
         {/* Action Buttons */}
