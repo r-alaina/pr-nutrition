@@ -76,24 +76,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         setTiers([])
       })
   }, [])
-
-  const getStepTitle = () => {
-    switch (currentStep) {
-      case 1:
-        return "What's your calorie goal?"
-      case 2:
-        return 'How often do you want to subscribe?'
-      case 3:
-        return 'How many meals per week?'
-      case 4:
-        return 'Complete your preferences'
-      case 5:
-        return 'Review your plan'
-      default:
-        return 'Update Preferences'
-    }
-  }
-
   const getStepSubtitle = () => {
     switch (currentStep) {
       case 1:
@@ -110,6 +92,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         return ''
     }
   }
+
 
   const handleTierSelect = (tier: Tier) => {
     setSelectedTier(tier)
