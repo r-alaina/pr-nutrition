@@ -51,8 +51,12 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   const [selectedPlan, setSelectedPlan] = useState<string>(
     userPreferences?.subscription_frequency || '',
   )
-  const [selectedMeals, setSelectedMeals] = useState<number>(userPreferences?.meals_per_week || 10)
-  const [includeBreakfast, _setIncludeBreakfast] = useState(
+  const [selectedMeals, setSelectedMeals] = useState<number>(userPreferences?.meals_per_week || 5)
+  
+  // New State for customizable plan
+  const [daysPerWeek, setDaysPerWeek] = useState<'5' | '7'>('5')
+  const [mealsPerDay, setMealsPerDay] = useState<'1' | '2'>('1')
+  const [includeBreakfast, setIncludeBreakfast] = useState(
     userPreferences?.include_breakfast || false,
   )
 
@@ -60,6 +64,14 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   const [allergies, setAllergies] = useState<string[]>(
     (userPreferences?.allergies || []).map(toCanonicalAllergen)
   )
+
+  // Recalculate total meals whenever configuration changes
+  useEffect(() => {
+    const days = parseInt(daysPerWeek)
+    const daily = parseInt(mealsPerDay)
+    const breakfast = includeBreakfast ? 1 : 0
+    setSelectedMeals(days * (daily + breakfast))
+  }, [daysPerWeek, mealsPerDay, includeBreakfast])
 
   const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
 
@@ -92,9 +104,9 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         case 1:
           return "What's your calorie goal?"
         case 2:
-          return 'How often do you want to subscribe?'
+          return "Customize your meal plan configuration"
         case 3:
-          return 'How many meals per week?'
+          return 'How often do you want to subscribe?'
         case 4:
           return 'Complete your preferences'
         case 5:
@@ -122,9 +134,9 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         case 1:
           return 'Choose the tier that matches your nutritional needs. Not sure which tier is right for you? We highly recommend calling us at (956) 424-2247 or stopping by our office so Peggy, our registered dietitian, can help determine the best tier for your specific goals and needs.'
         case 2:
-          return "Choose how often you'd like to receive your meals."
-        case 3:
           return "Select the number of meals you'd like per week."
+        case 3:
+          return "Choose how often you'd like to receive your meals."
         case 4:
           return 'Tell us about your dietary preferences and restrictions.'
         case 5:
@@ -189,8 +201,10 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           body: JSON.stringify({
             tier: selectedTier?.id || null,
             subscription_frequency: selectedPlan || null,
+            days_per_week: daysPerWeek,
+            meals_per_day: mealsPerDay,
             meals_per_week: selectedMeals || null,
-            include_breakfast: false,
+            include_breakfast: includeBreakfast,
             include_snacks: includeSnacks || false,
             allergies: allergies || [],
             preferences_set: true,
@@ -431,8 +445,152 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
           </div>
         )}
 
-        {/* Step 2: Plan Selection (New Users Only) */}
+
+
+        {/* Step 2: Plan Configuration (New Users Only) - WAS Step 3 */}
         {isNewUser && currentStep === 2 && (
+          <div className="space-y-8 max-w-3xl mx-auto">
+            {/* Plan Configuration Grid */}
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Days Per Week */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Days per Week</h3>
+                <div className="space-y-3">
+                  <div
+                    onClick={() => setDaysPerWeek('5')}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                      daysPerWeek === '5'
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-semibold text-gray-900">5 Days</div>
+                      <div className="text-sm text-gray-500">Mon - Fri</div>
+                    </div>
+                    {daysPerWeek === '5' && (
+                      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    onClick={() => setDaysPerWeek('7')}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                      daysPerWeek === '7'
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-semibold text-gray-900">7 Days</div>
+                      <div className="text-sm text-gray-500">Mon - Sun</div>
+                    </div>
+                    {daysPerWeek === '7' && (
+                      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Meals Per Day */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Meals per Day</h3>
+                <div className="space-y-3">
+                  <div
+                    onClick={() => setMealsPerDay('1')}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                      mealsPerDay === '1'
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-semibold text-gray-900">Lunch Only</div>
+                      <div className="text-sm text-gray-500">1 meal / day</div>
+                    </div>
+                    {mealsPerDay === '1' && (
+                      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    onClick={() => setMealsPerDay('2')}
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                      mealsPerDay === '2'
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-semibold text-gray-900">Lunch + Dinner</div>
+                      <div className="text-sm text-gray-500">2 meals / day</div>
+                    </div>
+                    {mealsPerDay === '2' && (
+                      <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Breakfast Toggle */}
+            <div 
+              onClick={() => setIncludeBreakfast(!includeBreakfast)}
+              className={`p-6 border-2 rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                includeBreakfast
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-4">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  includeBreakfast ? 'bg-emerald-100' : 'bg-gray-100'
+                }`}>
+                  <span className="text-2xl">🍳</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">Add Breakfast?</div>
+                  <div className="text-sm text-gray-500">Adds 1 meal per day to your plan</div>
+                </div>
+              </div>
+              <div className={`w-6 h-6 rounded border flex items-center justify-center ${
+                includeBreakfast ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 bg-white'
+              }`}>
+                {includeBreakfast && (
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            {/* Total Summary */}
+            <div className="bg-gray-900 text-white rounded-xl p-6 text-center shadow-lg mt-8">
+              <div className="text-gray-400 mb-1">Total Subscription</div>
+              <div className="text-4xl font-bold mb-2">{selectedMeals} Meals</div>
+              <div className="text-emerald-400 font-medium">per week</div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Frequency Selection (New Users Only) - WAS Step 2 */}
+        {isNewUser && currentStep === 3 && (
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div
@@ -444,9 +602,33 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 }`}
               >
                 <h3 className="text-xl font-semibold mb-2">Weekly</h3>
-                <p className="text-gray-600 mb-4">Perfect for trying out our service</p>
-                <div className="text-2xl font-bold text-emerald-600">
-                  ${selectedTier?.weekly_price}/week
+                <p className="text-gray-600 mb-4">10% discount from a la carte</p>
+                <div>
+                  {(() => {
+                    if (!selectedTier) return null
+                    const lowerBreakfastTiers = ['Tier 1', 'Tier 1+', 'Tier 2']
+                    const breakfastPrice = lowerBreakfastTiers.includes(selectedTier.tier_name) ? 6.50 : 8.00
+                    
+                    const days = parseInt(daysPerWeek)
+                    const dailyMeals = parseInt(mealsPerDay)
+                    
+                    const weeklyMealCost = days * dailyMeals * (selectedTier.single_price || 0)
+                    const weeklyBreakfastCost = includeBreakfast ? (days * breakfastPrice) : 0
+                    
+                    const totalBase = weeklyMealCost + weeklyBreakfastCost
+                    return (
+                      <div className="flex flex-col items-start bg-gray-50 p-2 rounded">
+                        <span className="text-sm text-gray-500 font-medium mb-1">
+                          Standard: 
+                          <span className="relative inline-block ml-1">
+                            <span className="relative z-10">${totalBase.toFixed(2)}</span>
+                            <div className="absolute top-1/2 left-[-10%] w-[120%] h-0.5 bg-red-600/80 -rotate-6 transform origin-center rounded-sm"></div>
+                          </span>
+                        </span>
+                        <span className="text-2xl font-bold text-emerald-600">${(totalBase * 0.90).toFixed(2)}<span className="text-sm text-gray-600 font-normal">/week</span></span>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
               <div
@@ -458,40 +640,36 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                 }`}
               >
                 <h3 className="text-xl font-semibold mb-2">Monthly</h3>
-                <p className="text-gray-600 mb-4">Best value for regular customers</p>
-                <div className="text-2xl font-bold text-emerald-600">
-                  ${selectedTier?.monthly_price}/month
+                <p className="text-gray-600 mb-4">15% discount (billed every 4 weeks)</p>
+                 <div>
+                  {(() => {
+                    if (!selectedTier) return null
+                    const lowerBreakfastTiers = ['Tier 1', 'Tier 1+', 'Tier 2']
+                    const breakfastPrice = lowerBreakfastTiers.includes(selectedTier.tier_name) ? 6.50 : 8.00
+                    
+                    const days = parseInt(daysPerWeek)
+                    const dailyMeals = parseInt(mealsPerDay)
+                    
+                    const weeklyMealCost = days * dailyMeals * (selectedTier.single_price || 0)
+                    const weeklyBreakfastCost = includeBreakfast ? (days * breakfastPrice) : 0
+                    
+                    const totalBase = weeklyMealCost + weeklyBreakfastCost
+                    const totalMonthlyBase = totalBase * 4
+                    return (
+                      <div className="flex flex-col items-start bg-gray-50 p-2 rounded">
+                         <span className="text-sm text-gray-500 font-medium mb-1">
+                          Standard: 
+                          <span className="relative inline-block ml-1">
+                            <span className="relative z-10">${totalMonthlyBase.toFixed(2)}</span>
+                            <div className="absolute top-1/2 left-[-10%] w-[120%] h-0.5 bg-red-600/80 -rotate-6 transform origin-center rounded-sm"></div>
+                          </span>
+                        </span>
+                         <span className="text-2xl font-bold text-emerald-600">${(totalMonthlyBase * 0.85).toFixed(2)}<span className="text-sm text-gray-600 font-normal">/month</span></span>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Meals Per Week (New Users Only) */}
-        {isNewUser && currentStep === 3 && (
-          <div className="space-y-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[5, 10, 12, 15].map((meals) => (
-                <div
-                  key={meals}
-                  onClick={() => handleMealsSelect(meals)}
-                  className={`p-6 border-2 rounded-lg cursor-pointer transition-all text-center relative ${
-                    selectedMeals === meals
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  {meals === 10 && (
-                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        Popular
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-2xl font-bold text-gray-900">{meals}</div>
-                  <div className="text-sm text-gray-600">meals per week</div>
-                </div>
-              ))}
             </div>
           </div>
         )}
@@ -560,9 +738,14 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Allergens:</span>
                   <span className="font-semibold text-gray-900">
                     {allergies.length > 0 ? allergies.join(', ') : 'None'}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 pt-3 mt-3">
+                  <span className="text-gray-600">Breakfast:</span>
+                  <span className="font-semibold text-gray-900">
+                    {includeBreakfast ? 'Included' : 'Not included'}
                   </span>
                 </div>
               </div>
@@ -637,8 +820,8 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             onClick={currentStep === totalSteps ? handleSubmit : nextStep}
             disabled={
               (isNewUser && currentStep === 1 && !selectedTier) ||
-              (isNewUser && currentStep === 2 && !selectedPlan) ||
-              (isNewUser && currentStep === 3 && !selectedMeals)
+              (isNewUser && currentStep === 2 && !selectedMeals) ||
+              (isNewUser && currentStep === 3 && !selectedPlan)
             }
             className="flex items-center px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
           >

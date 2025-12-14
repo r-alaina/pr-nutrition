@@ -86,10 +86,32 @@ export const Customers: CollectionConfig = {
       },
     },
     {
+      name: 'days_per_week',
+      type: 'select',
+      options: [
+        { label: '5 Days (Mon-Fri)', value: '5' },
+        { label: '7 Days (Mon-Sun)', value: '7' },
+      ],
+      admin: {
+        description: 'Number of days per week (5 or 7)',
+      },
+    },
+    {
+      name: 'meals_per_day',
+      type: 'select',
+      options: [
+        { label: '1 (Lunch)', value: '1' },
+        { label: '2 (Lunch + Dinner)', value: '2' },
+      ],
+      admin: {
+        description: 'Meals per day (1 or 2)',
+      },
+    },
+    {
       name: 'meals_per_week',
       type: 'number',
       admin: {
-        description: 'Number of meals per week',
+        description: 'Total calculated meals per week',
       },
     },
     {
@@ -97,7 +119,7 @@ export const Customers: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
       admin: {
-        description: 'Include breakfast in subscription',
+        description: 'Include breakfast in subscription (Adds 1 meal per day)',
       },
     },
     {

@@ -202,11 +202,19 @@ export interface Customer {
    */
   subscription_frequency?: string | null;
   /**
-   * Number of meals per week
+   * Number of days per week (5 or 7)
+   */
+  days_per_week?: ('5' | '7') | null;
+  /**
+   * Meals per day (1 or 2)
+   */
+  meals_per_day?: ('1' | '2') | null;
+  /**
+   * Total calculated meals per week
    */
   meals_per_week?: number | null;
   /**
-   * Include breakfast in subscription
+   * Include breakfast in subscription (Adds 1 meal per day)
    */
   include_breakfast?: boolean | null;
   /**
@@ -609,6 +617,8 @@ export interface CustomersSelect<T extends boolean = true> {
   active?: T;
   preferences_set?: T;
   subscription_frequency?: T;
+  days_per_week?: T;
+  meals_per_day?: T;
   meals_per_week?: T;
   include_breakfast?: T;
   include_snacks?: T;
