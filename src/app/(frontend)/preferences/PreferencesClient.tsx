@@ -7,31 +7,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
-interface Tier {
-  id: string
-  tier_name: string
-  description: string
-  weekly_price: number
-  monthly_price: number
-  single_price: number
-}
-
-interface User {
-  id: string
-  name?: string
-  email?: string
-  tier?: any
-  subscription_frequency?: string
-  meals_per_week?: number
-  include_breakfast?: boolean
-  include_snacks?: boolean
-  allergies?: string[]
-  week_half?: string
-  preferences_set?: boolean
-}
+import type { Customer, Tier } from '@/payload-types'
 
 interface PreferencesClientProps {
-  user: User
+  user: Customer
 }
 
 export default function PreferencesClient({ user }: PreferencesClientProps) {
@@ -39,7 +18,9 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(
+    user?.tier && typeof user.tier === 'object' ? user.tier : null,
+  )
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
   const [includeSnacks, _setIncludeSnacks] = useState(user?.include_snacks || false)
@@ -247,7 +228,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   aria-expanded={isDesktopDropdownOpen}
                   aria-haspopup="true"
                 >
-                  <span>{user?.name || 'User'}</span>
+                  <span>{user?.firstName} {user?.lastName || ''}</span>
                   <svg
                     className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
@@ -308,7 +289,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   aria-expanded={isMobileDropdownOpen}
                   aria-haspopup="true"
                 >
-                  <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                  <span className="text-xs sm:text-sm">{user?.firstName} {user?.lastName || ''}</span>
                   <svg
                     className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
@@ -443,7 +424,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
         {/* Title and Subtitle */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{getStepTitle()}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName}!</h1>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto">{getStepSubtitle()}</p>
         </div>
 

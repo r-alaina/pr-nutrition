@@ -6,22 +6,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 import { ALLERGENS, toCanonicalAllergen } from '@/utilities/allergens'
-import type { Customer } from '@/payload-types'
-
-interface Tier {
-  id: string
-  tier_name: string
-  description: string
-  weekly_price: number
-  monthly_price: number
-  single_price: number
-}
+import type { Customer, Tier } from '@/payload-types'
 
 interface OrderNowClientProps {
   isNewUser: boolean
   user?: Customer
   userPreferences?: {
-    tier?: Tier
+    tier?: Tier | number | null
     subscription_frequency?: string
     meals_per_week?: number
     include_breakfast?: boolean
@@ -54,7 +45,10 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   ]
 
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [selectedTier, setSelectedTier] = useState<Tier | null>(userPreferences?.tier || null)
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(
+    userPreferences?.tier && typeof userPreferences.tier === 'object' ? userPreferences.tier : null,
+  )
   const [selectedPlan, setSelectedPlan] = useState<string>(
     userPreferences?.subscription_frequency || '',
   )

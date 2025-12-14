@@ -178,7 +178,8 @@ export interface User {
  */
 export interface Customer {
   id: number;
-  name: string;
+  firstName: string;
+  lastName: string;
   /**
    * Customer pricing tier
    */
@@ -600,7 +601,8 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "customers_select".
  */
 export interface CustomersSelect<T extends boolean = true> {
-  name?: T;
+  firstName?: T;
+  lastName?: T;
   tier?: T;
   credit_balance?: T;
   credit_bal_exp?: T;

@@ -6,8 +6,8 @@ import type { User } from '@/payload-types'
 export const Customers: CollectionConfig = {
   slug: 'customers',
   admin: {
-    useAsTitle: 'name',
-    defaultColumns: ['name', 'email', 'tier', 'credit_balance', 'active'],
+    useAsTitle: 'email',
+    defaultColumns: ['firstName', 'lastName', 'email', 'tier', 'credit_balance', 'active'],
   },
 
   auth: {
@@ -33,7 +33,12 @@ export const Customers: CollectionConfig = {
 
   fields: [
     {
-      name: 'name',
+      name: 'firstName',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'lastName',
       type: 'text',
       required: true,
     },

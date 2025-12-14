@@ -125,7 +125,9 @@ export async function GET(request: NextRequest) {
 
       const customerId = typeof customer === 'object' ? customer.id : customer
       const customerName =
-        typeof customer === 'object' ? customer.name || customer.email : 'Unknown'
+        typeof customer === 'object' 
+          ? (customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.email)
+          : 'Unknown'
       const customerAllergens =
         typeof customer === 'object' && Array.isArray(customer.allergies) ? customer.allergies : []
 

@@ -113,7 +113,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
                 aria-expanded={isDesktopDropdownOpen}
                 aria-haspopup="true"
               >
-                <span>{user?.name || 'User'}</span>
+                <span>{user?.firstName} {user?.lastName || ''}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
@@ -174,7 +174,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
                 aria-expanded={isMobileDropdownOpen}
                 aria-haspopup="true"
               >
-                <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                <span className="text-xs sm:text-sm">{user?.firstName} {user?.lastName || ''}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                   fill="none"
