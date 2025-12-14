@@ -6,6 +6,8 @@ export const Tiers: CollectionConfig = {
   admin: {
     useAsTitle: 'tier_name',
     defaultColumns: ['tier_name', 'monthly_price', 'weekly_price', 'single_price'],
+    // Payload admin will automatically redirect to collection list after update
+    // This is the default behavior and should work with Payload's built-in REST API
   },
   access: {
     read: () => true,

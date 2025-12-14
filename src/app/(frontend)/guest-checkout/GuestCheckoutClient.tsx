@@ -192,7 +192,7 @@ export default function GuestCheckoutClient() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Title and Subtitle */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">What's your calorie goal?</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">What&apos;s your calorie goal?</h1>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto">
             Choose the tier that matches your nutritional needs.
           </p>
