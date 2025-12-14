@@ -40,7 +40,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
-  const [includeBreakfast, _setIncludeBreakfast] = useState(user?.include_breakfast || false)
   const [includeSnacks, _setIncludeSnacks] = useState(user?.include_snacks || false)
   const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
   const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)

@@ -2,6 +2,7 @@
 
 import React, { ReactElement, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createAdmin, type AdminSignupResponse } from '@/app/(frontend)/admin-signup/actions/create'
 import Link from 'next/link'
 
@@ -40,16 +41,21 @@ export default function AdminSignupForm(): ReactElement {
       }}
     >
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8 relative">
-        {/* Logo */}
-        <div className="flex items-center justify-center mb-6">
-          <img src="/images/brand/logo.png" alt="Meal PREPS Logo" className="h-16 w-auto" />
+        {/* Logo and Header */}
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <Image
+            src="/images/brand/logo.png"
+            alt="Meal PREPS Logo"
+            width={150}
+            height={48}
+            className="h-12 w-auto"
+          />
         </div>
-
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Sign Up</h1>
-          <p className="text-gray-600">Create an account for admin access</p>
-        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create Admin Account
+        </h2>
+      </div>
 
         {/* Form */}
         <form className="space-y-6" onSubmit={handleSubmit}>

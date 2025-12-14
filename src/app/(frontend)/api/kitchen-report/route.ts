@@ -72,8 +72,6 @@ export async function GET(request: NextRequest) {
     const payload = await getPayload({ config })
     const { searchParams } = new URL(request.url)
     const weekHalf = searchParams.get('weekHalf') || undefined
-    const status = searchParams.get('status') || 'confirmed' // Only confirmed orders
-
     // Build query for orders
     const orderQuery: any = {
       status: {
@@ -105,7 +103,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Aggregate by tier and meal
-    const tierMap = new Map<string, Map<string, number>>() // tierId -> mealName -> quantity
+    // Map<tierId, Map<mealName, { quantity: number, category: string }>>
+    const tierMap = new Map<string, Map<string, { quantity: number; category: string }>>()
     const tierNameMap = new Map<string, string>() // tierId -> tierName
     const allergenAdjustmentsMap = new Map<
       string,
@@ -173,8 +172,11 @@ export async function GET(request: NextRequest) {
         const category = menuItemData?.category || ''
 
         // Add to tier aggregation
-        const currentQty = mealMap.get(mealName) || 0
-        mealMap.set(mealName, currentQty + quantity)
+        const current = mealMap.get(mealName) || { quantity: 0, category }
+        mealMap.set(mealName, {
+          quantity: current.quantity + quantity,
+          category,
+        })
 
         // Check for allergen adjustments
         if (customerAllergens.length > 0 && menuItemData?.allergens) {
@@ -208,10 +210,16 @@ export async function GET(request: NextRequest) {
 
     // Get all unique meals that have at least 1 order across all tiers
     const allMealsSet = new Set<string>()
+    // Also track categories for each meal
+    const mealCategoryMap = new Map<string, string>()
+
     for (const mealMap of tierMap.values()) {
-      for (const [mealName, quantity] of mealMap.entries()) {
-        if (quantity > 0) {
+      for (const [mealName, data] of mealMap.entries()) {
+        if (data.quantity > 0) {
           allMealsSet.add(mealName)
+          if (data.category) {
+            mealCategoryMap.set(mealName, data.category)
+          }
         }
       }
     }
@@ -219,20 +227,21 @@ export async function GET(request: NextRequest) {
 
     // Convert tier aggregation to pivot table format
     // Each tier should include all meals (even if quantity is 0) for consistent table structure
-    const tierAggregations: TierAggregation[] = Array.from(tierMap.entries())
+    const tierAggregations = Array.from(tierMap.entries())
       .map(([tierId, mealMap]) => {
         if (!mealMap || mealMap.size === 0) return null
 
         // Include all meals that have at least 1 order somewhere, but only show quantity if > 0
         const meals = allMeals
           .map((mealName) => {
-            const quantity = mealMap.get(mealName) || 0
+            const data = mealMap.get(mealName)
+            const quantity = data?.quantity || 0
             // Only include meals with quantity > 0 for this tier
             if (quantity === 0) return null
             return {
               mealName: String(mealName),
               quantity: Number(quantity),
-              category: '', // Not used in display
+              category: mealCategoryMap.get(mealName) || '',
             }
           })
           .filter(
@@ -248,7 +257,7 @@ export async function GET(request: NextRequest) {
         }
       })
       .filter((tier): tier is TierAggregation => tier !== null)
-      .sort((a, b) => a.tierName.localeCompare(b.tierName))
+      .sort((a, b) => a.tierName.localeCompare(b.tierName)) as TierAggregation[]
 
     // Convert allergen adjustments to array format
     const allergenAdjustments: AllergenAdjustment[] = Array.from(allergenAdjustmentsMap.values())

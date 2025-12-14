@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 
 interface User {
@@ -27,7 +28,6 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isEditingPreferences, setIsEditingPreferences] = useState(false)
   const [profileData, setProfileData] = useState({
     name: initialUser.name || '',
     email: initialUser.email || '',
@@ -137,7 +137,6 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       }
 
       setMessage('Preferences updated successfully!')
-      setIsEditingPreferences(false)
       // Refresh the page to show updated data
       window.location.reload()
     } catch (error: any) {
@@ -155,9 +154,11 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
               <Link href="/">
-                <img
+                <Image
                   src="/images/brand/logo.png"
                   alt="Meal PREPS Logo"
+                  width={500}
+                  height={200}
                   className="h-10 sm:h-12 w-auto"
                 />
               </Link>

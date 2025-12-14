@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
 
     // Data rows: one row per tier (only include tiers with at least one order)
     const sortedTiers = Array.from(tierMap.entries())
-      .filter(([tierId, mealMap]) => {
+      .filter(([_tierId, mealMap]) => {
         // Check if tier has any orders (at least one meal with quantity > 0)
         for (const data of mealMap.values()) {
           if (data.quantity > 0) {
