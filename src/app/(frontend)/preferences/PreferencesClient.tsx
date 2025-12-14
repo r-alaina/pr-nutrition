@@ -1,6 +1,8 @@
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { ALLERGENS, toCanonicalAllergen } from '@/utilities/allergens'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -41,7 +43,9 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
   const [includeSnacks, _setIncludeSnacks] = useState(user?.include_snacks || false)
-  const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
+  const [allergies, setAllergies] = useState<string[]>(
+    (user?.allergies || []).map(toCanonicalAllergen)
+  )
   const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
   const desktopDropdownRef = useRef<HTMLDivElement>(null)
@@ -557,17 +561,17 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Allergies</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {['Nuts', 'Dairy', 'Gluten', 'Shellfish', 'Soy', 'Eggs'].map((allergy) => (
+                {ALLERGENS.map((allergen) => (
                   <button
-                    key={allergy}
-                    onClick={() => handleAllergyToggle(allergy)}
+                    key={allergen}
+                    onClick={() => handleAllergyToggle(allergen)}
                     className={`p-3 text-left border rounded-lg transition-all ${
-                      allergies.includes(allergy)
+                      allergies.includes(allergen)
                         ? 'border-red-500 bg-red-50 text-red-700'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {allergy}
+                    {allergen}
                   </button>
                 ))}
               </div>

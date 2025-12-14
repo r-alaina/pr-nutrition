@@ -1,4 +1,5 @@
 import type { MenuItem } from '@/payload-types'
+import { normalizeAllergen } from './allergens'
 
 export interface AllergenCharge {
   mealId: string
@@ -35,16 +36,21 @@ export function calculateAllergenCharges(
   // First pass: Check if there are any allergen conflicts across all meals
   selectedMeals.forEach((item) => {
     const mealAllergens = item.meal.allergens || []
-    const matchingAllergens = mealAllergens.filter((mealAllergen) =>
-      userAllergies.includes(mealAllergen.allergen),
-    )
+    
+    // Normalize user allergies for comparison
+    const normalizedUserAllergies = userAllergies.map(normalizeAllergen)
+
+    const matchingAllergens = mealAllergens.filter((mealAllergen) => {
+      const normalizedMealAllergen = normalizeAllergen(mealAllergen.allergen || '')
+      return normalizedUserAllergies.includes(normalizedMealAllergen)
+    })
 
     if (matchingAllergens.length > 0) {
       hasAnyAllergenConflict = true
 
       // Track which meals have allergens for reporting purposes
       const allergensWithCharges = matchingAllergens.map((allergen) => ({
-        allergen: allergen.allergen,
+        allergen: allergen.allergen || '',
         charge: 0, // Individual allergen charge is 0, charge is per order
       }))
 
@@ -72,7 +78,12 @@ export function calculateAllergenCharges(
  */
 export function hasAllergenConflict(meal: MenuItem, userAllergies: string[]): boolean {
   const mealAllergens = meal.allergens || []
-  return mealAllergens.some((mealAllergen) => userAllergies.includes(mealAllergen.allergen))
+  const normalizedUserAllergies = userAllergies.map(normalizeAllergen)
+  
+  return mealAllergens.some((mealAllergen) => {
+    const normalizedMealAllergen = normalizeAllergen(mealAllergen.allergen || '')
+    return normalizedUserAllergies.includes(normalizedMealAllergen)
+  })
 }
 
 /**
@@ -83,8 +94,13 @@ export function hasAllergenConflict(meal: MenuItem, userAllergies: string[]): bo
  */
 export function getMatchingAllergens(meal: MenuItem, userAllergies: string[]): string[] {
   const mealAllergens = meal.allergens || []
+  const normalizedUserAllergies = userAllergies.map(normalizeAllergen)
+  
   return mealAllergens
-    .filter((mealAllergen) => userAllergies.includes(mealAllergen.allergen || ''))
+    .filter((mealAllergen) => {
+      const normalizedMealAllergen = normalizeAllergen(mealAllergen.allergen || '')
+      return normalizedUserAllergies.includes(normalizedMealAllergen)
+    })
     .map((allergen) => allergen.allergen || '')
 }
 

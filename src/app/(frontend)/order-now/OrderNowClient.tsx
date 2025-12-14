@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
+import { ALLERGENS, toCanonicalAllergen } from '@/utilities/allergens'
 import type { Customer } from '@/payload-types'
 
 interface Tier {
@@ -63,7 +64,9 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   )
 
   const [includeSnacks, _setIncludeSnacks] = useState(userPreferences?.include_snacks || false)
-  const [allergies, setAllergies] = useState<string[]>(userPreferences?.allergies || [])
+  const [allergies, setAllergies] = useState<string[]>(
+    (userPreferences?.allergies || []).map(toCanonicalAllergen)
+  )
 
   const totalSteps = isNewUser ? 5 : 3 // New users: 5 steps (preferences step added back after removing breakfast), existing users: 3 steps
 
@@ -507,17 +510,17 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
             <div>
               <h3 className="text-lg font-semibold mb-4">Allergies</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {['Nuts', 'Dairy', 'Eggs', 'Soy', 'Shellfish', 'Gluten'].map((allergy) => (
+                {ALLERGENS.map((allergen) => (
                   <button
-                    key={allergy}
-                    onClick={() => handleAllergyToggle(allergy)}
+                    key={allergen}
+                    onClick={() => handleAllergyToggle(allergen)}
                     className={`p-3 border rounded-lg text-sm transition-all ${
-                      allergies.includes(allergy)
+                      allergies.includes(allergen)
                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {allergy}
+                    {allergen}
                   </button>
                 ))}
               </div>

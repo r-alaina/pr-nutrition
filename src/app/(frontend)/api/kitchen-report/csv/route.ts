@@ -1,32 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { normalizeAllergen } from '@/utilities/allergens'
 
 // Helper function to generate allergen adjustment description
 function generateAdjustmentDescription(
-  mealAllergens: Array<{ allergen: string }>,
+  mealAllergens: string[],
   customerAllergens: string[],
 ): string {
-  const matchingAllergens = mealAllergens
-    .map((a) => a.allergen)
-    .filter((allergen) => customerAllergens.includes(allergen))
+  const normalizedMealAllergens = mealAllergens.map(normalizeAllergen)
+  const normalizedCustomerAllergens = customerAllergens.map(normalizeAllergen)
+
+  const matchingAllergens = normalizedMealAllergens
+    .filter((allergen) => normalizedCustomerAllergens.includes(allergen))
 
   if (matchingAllergens.length === 0) return ''
 
   const adjustments: string[] = []
-  if (matchingAllergens.includes('Dairy') || matchingAllergens.includes('dairy')) {
+  
+  if (matchingAllergens.includes('lactose')) {
     adjustments.push('without cheese')
   }
-  if (matchingAllergens.includes('Gluten') || matchingAllergens.includes('gluten')) {
+  if (matchingAllergens.includes('gluten')) {
     adjustments.push('gluten-free')
   }
-  if (matchingAllergens.includes('Nuts') || matchingAllergens.includes('nuts')) {
+  if (matchingAllergens.includes('nuts')) {
     adjustments.push('no nuts')
   }
-  if (matchingAllergens.includes('Corn') || matchingAllergens.includes('corn')) {
+  if (matchingAllergens.includes('corn')) {
     adjustments.push('no corn')
   }
-  if (matchingAllergens.includes('Beans') || matchingAllergens.includes('beans')) {
+  if (matchingAllergens.includes('beans')) {
     adjustments.push('no beans')
   }
 
@@ -178,8 +182,12 @@ export async function GET(request: NextRequest) {
             continue
           }
 
+          const mealAllergens = (Array.isArray(menuItemFull.allergens) ? menuItemFull.allergens : [])
+            .map((a) => a.allergen)
+            .filter((a): a is string => typeof a === 'string')
+
           const adjustment = generateAdjustmentDescription(
-            Array.isArray(menuItemFull.allergens) ? menuItemFull.allergens : [],
+            mealAllergens,
             customerAllergens,
           )
 
