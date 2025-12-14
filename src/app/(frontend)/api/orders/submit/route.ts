@@ -217,6 +217,7 @@ export async function POST(request: NextRequest) {
         ...orderResponse,
         id: savedOrder.id,
         orderNumber: savedOrder.orderNumber || orderNumber,
+        weekHalf: weekHalf,
       },
     })
   } catch (error) {

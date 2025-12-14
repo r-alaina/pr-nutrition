@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface TierAggregation {
   tierName: string
@@ -35,10 +35,26 @@ export default function KitchenReportView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [weekHalf, setWeekHalf] = useState<string>('firstHalf')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchReport()
   }, [weekHalf])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const fetchReport = async () => {
     try {
@@ -112,38 +128,204 @@ export default function KitchenReportView() {
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          flexDirection: 'column',
+          gap: '1rem',
           marginBottom: '2rem',
         }}
       >
         <h1 style={{ margin: 0, color: '#000000' }}>Kitchen Order Report</h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <label style={{ color: '#000000' }}>
-            Week Half:
-            <select
-              value={weekHalf}
-              onChange={(e) => setWeekHalf(e.target.value)}
-              style={{
-                marginLeft: '0.5rem',
-                padding: '0.5rem',
-                color: '#000000',
-                backgroundColor: '#f3f4f6',
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.25rem',
-                fontSize: '1rem',
-                cursor: 'pointer',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-                backgroundImage: 'none',
-                boxShadow: 'none',
-              }}
-            >
-              <option value="firstHalf">First Half</option>
-              <option value="secondHalf">Second Half</option>
-            </select>
-          </label>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontWeight: '500', fontSize: '1rem', color: '#000000' }}>
+              Week Half:
+            </span>
+            <div style={{ position: 'relative' }} ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                style={{
+                  padding: '0.5rem 2.5rem 0.5rem 0.875rem',
+                  color: '#1f2937',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.15s ease-in-out',
+                  minWidth: '140px',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  textAlign: 'left',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#9ca3af'
+                  e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#d1d5db'
+                  e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#5CB85C'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(92, 184, 92, 0.1)'
+                }}
+                onBlur={(e) => {
+                  if (!isDropdownOpen) {
+                    e.currentTarget.style.borderColor = '#d1d5db'
+                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                  }
+                }}
+              >
+                <span>{weekHalf === 'firstHalf' ? 'First Half' : 'Second Half'}</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    color: '#6b7280',
+                    transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                  }}
+                >
+                  <path
+                    d="M3.5 5.25L7 8.75L10.5 5.25"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {isDropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: '0.25rem',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.375rem',
+                    boxShadow:
+                      '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    minWidth: '140px',
+                    zIndex: 50,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setWeekHalf('firstHalf')
+                      setIsDropdownOpen(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem 0.875rem',
+                      textAlign: 'left',
+                      color: weekHalf === 'firstHalf' ? '#5CB85C' : '#1f2937',
+                      backgroundColor: weekHalf === 'firstHalf' ? '#f0fdf4' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: weekHalf === 'firstHalf' ? '600' : '500',
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (weekHalf !== 'firstHalf') {
+                        e.currentTarget.style.backgroundColor = '#f9fafb'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (weekHalf !== 'firstHalf') {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }
+                    }}
+                  >
+                    {weekHalf === 'firstHalf' && (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ color: '#5CB85C', flexShrink: 0 }}
+                      >
+                        <path
+                          d="M13.333 4L6 11.333 2.667 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    <span>First Half</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setWeekHalf('secondHalf')
+                      setIsDropdownOpen(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '0.625rem 0.875rem',
+                      textAlign: 'left',
+                      color: weekHalf === 'secondHalf' ? '#5CB85C' : '#1f2937',
+                      backgroundColor: weekHalf === 'secondHalf' ? '#f0fdf4' : 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: weekHalf === 'secondHalf' ? '600' : '500',
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      borderTop: '1px solid #e5e7eb',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (weekHalf !== 'secondHalf') {
+                        e.currentTarget.style.backgroundColor = '#f9fafb'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (weekHalf !== 'secondHalf') {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                      }
+                    }}
+                  >
+                    {weekHalf === 'secondHalf' && (
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{ color: '#5CB85C', flexShrink: 0 }}
+                      >
+                        <path
+                          d="M13.333 4L6 11.333 2.667 8"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                    <span>Second Half</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <button
             onClick={downloadCSV}
             style={{
@@ -180,7 +362,8 @@ export default function KitchenReportView() {
         ) : (
           <div
             style={{
-              overflowX: 'auto',
+              overflowY: 'auto',
+              maxHeight: '70vh',
               backgroundColor: '#ffffff',
               borderRadius: '0.5rem',
               border: '1px solid #e5e7eb',
@@ -190,10 +373,9 @@ export default function KitchenReportView() {
               style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                minWidth: '600px',
               }}
             >
-              <thead>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                 <tr style={{ backgroundColor: '#f3f4f6' }}>
                   <th
                     style={{
@@ -201,59 +383,56 @@ export default function KitchenReportView() {
                       textAlign: 'left',
                       border: '1px solid #e5e7eb',
                       color: '#000000',
-                      position: 'sticky',
-                      left: 0,
                       backgroundColor: '#f3f4f6',
-                      zIndex: 1,
+                      fontWeight: 'bold',
                     }}
                   >
-                    Tier
+                    Meal
                   </th>
-                  {allMeals.map((meal) => (
+                  {report.tierAggregations.map((tier) => (
                     <th
-                      key={meal}
+                      key={tier.tierId}
                       style={{
                         padding: '0.75rem',
                         textAlign: 'center',
                         border: '1px solid #e5e7eb',
                         color: '#000000',
-                        whiteSpace: 'nowrap',
+                        backgroundColor: '#f3f4f6',
+                        fontWeight: 'bold',
                       }}
                     >
-                      {meal}
+                      {tier.tierName}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {report.tierAggregations.map((tier) => {
-                  const mealMap = tierMealMap.get(tier.tierName) || new Map()
+                {allMeals.map((meal) => {
                   return (
-                    <tr key={tier.tierId}>
+                    <tr key={meal}>
                       <td
                         style={{
                           padding: '0.75rem',
                           border: '1px solid #e5e7eb',
                           color: '#000000',
                           fontWeight: 'bold',
-                          position: 'sticky',
-                          left: 0,
                           backgroundColor: '#ffffff',
-                          zIndex: 1,
                         }}
                       >
-                        {tier.tierName}
+                        {meal}
                       </td>
-                      {allMeals.map((meal) => {
+                      {report.tierAggregations.map((tier) => {
+                        const mealMap = tierMealMap.get(tier.tierName) || new Map()
                         const quantity = mealMap.get(meal) || 0
                         return (
                           <td
-                            key={meal}
+                            key={tier.tierId}
                             style={{
                               padding: '0.75rem',
                               textAlign: 'center',
                               border: '1px solid #e5e7eb',
                               color: '#000000',
+                              backgroundColor: '#ffffff',
                             }}
                           >
                             {quantity > 0 ? quantity : ''}
