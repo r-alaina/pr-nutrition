@@ -465,6 +465,15 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
         <div className="mt-8 bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
+            <Link
+              href="/preferences"
+              className="px-4 py-2 text-white rounded-md transition-colors whitespace-nowrap"
+              style={{ backgroundColor: '#5CB85C' }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+            >
+              Update Preferences
+            </Link>
           </div>
           <div className="px-6 py-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
