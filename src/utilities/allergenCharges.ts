@@ -1,4 +1,4 @@
-import type { MenuItem, Customer } from '@/payload-types'
+import type { MenuItem } from '@/payload-types'
 
 export interface AllergenCharge {
   mealId: string
@@ -84,8 +84,8 @@ export function hasAllergenConflict(meal: MenuItem, userAllergies: string[]): bo
 export function getMatchingAllergens(meal: MenuItem, userAllergies: string[]): string[] {
   const mealAllergens = meal.allergens || []
   return mealAllergens
-    .filter((mealAllergen) => userAllergies.includes(mealAllergen.allergen))
-    .map((allergen) => allergen.allergen)
+    .filter((mealAllergen) => userAllergies.includes(mealAllergen.allergen || ''))
+    .map((allergen) => allergen.allergen || '')
 }
 
 /**

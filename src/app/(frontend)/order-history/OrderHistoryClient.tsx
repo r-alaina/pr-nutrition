@@ -128,7 +128,7 @@ export default function OrderHistoryClient({ user }: OrderHistoryClientProps) {
           <div className="space-y-6">
             {orders.map((order) => {
               const menuItems = order.orderItems || []
-              const customer = typeof order.customer === 'object' ? order.customer : null
+
 
               return (
                 <div

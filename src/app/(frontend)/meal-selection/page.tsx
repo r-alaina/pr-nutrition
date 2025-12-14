@@ -2,7 +2,7 @@ import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import MealSelectionClient from './MealSelectionClient'
-import type { MenuItem, Customer } from '@/payload-types'
+import type { MenuItem } from '@/payload-types'
 
 export default async function MealSelectionPage() {
   const user = await getUser()

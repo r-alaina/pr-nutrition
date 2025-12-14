@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -37,7 +37,7 @@ interface Order {
 }
 
 export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
-  const router = useRouter()
+
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)

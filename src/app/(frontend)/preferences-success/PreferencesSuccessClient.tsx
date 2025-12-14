@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -11,7 +9,7 @@ interface PreferencesSuccessClientProps {
 }
 
 export default function PreferencesSuccessClient({ user }: PreferencesSuccessClientProps) {
-  const router = useRouter()
+
 
   const getPlanSummary = () => {
     const tier = (user as any).tier

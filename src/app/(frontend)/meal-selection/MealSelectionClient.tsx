@@ -38,7 +38,7 @@ export default function MealSelectionClient({
   const selectedMeals = [...selectedFirstHalfMeals, ...selectedSecondHalfMeals]
 
   // Separate meals from snacks
-  const selectedMealsOnly = selectedMeals.filter((item) => item.meal.category !== 'snack')
+
   const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack')
 
   // Calculate allergen charges for display
