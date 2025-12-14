@@ -54,16 +54,16 @@ export default async function MealSelectionPage() {
 
     const firstHalfIds = new Set(
       firstHalfMenuItems
-        .filter((item: any) => item.available !== false)
-        .map((item: any) =>
+        .filter((item) => item.available !== false)
+        .map((item) =>
           String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
         ),
     )
 
     const secondHalfIds = new Set(
       secondHalfMenuItems
-        .filter((item: any) => item.available !== false)
-        .map((item: any) =>
+        .filter((item) => item.available !== false)
+        .map((item) =>
           String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
         ),
     )

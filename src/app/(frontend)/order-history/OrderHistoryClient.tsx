@@ -113,7 +113,7 @@ export default function OrderHistoryClient({ user }: OrderHistoryClientProps) {
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
             <p className="text-gray-600 mb-6">You haven&apos;t placed any orders yet.</p>
             <Link
-              href={(user as any)?.preferences_set ? '/meal-selection' : '/order-now'}
+              href={user?.preferences_set ? '/meal-selection' : '/order-now'}
               className="inline-flex items-center px-6 py-3 text-white rounded-lg font-semibold transition-colors"
               style={{ backgroundColor: '#5CB85C' }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}

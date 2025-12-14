@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
-import config from '@/payload.config'
 import { cookies } from 'next/headers'
+import type { PayloadRequest } from 'payload'
+import config from '@/payload.config'
 import { calculateAllergenCharges } from '@/utilities/allergenCharges'
+import type { Tier, MenuItem } from '@/payload-types'
+
+interface CartItem {
+  meal: MenuItem
+  quantity: number
+  weekHalf?: string
+}
+
+interface SubmitOrderRequest {
+  selectedMeals: CartItem[]
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +45,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Not authenticated' }, { status: 401 })
     }
 
-    const body = await request.json()
+    if (user.collection !== 'customers') {
+      console.log('User is not a customer, returning 403')
+      return NextResponse.json({ message: 'Only customers can place orders' }, { status: 403 })
+    }
+
+    const body = (await request.json()) as SubmitOrderRequest
     console.log('Request body received:', { selectedMealsCount: body.selectedMeals?.length })
 
     const { selectedMeals } = body
@@ -47,24 +64,24 @@ export async function POST(request: NextRequest) {
     const orderNumber = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
 
     // Separate snacks from meals
-    const meals = selectedMeals.filter((item: { meal: any }) => item.meal.category !== 'snack')
-    const snacks = selectedMeals.filter((item: { meal: any }) => item.meal.category === 'snack')
+    const meals = selectedMeals.filter((item) => item.meal.category !== 'snack')
+    const snacks = selectedMeals.filter((item) => item.meal.category === 'snack')
 
     // Calculate allergen charges for all items (meals + snacks)
-    const userAllergies = (user as any).allergies || []
+    const userAllergies = user.allergies || []
     const { allergenCharges, totalAllergenCharges } = calculateAllergenCharges(
       selectedMeals,
       userAllergies,
     )
 
     // Calculate totals based on user's tier and subscription frequency
-    const tier = (user as any).tier
-    const subscriptionFrequency = (user as any).subscription_frequency
+    const tier = typeof user.tier === 'object' && user.tier !== null ? (user.tier as Tier) : null
+    const subscriptionFrequency = user.subscription_frequency
 
     // Determine week_half from selected meals - if meals from both halves, store as combined
     // Otherwise, use the week_half from the meals
     const mealWeeks = new Set(
-      selectedMeals.map((item: { meal: any; weekHalf?: string }) => item.weekHalf || 'firstHalf'),
+      selectedMeals.map((item) => item.weekHalf || 'firstHalf'),
     )
     const weekHalf =
       mealWeeks.size > 1 ? 'both' : mealWeeks.has('secondHalf') ? 'secondHalf' : 'firstHalf'
@@ -87,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Meals are not available a la carte - require tier subscription
 
     // Snacks are always a la carte
-    snacks.forEach((item: { meal: any; quantity: number }) => {
+    snacks.forEach((item) => {
       const unitPrice = item.meal.price || 0
       snackSubtotal += unitPrice * item.quantity
     })
@@ -96,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     // Create order items for display purposes
     const orderItems = selectedMeals.map(
-      (item: { meal: any; quantity: number; weekHalf?: string }) => {
+      (item) => {
         const isSnack = item.meal.category === 'snack'
         const itemWeekHalf = item.weekHalf || 'firstHalf'
 
@@ -121,7 +138,7 @@ export async function POST(request: NextRequest) {
         // Calculate a per-meal price based on the tier pricing for order tracking
         let unitPrice = 0
         if (tier && subscriptionFrequency) {
-          const totalMealsPerWeek = (user as any).meals_per_week || 10
+          const totalMealsPerWeek = user.meals_per_week || 10
           if (subscriptionFrequency === 'weekly') {
             unitPrice = (tier.weekly_price || 0) / totalMealsPerWeek
           } else if (subscriptionFrequency === 'monthly') {
@@ -172,10 +189,13 @@ export async function POST(request: NextRequest) {
 
     // Save the order to the database
     // Create a proper req object for Payload with user and payload context
+    // We cast to any for 'req' because strict typing for generic PayloadRequest is complex in this context
+    // and Payload's local API create method expects a specific Request definition.
+    // However, we can improve this by using Partial<PayloadRequest>.
     const reqObj = {
       user,
       payload,
-    } as any
+    }
 
     const savedOrder = await payload.create({
       collection: 'orders',
@@ -199,12 +219,12 @@ export async function POST(request: NextRequest) {
         taxAmount: orderResponse.taxAmount,
         totalAmount: orderResponse.totalAmount,
         tier: tier?.id || null,
-        subscriptionFrequency: subscriptionFrequency || null,
-        mealsPerWeek: (user as any).meals_per_week || null,
+        subscriptionFrequency: (subscriptionFrequency as 'weekly' | 'monthly' | 'a_la_carte') || null,
+        mealsPerWeek: user.meals_per_week || null,
         weekHalf: weekHalf,
-        notes: `Order placed by ${(user as any).name || user.email}`,
+        notes: `Order placed by ${user.firstName} ${user.lastName}`,
       },
-      req: reqObj,
+      req: reqObj as unknown as PayloadRequest,
     })
 
     console.log('Order saved to database:', savedOrder.id)

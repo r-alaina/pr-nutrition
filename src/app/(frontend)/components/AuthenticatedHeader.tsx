@@ -54,7 +54,7 @@ export default function AuthenticatedHeader({ user }: AuthenticatedHeaderProps) 
     }
   }, [])
 
-  const orderNowHref = (user as any)?.preferences_set ? '/meal-selection' : '/order-now'
+  const orderNowHref = user?.preferences_set ? '/meal-selection' : '/order-now'
   const navLinks = [
     { href: '/', label: 'Home', isOrderNow: false },
     { href: '/menu', label: 'Menu', isOrderNow: false },

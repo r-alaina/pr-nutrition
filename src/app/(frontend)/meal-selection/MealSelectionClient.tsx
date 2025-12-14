@@ -402,13 +402,13 @@ export default function MealSelectionClient({
             <div>
               <p className="text-sm text-gray-600">Tier</p>
               <p className="font-semibold text-gray-900">
-                {(user as any).tier?.tier_name || 'Not selected'}
+                {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not selected'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Frequency</p>
               <p className="font-semibold text-gray-900 capitalize">
-                {(user as any).subscription_frequency || 'Not selected'}
+                {user.subscription_frequency || 'Not selected'}
               </p>
             </div>
             <div>
@@ -419,16 +419,16 @@ export default function MealSelectionClient({
               <p className="text-sm text-gray-600">Plan Price</p>
               <p className="font-semibold text-lg" style={{ color: '#5CB85C' }}>
                 $
-                {(user as any).subscription_frequency === 'weekly'
-                  ? (user as any).tier?.weekly_price || '0.00'
-                  : (user as any).subscription_frequency === 'monthly'
-                    ? (user as any).tier?.monthly_price || '0.00'
-                    : (user as any).tier?.weekly_price ||
-                      (user as any).tier?.monthly_price ||
+                {user.subscription_frequency === 'weekly'
+                  ? (typeof user.tier === 'object' && user.tier?.weekly_price) || '0.00'
+                  : user.subscription_frequency === 'monthly'
+                    ? (typeof user.tier === 'object' && user.tier?.monthly_price) || '0.00'
+                    : (typeof user.tier === 'object' && user.tier?.weekly_price) ||
+                      (typeof user.tier === 'object' && user.tier?.monthly_price) ||
                       '0.00'}
-                {(user as any).subscription_frequency === 'weekly'
+                {user.subscription_frequency === 'weekly'
                   ? '/week'
-                  : (user as any).subscription_frequency === 'monthly'
+                  : user.subscription_frequency === 'monthly'
                     ? '/month'
                     : ''}
               </p>

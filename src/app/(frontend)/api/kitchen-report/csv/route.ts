@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { normalizeAllergen } from '@/utilities/allergens'
+import type { Where } from 'payload'
 
 // Helper function to generate allergen adjustment description
 function generateAdjustmentDescription(
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     const weekHalf = searchParams.get('weekHalf') || undefined
 
     // Build query for orders
-    const orderQuery: any = {
+    const orderQuery: Where = {
       status: {
         in: ['confirmed', 'preparing', 'ready', 'pending'],
       },

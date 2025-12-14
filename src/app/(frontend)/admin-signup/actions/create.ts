@@ -60,13 +60,14 @@ export async function createAdmin({
       })
 
       return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.log('Admin signup error: ', e)
+      const message = e instanceof Error ? e.message : String(e)
       // Handle specific Payload errors
-      if (e?.message?.includes('email')) {
+      if (message.includes('email')) {
         return { success: false, error: 'Invalid email address' }
       }
-      if (e?.message?.includes('password')) {
+      if (message.includes('password')) {
         return { success: false, error: 'Password does not meet requirements' }
       }
       return { success: false, error: 'There was a problem creating your account' }

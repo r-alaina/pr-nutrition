@@ -92,8 +92,9 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       setIsEditingProfile(false)
       // Refresh the page to show updated data
       window.location.reload()
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setMessage(`Error: ${message}`)
     } finally {
       setLoading(false)
     }
@@ -129,8 +130,9 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       setMessage('Preferences updated successfully!')
       // Refresh the page to show updated data
       window.location.reload()
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setMessage(`Error: ${message}`)
     } finally {
       setLoading(false)
     }

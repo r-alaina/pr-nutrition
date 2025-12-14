@@ -159,9 +159,10 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
       // Redirect to success page
       router.push('/preferences-success')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving preferences:', error)
-      alert(`Failed to save preferences: ${error.message}`)
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to save preferences: ${message}`)
     }
   }
 

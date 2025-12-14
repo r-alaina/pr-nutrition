@@ -30,7 +30,7 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
         { href: '/', label: 'Home' },
         { href: '/menu', label: 'Menu' },
         {
-          href: (user as any)?.preferences_set ? '/meal-selection' : '/order-now',
+          href: user?.preferences_set ? '/meal-selection' : '/order-now',
           label: 'Order Now',
         },
       ]

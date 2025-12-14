@@ -45,7 +45,6 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
   ]
 
   const [tiers, setTiers] = useState<Tier[]>([])
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   const [selectedTier, setSelectedTier] = useState<Tier | null>(
     userPreferences?.tier && typeof userPreferences.tier === 'object' ? userPreferences.tier : null,
   )

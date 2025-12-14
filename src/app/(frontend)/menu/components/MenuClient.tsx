@@ -244,7 +244,7 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                           </span>
                         ) : (
                           user &&
-                          (user as any).preferences_set && (
+                          user.preferences_set && (
                             <span className="text-lg text-gray-600">
                               {item.category === 'snack'
                                 ? 'A la carte'
@@ -254,14 +254,14 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                         )}
                         <Link
                           href={
-                            user && (user as any).preferences_set ? '/meal-selection' : '/order-now'
+                            user && user.preferences_set ? '/meal-selection' : '/order-now'
                           }
                           className="text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
                           style={{ backgroundColor: '#5CB85C' }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
                         >
-                          {user && (user as any).preferences_set ? 'Order Meals' : 'Order Now'}
+                          {user && user.preferences_set ? 'Order Meals' : 'Order Now'}
                         </Link>
                       </div>
                     </div>

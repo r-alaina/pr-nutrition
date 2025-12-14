@@ -22,12 +22,18 @@ interface OrderItem {
   totalPrice: number
 }
 
+interface AllergenCharge {
+  mealName: string
+  quantity: number
+  matchingAllergens: { allergen: string }[]
+}
+
 interface Order {
   id: string
   orderNumber: string
   status: string
   orderItems: OrderItem[]
-  allergenCharges?: any[]
+  allergenCharges?: AllergenCharge[]
   totalAllergenCharges?: number
   subtotal: number
   subtotalWithAllergens?: number
@@ -184,7 +190,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
               <div className="text-sm text-blue-800">
                 <p>
-                  <strong>Tier:</strong> {(user.tier as any)?.tier_name || 'Not specified'}
+                  <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
                 </p>
                 <p>
                   <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
@@ -205,13 +211,13 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                   Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
                   order)
                 </p>
-                {order.allergenCharges.map((charge: any, index: number) => (
+                {order.allergenCharges.map((charge, index) => (
                   <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
                     <p className="text-sm text-yellow-800">
                       <strong>{charge.mealName}</strong> (Qty: {charge.quantity})
                     </p>
                     <p className="text-xs text-yellow-700 ml-4">
-                      Allergens: {charge.matchingAllergens.map((a: any) => a.allergen).join(', ')}
+                      Allergens: {charge.matchingAllergens.map((a) => a.allergen).join(', ')}
                     </p>
                   </div>
                 ))}
