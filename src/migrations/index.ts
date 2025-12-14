@@ -1,6 +1,7 @@
 import * as migration_20251214_204101_initials from './20251214_204101_initials';
 import * as migration_20251214_212526_seed_tiers from './20251214_212526_seed_tiers';
 import * as migration_20251214_221223_add_meal_preferences from './20251214_221223_add_meal_preferences';
+import * as migration_20251214_224859_remove_tier_prices from './20251214_224859_remove_tier_prices';
 
 export const migrations = [
   {
@@ -16,6 +17,11 @@ export const migrations = [
   {
     up: migration_20251214_221223_add_meal_preferences.up,
     down: migration_20251214_221223_add_meal_preferences.down,
-    name: '20251214_221223_add_meal_preferences'
+    name: '20251214_221223_add_meal_preferences',
+  },
+  {
+    up: migration_20251214_224859_remove_tier_prices.up,
+    down: migration_20251214_224859_remove_tier_prices.down,
+    name: '20251214_224859_remove_tier_prices'
   },
 ];

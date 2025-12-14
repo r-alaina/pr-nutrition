@@ -255,8 +255,6 @@ export interface Tier {
   id: number;
   tier_name: string;
   description?: string | null;
-  monthly_price: number;
-  weekly_price: number;
   single_price: number;
   updatedAt: string;
   createdAt: string;
@@ -673,8 +671,6 @@ export interface MenuItemsSelect<T extends boolean = true> {
 export interface TiersSelect<T extends boolean = true> {
   tier_name?: T;
   description?: T;
-  monthly_price?: T;
-  weekly_price?: T;
   single_price?: T;
   updatedAt?: T;
   createdAt?: T;

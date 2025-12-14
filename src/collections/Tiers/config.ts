@@ -5,7 +5,7 @@ export const Tiers: CollectionConfig = {
   slug: 'tiers',
   admin: {
     useAsTitle: 'tier_name',
-    defaultColumns: ['tier_name', 'monthly_price', 'weekly_price', 'single_price'],
+    defaultColumns: ['tier_name', 'single_price'],
   },
   access: {
     read: () => true,
@@ -23,22 +23,7 @@ export const Tiers: CollectionConfig = {
       name: 'description',
       type: 'textarea',
     },
-    {
-      name: 'monthly_price',
-      type: 'number',
-      required: true,
-      admin: {
-        step: 0.01,
-      },
-    },
-    {
-      name: 'weekly_price',
-      type: 'number',
-      required: true,
-      admin: {
-        step: 0.01,
-      },
-    },
+
     {
       name: 'single_price',
       type: 'number',

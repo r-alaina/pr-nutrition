@@ -91,14 +91,33 @@ export async function POST(request: NextRequest) {
 
     // Calculate meal pricing (tier-based or a la carte)
     if (tier && subscriptionFrequency && meals.length > 0) {
-      // Get the tier pricing based on subscription frequency
+      // Logic for new dynamic pricing
+      // 1. Get user configuration
+      const daysPerWeek = parseInt(user.days_per_week || '5')
+      const mealsPerDay = parseInt(user.meals_per_day || '2') // Default to 2 if not set
+      const includeBreakfast = user.include_breakfast || false
+
+      // 2. Determine Breakfast Price based on Tier
+      // Lower tiers: Tier 1, Tier 1+, Tier 2 -> $6.50
+      // Higher tiers: Tier 2+, Tier 3, Tier 3+ -> $8.00
+      const lowerBreakfastTiers = ['Tier 1', 'Tier 1+', 'Tier 2']
+      const breakfastPrice = lowerBreakfastTiers.includes(tier.tier_name) ? 6.50 : 8.00
+
+      // 3. Calculate Base Weekly Cost
+      const weeklyMealCost = daysPerWeek * mealsPerDay * tier.single_price
+      const weeklyBreakfastCost = includeBreakfast ? (daysPerWeek * breakfastPrice) : 0
+      const totalBaseWeekly = weeklyMealCost + weeklyBreakfastCost
+
+      // 4. Apply Frequency Discount
       if (subscriptionFrequency === 'weekly') {
-        mealSubtotal = tier.weekly_price || 0
+         // 10% Discount
+         mealSubtotal = totalBaseWeekly * 0.90
       } else if (subscriptionFrequency === 'monthly') {
-        mealSubtotal = tier.monthly_price || 0
+         // 15% Discount (x4 weeks)
+         mealSubtotal = (totalBaseWeekly * 4) * 0.85
       } else {
-        // Fallback to weekly pricing
-        mealSubtotal = tier.weekly_price || 0
+         // Fallback to weekly
+         mealSubtotal = totalBaseWeekly * 0.90
       }
     }
     // Meals are not available a la carte - require tier subscription
@@ -138,14 +157,18 @@ export async function POST(request: NextRequest) {
         // Calculate a per-meal price based on the tier pricing for order tracking
         let unitPrice = 0
         if (tier && subscriptionFrequency) {
-          const totalMealsPerWeek = user.meals_per_week || 10
-          if (subscriptionFrequency === 'weekly') {
-            unitPrice = (tier.weekly_price || 0) / totalMealsPerWeek
-          } else if (subscriptionFrequency === 'monthly') {
-            // For monthly, calculate weekly equivalent then divide by meals per week
-            const weeklyEquivalent = (tier.monthly_price || 0) / 4 // Approximate 4 weeks per month
-            unitPrice = weeklyEquivalent / totalMealsPerWeek
-          }
+           // Re-calculate the effective unit price based on the subtotal
+           // Total Subtotal / Total Meal Count
+           const daysPerWeek = parseInt(user.days_per_week || '5')
+           const mealsPerDay = parseInt(user.meals_per_day || '2')
+           const includeBreakfast = user.include_breakfast || false
+           
+           const mealsPerWeek = daysPerWeek * (mealsPerDay + (includeBreakfast ? 1 : 0))
+           const totalMeals = subscriptionFrequency === 'monthly' ? mealsPerWeek * 4 : mealsPerWeek
+           
+           if (totalMeals > 0) {
+             unitPrice = mealSubtotal / totalMeals
+           }
         }
         // Meals are not available a la carte - require tier subscription
 

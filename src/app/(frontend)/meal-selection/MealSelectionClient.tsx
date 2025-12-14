@@ -420,17 +420,11 @@ export default function MealSelectionClient({
               <p className="font-semibold text-lg" style={{ color: '#5CB85C' }}>
                 $
                 {user.subscription_frequency === 'weekly'
-                  ? (typeof user.tier === 'object' && user.tier?.weekly_price) || '0.00'
+                  ? 'Weekly Plan Price'
                   : user.subscription_frequency === 'monthly'
-                    ? (typeof user.tier === 'object' && user.tier?.monthly_price) || '0.00'
-                    : (typeof user.tier === 'object' && user.tier?.weekly_price) ||
-                      (typeof user.tier === 'object' && user.tier?.monthly_price) ||
-                      '0.00'}
-                {user.subscription_frequency === 'weekly'
-                  ? '/week'
-                  : user.subscription_frequency === 'monthly'
-                    ? '/month'
-                    : ''}
+                    ? 'Monthly Plan Price'
+                  : 'Start Subscription'
+                }
               </p>
             </div>
           </div>

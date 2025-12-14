@@ -8,8 +8,6 @@ interface Tier {
   id: string
   tier_name: string
   description?: string
-  monthly_price: number
-  weekly_price: number
   single_price: number
   calories?: string
 }
@@ -221,7 +219,7 @@ export default function SelectMealsPage() {
                           Billed every week. Simple and flexible.
                         </p>
                         <div className="text-2xl font-bold text-[#5CB85C] mb-6">
-                          ${selectedTierData.weekly_price}/week
+                           ${(selectedTierData.single_price * 10 * 0.90).toFixed(2)}/week <span className="text-sm text-gray-500 font-normal">(est. for 10 meals)</span>
                         </div>
                         <div className="space-y-3">
                           <div className="flex items-center">
@@ -286,7 +284,7 @@ export default function SelectMealsPage() {
                           Billed monthly with credit allocation. Best value!
                         </p>
                         <div className="text-2xl font-bold text-[#5CB85C] mb-6">
-                          ${selectedTierData.monthly_price}/month
+                           ${(selectedTierData.single_price * 40 * 0.85).toFixed(2)}/month <span className="text-sm text-gray-500 font-normal">(est. for 10 meals/wk)</span>
                         </div>
                         <div className="space-y-3">
                           <div className="flex items-center">

@@ -465,7 +465,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
               >
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Weekly</h3>
                 <p className="text-2xl font-bold text-emerald-600 mb-2">
-                  ${selectedTier?.weekly_price || 0}
+                  ${selectedTier?.single_price ? (selectedTier.single_price * 10 * 0.90).toFixed(2) : '0.00'}
                 </p>
                 <p className="text-gray-600">per week</p>
               </div>
@@ -479,7 +479,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
               >
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Monthly</h3>
                 <p className="text-2xl font-bold text-emerald-600 mb-2">
-                  ${selectedTier?.monthly_price || 0}
+                  ${selectedTier?.single_price ? (selectedTier.single_price * 40 * 0.85).toFixed(2) : '0.00'}
                 </p>
                 <p className="text-gray-600">per month</p>
               </div>
