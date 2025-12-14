@@ -36,7 +36,8 @@ export default function GuestCheckoutFormClient() {
   const [allergies, setAllergies] = useState<string[]>([])
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
   })
@@ -113,8 +114,8 @@ export default function GuestCheckoutFormClient() {
 
     try {
       // Validate required fields
-      if (!formData.name || !formData.email || !formData.phone) {
-        alert('Please fill in all required fields (Name, Email, Phone)')
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+        alert('Please fill in all required fields (First Name, Last Name, Email, Phone)')
         setLoading(false)
         return
       }
@@ -355,19 +356,35 @@ export default function GuestCheckoutFormClient() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Information</h2>
 
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="firstName"
+                      name="firstName"
+                      required
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="lastName"
+                      name="lastName"
+                      required
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
                 </div>
 
                 <div>

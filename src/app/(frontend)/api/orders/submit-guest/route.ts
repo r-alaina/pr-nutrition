@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required customer fields
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-      return NextResponse.json({ message: 'Name, email, and phone are required' }, { status: 400 })
+    if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.phone) {
+      return NextResponse.json({ message: 'First name, last name, email, and phone are required' }, { status: 400 })
     }
 
     // Check if customer already exists
@@ -96,7 +96,8 @@ export async function POST(request: NextRequest) {
       customer = await payload.create({
         collection: 'customers',
         data: {
-          name: customerInfo.name,
+          firstName: customerInfo.firstName,
+          lastName: customerInfo.lastName,
           email: customerInfo.email,
           password: randomPassword,
           tier: tier?.id || null,
