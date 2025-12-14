@@ -136,7 +136,7 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
         case 2:
           return "Select the number of meals you'd like per week."
         case 3:
-          return "Choose how often you'd like to receive your meals."
+          return ""
         case 4:
           return 'Tell us about your dietary preferences and restrictions.'
         case 5:
