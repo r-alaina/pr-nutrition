@@ -1,39 +1,30 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
 
-interface User {
-  id: string
-  name?: string
-  email?: string
-  tier?: any
-  subscription_frequency?: string
-  meals_per_week?: number
-  include_breakfast?: boolean
-  include_snacks?: boolean
-  allergies?: string[]
-  week_half?: string
-  preferences_set?: boolean
-}
+import type { Customer } from '@/payload-types'
 
 interface AccountSettingsClientProps {
-  user: User
+  user: Customer
 }
 
 export default function AccountSettingsClient({ user: initialUser }: AccountSettingsClientProps) {
-  const [user, setUser] = useState(initialUser)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [user, setUser] = useState<Customer>(initialUser)
+  const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isEditingPreferences, setIsEditingPreferences] = useState(false)
   const [profileData, setProfileData] = useState({
-    name: initialUser.name || '',
+    firstName: initialUser.firstName || '',
+    lastName: initialUser.lastName || '',
     email: initialUser.email || '',
   })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const desktopDropdownRef = useRef<HTMLDivElement>(null)
+  const mobileDropdownRef = useRef<HTMLDivElement>(null)
 
   // Function to refresh user data
   const refreshUserData = async () => {
@@ -43,7 +34,8 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
         const userData = await response.json()
         setUser(userData.user)
         setProfileData({
-          name: userData.user.name || '',
+          firstName: userData.user.firstName || '',
+          lastName: userData.user.lastName || '',
           email: userData.user.email || '',
         })
       }
@@ -57,11 +49,17 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
     refreshUserData()
   }, [])
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
+      if (
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDesktopDropdownOpen(false)
+      }
+      if (mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target as Node)) {
+        setIsMobileDropdownOpen(false)
       }
     }
 
@@ -94,8 +92,9 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       setIsEditingProfile(false)
       // Refresh the page to show updated data
       window.location.reload()
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setMessage(`Error: ${message}`)
     } finally {
       setLoading(false)
     }
@@ -112,7 +111,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          tier: user.tier?.id || null,
+          tier: (typeof user.tier === 'object' ? user.tier?.id : user.tier) || null,
           subscription_frequency: user.subscription_frequency || null,
           meals_per_week: user.meals_per_week || null,
           include_breakfast: user.include_breakfast || false,
@@ -129,11 +128,11 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
       }
 
       setMessage('Preferences updated successfully!')
-      setIsEditingPreferences(false)
       // Refresh the page to show updated data
       window.location.reload()
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setMessage(`Error: ${message}`)
     } finally {
       setLoading(false)
     }
@@ -147,9 +146,11 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
               <Link href="/">
-                <img
+                <Image
                   src="/images/brand/logo.png"
                   alt="Meal PREPS Logo"
+                  width={500}
+                  height={200}
                   className="h-10 sm:h-12 w-auto"
                 />
               </Link>
@@ -176,14 +177,16 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
               >
                 Order Now
               </Link>
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={desktopDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsDesktopDropdownOpen(!isDesktopDropdownOpen)}
                   className="flex items-center space-x-2 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+                  aria-expanded={isDesktopDropdownOpen}
+                  aria-haspopup="true"
                 >
-                  <span>{user?.name || 'User'}</span>
+                  <span>{user?.firstName} {user?.lastName || ''}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -197,26 +200,26 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isDesktopDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -224,7 +227,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Logout
                     </Link>
@@ -235,14 +238,16 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
 
             {/* Mobile Menu Button */}
             <div className="flex items-center space-x-3 lg:hidden">
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={mobileDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
                   className="flex items-center space-x-1 text-gray-700 font-medium text-sm"
+                  aria-expanded={isMobileDropdownOpen}
+                  aria-haspopup="true"
                 >
-                  <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                  <span className="text-xs sm:text-sm">{user?.firstName} {user?.lastName || ''}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -256,26 +261,26 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isMobileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -283,7 +288,7 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Logout
                     </Link>
@@ -387,7 +392,11 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
                 <button
                   onClick={() => {
                     setIsEditingProfile(false)
-                    setProfileData({ name: user.name || '', email: user.email || '' })
+                    setProfileData({ 
+                      firstName: user.firstName || '', 
+                      lastName: user.lastName || '', 
+                      email: user.email || '' 
+                    })
                     setMessage('')
                   }}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
@@ -412,17 +421,31 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
             )}
           </div>
           <div className="px-6 py-4 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input
-                type="text"
-                value={profileData.name}
-                onChange={(e) => setProfileData((prev) => ({ ...prev, name: e.target.value }))}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                  !isEditingProfile ? 'bg-gray-50' : ''
-                }`}
-                readOnly={!isEditingProfile}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={profileData.firstName}
+                  onChange={(e) => setProfileData((prev) => ({ ...prev, firstName: e.target.value }))}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                    !isEditingProfile ? 'bg-gray-50' : ''
+                  }`}
+                  readOnly={!isEditingProfile}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input
+                  type="text"
+                  value={profileData.lastName}
+                  onChange={(e) => setProfileData((prev) => ({ ...prev, lastName: e.target.value }))}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                    !isEditingProfile ? 'bg-gray-50' : ''
+                  }`}
+                  readOnly={!isEditingProfile}
+                />
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -442,22 +465,13 @@ export default function AccountSettingsClient({ user: initialUser }: AccountSett
         <div className="mt-8 bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
-            <Link
-              href="/preferences"
-              className="px-4 py-2 text-white rounded-md transition-colors whitespace-nowrap"
-              style={{ backgroundColor: '#5CB85C' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
-            >
-              Update Preferences
-            </Link>
           </div>
           <div className="px-6 py-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tier</label>
                 <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md">
-                  {user.tier?.tier_name || 'Not selected'}
+                  {(typeof user.tier === 'object' ? user.tier?.tier_name : null) || 'Not selected'}
                 </div>
               </div>
               <div>

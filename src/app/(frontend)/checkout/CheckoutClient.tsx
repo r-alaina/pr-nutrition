@@ -41,11 +41,12 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   }
 
   const getPlanSummary = () => {
-    const tier = (user as any).tier
-    const frequency = (user as any).subscription_frequency
-    const mealsPerWeek = (user as any).meals_per_week
-    const includeBreakfast = (user as any).include_breakfast
-    const includeSnacks = (user as any).include_snacks
+    // Narrowing the tier type to check if it's the full Tier object
+    const tier = typeof user.tier === 'object' && user.tier !== null ? user.tier : null
+    const frequency = user.subscription_frequency
+    const mealsPerWeek = user.meals_per_week
+    const includeBreakfast = user.include_breakfast
+    const includeSnacks = user.include_snacks
 
     return {
       tier: tier?.tier_name || 'Not selected',
@@ -141,11 +142,10 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   Pickup Information
                 </label>
                 <p className="text-sm text-gray-600">
-                  Week Half:{' '}
                   <span className="font-semibold">
-                    {(user as any).week_half === 'firstHalf'
+                    {user.week_half === 'firstHalf'
                       ? 'First Half (Sunday & Monday)'
-                      : (user as any).week_half === 'secondHalf'
+                      : user.week_half === 'secondHalf'
                         ? 'Second Half (Wednesday & Thursday)'
                         : 'Not set'}
                   </span>
@@ -157,19 +157,11 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   Dietary Information
                 </label>
                 <div className="text-sm text-gray-600">
-                  <p>
-                    <span className="font-semibold">Restrictions:</span>{' '}
-                    {(user as any).dietary_restrictions &&
-                    (user as any).dietary_restrictions.length > 0
-                      ? (user as any).dietary_restrictions
-                          .map((dr: any) => dr.name || dr)
-                          .join(', ')
-                      : 'None'}
-                  </p>
+
                   <p>
                     <span className="font-semibold">Allergies:</span>{' '}
-                    {(user as any).allergies && (user as any).allergies.length > 0
-                      ? (user as any).allergies.join(', ')
+                    {user.allergies && user.allergies.length > 0
+                      ? user.allergies.join(', ')
                       : 'None'}
                   </p>
                 </div>

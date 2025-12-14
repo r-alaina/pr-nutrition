@@ -1,34 +1,16 @@
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { ALLERGENS, toCanonicalAllergen } from '@/utilities/allergens'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
-interface Tier {
-  id: string
-  tier_name: string
-  description: string
-  weekly_price: number
-  monthly_price: number
-  single_price: number
-}
-
-interface User {
-  id: string
-  name?: string
-  email?: string
-  tier?: any
-  subscription_frequency?: string
-  meals_per_week?: number
-  include_breakfast?: boolean
-  include_snacks?: boolean
-  allergies?: string[]
-  week_half?: string
-  preferences_set?: boolean
-}
+import type { Customer, Tier } from '@/payload-types'
 
 interface PreferencesClientProps {
-  user: User
+  user: Customer
 }
 
 export default function PreferencesClient({ user }: PreferencesClientProps) {
@@ -36,22 +18,33 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [tiers, setTiers] = useState<Tier[]>([])
-  const [selectedTier, setSelectedTier] = useState<Tier | null>(user?.tier || null)
+  const [selectedTier, setSelectedTier] = useState<Tier | null>(
+    user?.tier && typeof user.tier === 'object' ? user.tier : null,
+  )
   const [selectedPlan, setSelectedPlan] = useState<string>(user?.subscription_frequency || '')
   const [selectedMeals, setSelectedMeals] = useState<number>(user?.meals_per_week || 10)
-  const [includeBreakfast, setIncludeBreakfast] = useState(user?.include_breakfast || false)
-  const [includeSnacks, setIncludeSnacks] = useState(user?.include_snacks || false)
-  const [allergies, setAllergies] = useState<string[]>(user?.allergies || [])
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [includeSnacks, _setIncludeSnacks] = useState(user?.include_snacks || false)
+  const [allergies, setAllergies] = useState<string[]>(
+    (user?.allergies || []).map(toCanonicalAllergen)
+  )
+  const [isDesktopDropdownOpen, setIsDesktopDropdownOpen] = useState(false)
+  const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
+  const desktopDropdownRef = useRef<HTMLDivElement>(null)
+  const mobileDropdownRef = useRef<HTMLDivElement>(null)
 
   const totalSteps = 5
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
+      if (
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDesktopDropdownOpen(false)
+      }
+      if (mobileDropdownRef.current && !mobileDropdownRef.current.contains(event.target as Node)) {
+        setIsMobileDropdownOpen(false)
       }
     }
 
@@ -83,24 +76,6 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         setTiers([])
       })
   }, [])
-
-  const getStepTitle = () => {
-    switch (currentStep) {
-      case 1:
-        return "What's your calorie goal?"
-      case 2:
-        return 'How often do you want to subscribe?'
-      case 3:
-        return 'How many meals per week?'
-      case 4:
-        return 'Complete your preferences'
-      case 5:
-        return 'Review your plan'
-      default:
-        return 'Update Preferences'
-    }
-  }
-
   const getStepSubtitle = () => {
     switch (currentStep) {
       case 1:
@@ -117,6 +92,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
         return ''
     }
   }
+
 
   const handleTierSelect = (tier: Tier) => {
     setSelectedTier(tier)
@@ -183,9 +159,10 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
       // Redirect to success page
       router.push('/preferences-success')
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving preferences:', error)
-      alert(`Failed to save preferences: ${error.message}`)
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to save preferences: ${message}`)
     }
   }
 
@@ -197,9 +174,11 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center">
               <Link href="/">
-                <img
+                <Image
                   src="/images/brand/logo.png"
                   alt="Meal PREPS Logo"
+                  width={150}
+                  height={48}
                   className="h-10 sm:h-12 w-auto"
                 />
               </Link>
@@ -226,14 +205,16 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
               >
                 Order Now
               </Link>
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={desktopDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsDesktopDropdownOpen(!isDesktopDropdownOpen)}
                   className="flex items-center space-x-2 text-gray-700 font-medium hover:text-gray-900 transition-colors"
+                  aria-expanded={isDesktopDropdownOpen}
+                  aria-haspopup="true"
                 >
-                  <span>{user?.name || 'User'}</span>
+                  <span>{user?.firstName} {user?.lastName || ''}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isDesktopDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -247,26 +228,26 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isDesktopDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -274,7 +255,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsDesktopDropdownOpen(false)}
                     >
                       Logout
                     </Link>
@@ -285,14 +266,16 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
             {/* Mobile Menu Button */}
             <div className="flex items-center space-x-3 lg:hidden">
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={mobileDropdownRef}>
                 <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
                   className="flex items-center space-x-1 text-gray-700 font-medium text-sm"
+                  aria-expanded={isMobileDropdownOpen}
+                  aria-haspopup="true"
                 >
-                  <span className="text-xs sm:text-sm">{user?.name || 'User'}</span>
+                  <span className="text-xs sm:text-sm">{user?.firstName} {user?.lastName || ''}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform ${isMobileDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -306,26 +289,26 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                   </svg>
                 </button>
 
-                {isDropdownOpen && (
+                {isMobileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                       href="/account-settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Account Settings
                     </Link>
                     <Link
                       href="/preferences"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors bg-gray-50"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Manage Preferences
                     </Link>
                     <Link
                       href="/order-history"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Order History
                     </Link>
@@ -333,7 +316,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
                     <Link
                       href="/logout"
                       className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      onClick={() => setIsDropdownOpen(false)}
+                      onClick={() => setIsMobileDropdownOpen(false)}
                     >
                       Logout
                     </Link>
@@ -425,7 +408,7 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
 
         {/* Title and Subtitle */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{getStepTitle()}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName}!</h1>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto">{getStepSubtitle()}</p>
         </div>
 
@@ -543,17 +526,17 @@ export default function PreferencesClient({ user }: PreferencesClientProps) {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Allergies</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {['Nuts', 'Dairy', 'Gluten', 'Shellfish', 'Soy', 'Eggs'].map((allergy) => (
+                {ALLERGENS.map((allergen) => (
                   <button
-                    key={allergy}
-                    onClick={() => handleAllergyToggle(allergy)}
+                    key={allergen}
+                    onClick={() => handleAllergyToggle(allergen)}
                     className={`p-3 text-left border rounded-lg transition-all ${
-                      allergies.includes(allergy)
+                      allergies.includes(allergen)
                         ? 'border-red-500 bg-red-50 text-red-700'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {allergy}
+                    {allergen}
                   </button>
                 ))}
               </div>

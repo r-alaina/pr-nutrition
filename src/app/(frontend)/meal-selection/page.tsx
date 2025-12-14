@@ -2,7 +2,7 @@ import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import MealSelectionClient from './MealSelectionClient'
-import type { MenuItem, Customer } from '@/payload-types'
+import type { MenuItem } from '@/payload-types'
 
 export default async function MealSelectionPage() {
   const user = await getUser()
@@ -54,16 +54,16 @@ export default async function MealSelectionPage() {
 
     const firstHalfIds = new Set(
       firstHalfMenuItems
-        .filter((item: any) => item.available !== false)
-        .map((item: any) =>
+        .filter((item) => item.available !== false)
+        .map((item) =>
           String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
         ),
     )
 
     const secondHalfIds = new Set(
       secondHalfMenuItems
-        .filter((item: any) => item.available !== false)
-        .map((item: any) =>
+        .filter((item) => item.available !== false)
+        .map((item) =>
           String(typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem),
         ),
     )

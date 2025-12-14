@@ -25,7 +25,7 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
         {/* What You'll Get Section */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 md:p-12 mb-12 shadow-lg">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-            What You'll Get from Your 3D Body Scan
+            What You&apos;ll Get from Your 3D Body Scan
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-md">
@@ -264,7 +264,7 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
             Get Your 3D Body Scan
           </a>
           <p className="text-sm mt-4 opacity-90">
-            You'll be redirected to Fit3D to complete your scan
+            You&apos;ll be redirected to Fit3D to complete your scan
           </p>
         </div>
       </div>

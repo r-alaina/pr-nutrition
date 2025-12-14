@@ -38,7 +38,7 @@ export default function MealSelectionClient({
   const selectedMeals = [...selectedFirstHalfMeals, ...selectedSecondHalfMeals]
 
   // Separate meals from snacks
-  const selectedMealsOnly = selectedMeals.filter((item) => item.meal.category !== 'snack')
+
   const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack')
 
   // Calculate allergen charges for display
@@ -46,7 +46,7 @@ export default function MealSelectionClient({
 
   const handleMealToggle = (meal: MenuItem, half: 'firstHalf' | 'secondHalf') => {
     const setter = half === 'firstHalf' ? setSelectedFirstHalfMeals : setSelectedSecondHalfMeals
-    const currentMeals = half === 'firstHalf' ? selectedFirstHalfMeals : selectedSecondHalfMeals
+
 
     setter((prev) => {
       const existingIndex = prev.findIndex((item) => item.meal.id === meal.id)
@@ -145,13 +145,14 @@ export default function MealSelectionClient({
         .filter((item) => item.meal.category !== 'snack')
         .reduce((total, item) => total + item.quantity, 0)
     }
-    const firstHalfTotal = selectedFirstHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
-      .reduce((total, item) => total + item.quantity, 0)
-    const secondHalfTotal = selectedSecondHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
-      .reduce((total, item) => total + item.quantity, 0)
-    return firstHalfTotal + secondHalfTotal
+    return (
+      selectedFirstHalfMeals
+        .filter((item) => item.meal.category !== 'snack')
+        .reduce((total, item) => total + item.quantity, 0) +
+      selectedSecondHalfMeals
+        .filter((item) => item.meal.category !== 'snack')
+        .reduce((total, item) => total + item.quantity, 0)
+    )
   }
 
   const getTotalSelectedSnacks = () => {
@@ -324,7 +325,7 @@ export default function MealSelectionClient({
                               <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
                                 <p className="text-xs text-yellow-800 font-medium">
                                   Contains {getMatchingAllergens(item, user.allergies || []).length}{' '}
-                                  allergen(s) you're sensitive to
+                                  allergen(s) you&apos;re sensitive to
                                 </p>
                                 <p className="text-xs text-yellow-700 mt-1">
                                   Additional $
@@ -401,13 +402,13 @@ export default function MealSelectionClient({
             <div>
               <p className="text-sm text-gray-600">Tier</p>
               <p className="font-semibold text-gray-900">
-                {(user as any).tier?.tier_name || 'Not selected'}
+                {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not selected'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Frequency</p>
               <p className="font-semibold text-gray-900 capitalize">
-                {(user as any).subscription_frequency || 'Not selected'}
+                {user.subscription_frequency || 'Not selected'}
               </p>
             </div>
             <div>
@@ -418,16 +419,16 @@ export default function MealSelectionClient({
               <p className="text-sm text-gray-600">Plan Price</p>
               <p className="font-semibold text-lg" style={{ color: '#5CB85C' }}>
                 $
-                {(user as any).subscription_frequency === 'weekly'
-                  ? (user as any).tier?.weekly_price || '0.00'
-                  : (user as any).subscription_frequency === 'monthly'
-                    ? (user as any).tier?.monthly_price || '0.00'
-                    : (user as any).tier?.weekly_price ||
-                      (user as any).tier?.monthly_price ||
+                {user.subscription_frequency === 'weekly'
+                  ? (typeof user.tier === 'object' && user.tier?.weekly_price) || '0.00'
+                  : user.subscription_frequency === 'monthly'
+                    ? (typeof user.tier === 'object' && user.tier?.monthly_price) || '0.00'
+                    : (typeof user.tier === 'object' && user.tier?.weekly_price) ||
+                      (typeof user.tier === 'object' && user.tier?.monthly_price) ||
                       '0.00'}
-                {(user as any).subscription_frequency === 'weekly'
+                {user.subscription_frequency === 'weekly'
                   ? '/week'
-                  : (user as any).subscription_frequency === 'monthly'
+                  : user.subscription_frequency === 'monthly'
                     ? '/month'
                     : ''}
               </p>
@@ -474,8 +475,7 @@ export default function MealSelectionClient({
           <button
             onClick={async () => {
               // Check if both halves have meals or at least one half is complete
-              const firstHalfTotal = getTotalSelectedMeals('firstHalf')
-              const secondHalfTotal = getTotalSelectedMeals('secondHalf')
+              // Check if both halves have meals or at least one half is complete
 
               if (selectedMeals.length === 0) {
                 alert('Please select at least one meal before proceeding.')

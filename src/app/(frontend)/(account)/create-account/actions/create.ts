@@ -6,7 +6,8 @@ import config from '@/payload.config'
 interface CreateParams {
   email: string
   password: string
-  name: string
+  firstName: string
+  lastName: string
 }
 
 export interface Response {
@@ -14,7 +15,7 @@ export interface Response {
   error?: string
 }
 
-export async function create({ email, password, name }: CreateParams): Promise<Response> {
+export async function create({ email, password, firstName, lastName }: CreateParams): Promise<Response> {
   // initialize Payload
   const payload = await getPayload({ config })
 
@@ -38,7 +39,8 @@ export async function create({ email, password, name }: CreateParams): Promise<R
           data: {
             email,
             password,
-            name,
+            firstName,
+            lastName,
           },
         })
         // and return success: true if the try succeeds

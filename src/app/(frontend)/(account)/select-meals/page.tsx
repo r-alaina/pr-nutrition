@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ALLERGENS } from '@/utilities/allergens'
 
 interface Tier {
   id: string
@@ -580,7 +581,7 @@ export default function SelectMealsPage() {
                   'Vegetarian',
                   'Vegan',
                   'Gluten-Free',
-                  'Dairy-Free',
+                  'Lactose-Free',
                   'Keto',
                   'Paleo',
                   'Low-Carb',
@@ -628,35 +629,25 @@ export default function SelectMealsPage() {
               <h3 className="text-2xl font-bold text-gray-900">Allergies</h3>
               <p className="text-lg text-gray-600">Let us know about any food allergies</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {[
-                  'Nuts',
-                  'Peanuts',
-                  'Shellfish',
-                  'Fish',
-                  'Eggs',
-                  'Soy',
-                  'Wheat',
-                  'Sesame',
-                  'None',
-                ].map((allergy) => (
+                {[...ALLERGENS, 'None'].map((allergen) => (
                   <button
-                    key={allergy}
+                    key={allergen}
                     onClick={() => {
                       setAllergies((prev) =>
-                        prev.includes(allergy)
-                          ? prev.filter((a) => a !== allergy)
-                          : [...prev, allergy],
+                        prev.includes(allergen)
+                          ? prev.filter((a) => a !== allergen)
+                          : [...prev, allergen],
                       )
                     }}
                     className={`p-4 rounded-2xl border-2 transition-all text-left ${
-                      allergies.includes(allergy)
+                      allergies.includes(allergen)
                         ? 'border-[#5CB85C] bg-green-50'
                         : 'border-gray-300 bg-white hover:border-gray-400'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-medium text-gray-900">{allergy}</span>
-                      {allergies.includes(allergy) && (
+                      <span className="text-lg font-medium text-gray-900">{allergen}</span>
+                      {allergies.includes(allergen) && (
                         <svg
                           className="w-5 h-5 text-[#5CB85C]"
                           fill="currentColor"

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import { useState } from 'react'
 import type { MenuItem, Customer } from '@/payload-types'
 import AuthenticatedHeader from '../../components/AuthenticatedHeader'
@@ -44,9 +45,11 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
             <div className="flex justify-between items-center py-3 md:py-4">
               <div className="flex items-center">
                 <Link href="/">
-                  <img
+                  <Image
                     src="/images/brand/logo.png"
                     alt="Meal PREPS Logo"
+                    width={150}
+                    height={48}
                     className="h-10 sm:h-12 w-auto"
                   />
                 </Link>
@@ -240,7 +243,8 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                             ${(item.price || 0).toFixed(2)}
                           </span>
                         ) : (
-                          user && (
+                          user &&
+                          user.preferences_set && (
                             <span className="text-lg text-gray-600">
                               {item.category === 'snack'
                                 ? 'A la carte'
@@ -250,14 +254,14 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                         )}
                         <Link
                           href={
-                            user && (user as any).preferences_set ? '/meal-selection' : '/order-now'
+                            user && user.preferences_set ? '/meal-selection' : '/order-now'
                           }
                           className="text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
                           style={{ backgroundColor: '#5CB85C' }}
                           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
                           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
                         >
-                          {user && (user as any).preferences_set ? 'Order Meals' : 'Order Now'}
+                          {user && user.preferences_set ? 'Order Meals' : 'Order Now'}
                         </Link>
                       </div>
                     </div>

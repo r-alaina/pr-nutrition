@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
@@ -11,12 +9,12 @@ interface PreferencesSuccessClientProps {
 }
 
 export default function PreferencesSuccessClient({ user }: PreferencesSuccessClientProps) {
-  const router = useRouter()
+
 
   const getPlanSummary = () => {
-    const tier = (user as any).tier
-    const frequency = (user as any).subscription_frequency
-    const mealsPerWeek = (user as any).meals_per_week
+    const tier = typeof user.tier === 'object' ? user.tier : null
+    const frequency = user.subscription_frequency
+    const mealsPerWeek = user.meals_per_week
 
     return {
       tier: tier?.tier_name || 'Not selected',
