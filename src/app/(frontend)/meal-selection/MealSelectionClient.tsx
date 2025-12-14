@@ -324,7 +324,7 @@ export default function MealSelectionClient({
                               <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
                                 <p className="text-xs text-yellow-800 font-medium">
                                   Contains {getMatchingAllergens(item, user.allergies || []).length}{' '}
-                                  allergen(s) you're sensitive to
+                                  allergen(s) you&apos;re sensitive to
                                 </p>
                                 <p className="text-xs text-yellow-700 mt-1">
                                   Additional $
