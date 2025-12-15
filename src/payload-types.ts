@@ -72,7 +72,6 @@ export interface Config {
     customers: Customer;
     'menu-items': MenuItem;
     tiers: Tier;
-    'weekly-menus': WeeklyMenu;
     orders: Order;
     'kitchen-orders': KitchenOrder;
     'payload-locked-documents': PayloadLockedDocument;
@@ -85,7 +84,6 @@ export interface Config {
     customers: CustomersSelect<false> | CustomersSelect<true>;
     'menu-items': MenuItemsSelect<false> | MenuItemsSelect<true>;
     tiers: TiersSelect<false> | TiersSelect<true>;
-    'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'kitchen-orders': KitchenOrdersSelect<false> | KitchenOrdersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -280,33 +278,6 @@ export interface MenuItem {
     firstHalf?: boolean | null;
     secondHalf?: boolean | null;
   };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "weekly-menus".
- */
-export interface WeeklyMenu {
-  id: number;
-  weekLabel: string;
-  startDate: string;
-  endDate: string;
-  active?: boolean | null;
-  firstHalfItems?:
-    | {
-        menuItem: number | MenuItem;
-        available?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  secondHalfItems?:
-    | {
-        menuItem: number | MenuItem;
-        available?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -509,10 +480,6 @@ export interface PayloadLockedDocument {
         value: number | Tier;
       } | null)
     | ({
-        relationTo: 'weekly-menus';
-        value: number | WeeklyMenu;
-      } | null)
-    | ({
         relationTo: 'orders';
         value: number | Order;
       } | null)
@@ -666,32 +633,6 @@ export interface TiersSelect<T extends boolean = true> {
   monthly_price?: T;
   weekly_price?: T;
   single_price?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "weekly-menus_select".
- */
-export interface WeeklyMenusSelect<T extends boolean = true> {
-  weekLabel?: T;
-  startDate?: T;
-  endDate?: T;
-  active?: T;
-  firstHalfItems?:
-    | T
-    | {
-        menuItem?: T;
-        available?: T;
-        id?: T;
-      };
-  secondHalfItems?:
-    | T
-    | {
-        menuItem?: T;
-        available?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
 }

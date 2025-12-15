@@ -1,23 +1,10 @@
-import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import MealSelectionClient from './MealSelectionClient'
+import GuestMealSelectionClient from './GuestMealSelectionClient'
 import type { MenuItem } from '@/payload-types'
 
-export default async function MealSelectionPage() {
-  const user = await getUser()
-
-  if (!user) {
-    // Redirect to login if not authenticated
-    return <div>Redirecting to login...</div>
-  }
-
-  // Check if user has preferences set up
-  if (!user.preferences_set) {
-    // Redirect to order-now for preference setup
-    return <div>Redirecting to preference setup...</div>
-  }
-
+export default async function GuestMealSelectionPage() {
   const payload = await getPayload({ config })
 
   // Get all active menu items
@@ -83,11 +70,10 @@ export default async function MealSelectionPage() {
   ]
 
   return (
-    <MealSelectionClient
+    <GuestMealSelectionClient
       groupedFirstHalf={groupedFirstHalf}
       groupedSecondHalf={groupedSecondHalf}
       categoryOrder={categoryOrder}
-      user={user}
     />
   )
 }

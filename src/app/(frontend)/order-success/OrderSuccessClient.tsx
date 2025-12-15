@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 
 interface OrderSuccessClientProps {
-  user: Customer
+  user: Customer | null
 }
 
 interface OrderItem {
@@ -40,13 +40,33 @@ interface Order {
   taxAmount: number
   totalAmount: number
   createdAt: string
+  weekHalf?: 'firstHalf' | 'secondHalf' | 'both'
 }
 
 export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
-
+  const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/menu', label: 'Menu' },
+    { href: '/order-now', label: 'Order Now' },
+    { href: '/login', label: 'Log In' },
+  ]
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path
+    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
+  }
+
+  const getLinkStyle = (path: string) => {
+    const isActive = pathname === path
+    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
+  }
 
   useEffect(() => {
     // Get order data from URL params
@@ -62,10 +82,91 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
     setLoading(false)
   }, [searchParams])
 
+  // Render guest header if no user
+  const renderHeader = () => {
+    if (user) {
+      return <AuthenticatedHeader user={user} />
+    }
+
+    return (
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/">
+                <img
+                  src="/images/brand/logo.png"
+                  alt="Meal PREPS Logo"
+                  className="h-10 sm:h-12 w-auto"
+                />
+              </Link>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={getLinkClass(link.href)}
+                  style={getLinkStyle(link.href)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-gray-700 hover:text-gray-900"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {isMobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="lg:hidden pb-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </header>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <AuthenticatedHeader user={user} />
+        {renderHeader()}
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
@@ -79,7 +180,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
   if (!order) {
     return (
       <div className="min-h-screen bg-white">
-        <AuthenticatedHeader user={user} />
+        {renderHeader()}
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Order Not Found</h1>
@@ -87,13 +188,13 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               We couldn&apos;t find your order details. Please try again.
             </p>
             <Link
-              href="/meal-selection"
+              href={user ? '/meal-selection' : '/guest-checkout'}
               className="inline-flex items-center px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors"
               style={{ backgroundColor: '#5CB85C' }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
             >
-              Back to Meal Selection
+              {user ? 'Back to Meal Selection' : 'Back to Order'}
             </Link>
           </div>
         </div>
@@ -121,7 +222,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <AuthenticatedHeader user={user} />
+      {renderHeader()}
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -147,6 +248,16 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
             Thank you for your order! We&apos;ll start preparing your meals.
           </p>
           <p className="text-lg text-gray-500">Order #{order.orderNumber}</p>
+        </div>
+
+        {/* Contact Info Box */}
+        <div className="bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-6 mb-8">
+          <p className="text-sm text-blue-800 text-center">
+            Not sure which tier is right for you? We highly recommend calling us at{' '}
+            <span className="font-bold text-blue-900">(956) 424-2247</span> or stopping by our
+            office so Peggy, our registered dietitian, can help determine the best tier for your
+            specific goals and needs.
+          </p>
         </div>
 
         {/* Order Details */}
@@ -185,21 +296,26 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               ))}
             </div>
 
-            {/* Subscription Details */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
-              <div className="text-sm text-blue-800">
-                <p>
-                  <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Meals per Week:</strong> {user.meals_per_week || 0}
-                </p>
+            {/* Subscription Details - Only show for authenticated users */}
+            {user && (
+              <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
+                <div className="text-sm text-blue-800">
+                  <p>
+                    <strong>Tier:</strong>{' '}
+                    {typeof user.tier === 'object' && user.tier !== null
+                      ? user.tier.tier_name
+                      : 'Not specified'}
+                  </p>
+                  <p>
+                    <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
+                  </p>
+                  <p>
+                    <strong>Meals per Week:</strong> {user.meals_per_week || 0}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Allergen Charges Summary */}
             {order.allergenCharges && order.allergenCharges.length > 0 && (
@@ -208,8 +324,8 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                   Allergen Accommodation Charges
                 </h4>
                 <p className="text-sm text-yellow-700 mb-3">
-                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
-                  order)
+                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00
+                  per order)
                 </p>
                 {order.allergenCharges.map((charge, index) => (
                   <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
@@ -235,11 +351,13 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {user.subscription_frequency === 'weekly'
-                    ? 'Weekly Plan:'
-                    : user.subscription_frequency === 'monthly'
-                      ? 'Monthly Plan:'
-                      : 'Plan:'}
+                  {user
+                    ? user.subscription_frequency === 'weekly'
+                      ? 'Weekly Plan:'
+                      : user.subscription_frequency === 'monthly'
+                        ? 'Monthly Plan:'
+                        : 'Plan:'
+                    : 'Subtotal:'}
                 </span>
                 <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
               </div>
@@ -259,38 +377,56 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 <span>Total:</span>
                 <span style={{ color: '#5CB85C' }}>{formatCurrency(order.totalAmount)}</span>
               </div>
-              <div className="text-xs text-gray-500 mt-2">
-                {user.subscription_frequency === 'weekly'
-                  ? 'Charged weekly'
-                  : user.subscription_frequency === 'monthly'
-                    ? 'Charged monthly'
-                    : 'One-time charge'}
-              </div>
+              {user && (
+                <div className="text-xs text-gray-500 mt-2">
+                  {user.subscription_frequency === 'weekly'
+                    ? 'Charged weekly'
+                    : user.subscription_frequency === 'monthly'
+                      ? 'Charged monthly'
+                      : 'One-time charge'}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Next Steps */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-semibold text-green-900 mb-3">What&apos;s Next?</h3>
-          <ul className="space-y-2 text-green-800">
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>You&apos;ll receive a confirmation email shortly</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>We&apos;ll start preparing your meals according to your preferences</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>We&apos;ll notify you when your order is ready for pickup</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-green-600 mr-2">•</span>
-              <span>Order details have been logged and will be processed by our team</span>
-            </li>
-          </ul>
+          <h3 className="text-lg font-semibold text-green-900 mb-3">Pickup Information</h3>
+          <div className="space-y-3 text-green-800">
+            {order.weekHalf === 'firstHalf' && (
+              <p className="font-semibold">
+                Please pick up your order on <strong>Sunday & Monday</strong> (First Half)
+              </p>
+            )}
+            {order.weekHalf === 'secondHalf' && (
+              <p className="font-semibold">
+                Please pick up your order on <strong>Wednesday & Thursday</strong> (Second Half)
+              </p>
+            )}
+            {order.weekHalf === 'both' && (
+              <div>
+                <p className="font-semibold mb-2">Please pick up your order according to:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>
+                    <strong>First Half:</strong> Sunday & Monday
+                  </li>
+                  <li>
+                    <strong>Second Half:</strong> Wednesday & Thursday
+                  </li>
+                </ul>
+              </div>
+            )}
+            {!order.weekHalf && (
+              <p className="font-semibold">
+                Please pick up your order according to your selected week half
+              </p>
+            )}
+            <p className="text-sm text-green-700 mt-4">
+              We&apos;ll start preparing your meals according to your preferences and have them
+              ready for pickup.
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -302,7 +438,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
             Back to Home
           </Link>
           <Link
-            href="/meal-selection"
+            href={user ? '/meal-selection' : '/guest-checkout'}
             className="inline-flex items-center justify-center px-8 py-3 text-white rounded-lg font-semibold transition-colors"
             style={{ backgroundColor: '#5CB85C' }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
