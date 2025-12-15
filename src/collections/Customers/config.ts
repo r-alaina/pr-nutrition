@@ -30,6 +30,32 @@ export const Customers: CollectionConfig = {
       return checkRole(['admin', 'editor'], user as User)
     },
   },
+  hooks: {
+    beforeDelete: [
+      async ({ req, id }) => {
+        if (!req.payload) return
+
+        // Check if customer has any orders
+        const orders = await req.payload.find({
+          collection: 'orders',
+          where: {
+            customer: {
+              equals: typeof id === 'string' ? parseInt(id, 10) : id,
+            },
+          },
+          limit: 1,
+        })
+
+        if (orders.totalDocs > 0) {
+          throw new Error(
+            `Cannot delete customer: Customer has ${orders.totalDocs} order(s) associated. Please delete or reassign orders first.`,
+          )
+        }
+
+        return
+      },
+    ],
+  },
 
   fields: [
     {
