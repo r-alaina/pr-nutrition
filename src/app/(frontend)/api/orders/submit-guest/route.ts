@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { calculateAllergenCharges } from '@/utilities/allergenCharges'
+import type { MenuItem } from '@/payload-types'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
@@ -114,42 +115,41 @@ export async function POST(request: NextRequest) {
     // Generate order number
     const orderNumber = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
 
-    // Transform selected meals to match expected format
-    const formattedMeals = selectedMeals.map((item: any) => {
-      // If meal is nested (from sessionStorage)
-      if (item.meal) {
-        const mealId =
-          typeof item.meal.id === 'number' ? item.meal.id : parseInt(String(item.meal.id), 10)
+    // Transform selected meals to match expected format for allergen calculation
+    // We need to fetch full menu items to get proper MenuItem type
+    const formattedMeals = await Promise.all(
+      selectedMeals.map(async (item: any) => {
+        let mealId: number
+        let menuItem: any
+
+        // If meal is nested (from sessionStorage)
+        if (item.meal) {
+          mealId =
+            typeof item.meal.id === 'number' ? item.meal.id : parseInt(String(item.meal.id), 10)
+        } else {
+          // If meal is flat (legacy format)
+          mealId = typeof item.id === 'number' ? item.id : parseInt(String(item.id), 10)
+        }
+
+        // Fetch the full menu item to get proper MenuItem type
+        try {
+          menuItem = await payload.findByID({
+            collection: 'menu-items',
+            id: mealId,
+          })
+        } catch (error) {
+          console.error(`Error fetching menu item ${mealId}:`, error)
+          // Fallback to provided data
+          menuItem = item.meal || item
+        }
 
         return {
-          meal: {
-            id: mealId,
-            name: item.meal.name,
-            category: item.meal.category,
-            allergens: item.meal.allergens || [],
-            price: item.meal.price || 0,
-            description: item.meal.description || '',
-          },
+          meal: menuItem as MenuItem,
           quantity: item.quantity,
           weekHalf: item.weekHalf || 'firstHalf',
         }
-      }
-      // If meal is flat (legacy format)
-      const mealId = typeof item.id === 'number' ? item.id : parseInt(String(item.id), 10)
-
-      return {
-        meal: {
-          id: mealId,
-          name: item.name,
-          category: item.category,
-          allergens: item.allergens || [],
-          price: item.price || 0,
-          description: item.description || '',
-        },
-        quantity: item.quantity,
-        weekHalf: item.weekHalf || 'firstHalf',
-      }
-    })
+      }),
+    )
 
     // Separate snacks from meals
     const meals = formattedMeals.filter((item: { meal: any }) => item.meal.category !== 'snack')
