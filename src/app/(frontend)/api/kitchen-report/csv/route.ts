@@ -19,7 +19,7 @@ function generateAdjustmentDescription(
 
   const adjustments: string[] = []
   
-  if (matchingAllergens.includes('lactose')) {
+  if (matchingAllergens.includes('dairy')) {
     adjustments.push('without cheese')
   }
   if (matchingAllergens.includes('gluten')) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       {
         customerName: string
         allergens: string[]
-        meals: Map<string, { adjustment: string; quantity: number; mealName: string }>
+        meals: Map<string, { adjustment: string; quantity: number; mealName: string; tierName: string }>
       }
     >()
 
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
       const customerId = typeof customer === 'object' ? customer.id : customer
       const customerName =
         typeof customer === 'object' 
-          ? (customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.email)
+          ? ((customer as any).firstName && (customer as any).lastName ? `${(customer as any).firstName} ${(customer as any).lastName}` : customer.email)
           : 'Unknown'
       const customerAllergens =
         typeof customer === 'object' && Array.isArray(customer.allergies) ? customer.allergies : []
@@ -138,8 +138,14 @@ export async function GET(request: NextRequest) {
       }
       const mealMap = tierMap.get(String(tierId))!
 
-      // Process order items
-      for (const item of order.orderItems || []) {
+      // Process order items - filter by weekHalf if specified
+      const itemsToProcess = (order.orderItems || []).filter((item) => {
+        if (!weekHalf) return true // If no weekHalf filter, include all items
+        // Only include items that match the selected weekHalf
+        return item.weekHalf === weekHalf
+      })
+
+      for (const item of itemsToProcess) {
         const menuItem = item.menuItem
         if (!menuItem) continue
 
@@ -158,14 +164,10 @@ export async function GET(request: NextRequest) {
         const quantity = item.quantity || 0
         const category = menuItemData.category || ''
 
-        // Add to tier aggregation
-        const current = mealMap.get(mealName) || { quantity: 0, category }
-        mealMap.set(mealName, {
-          quantity: current.quantity + quantity,
-          category,
-        })
-
-        // Check for allergen adjustments
+        // Check for allergen conflicts first
+        let hasAllergenConflict = false
+        let adjustment = ''
+        
         if (customerAllergens.length > 0) {
           let menuItemFull
           try {
@@ -189,12 +191,14 @@ export async function GET(request: NextRequest) {
             .map((a) => a.allergen)
             .filter((a): a is string => typeof a === 'string')
 
-          const adjustment = generateAdjustmentDescription(
+          adjustment = generateAdjustmentDescription(
             mealAllergens,
             customerAllergens,
           )
 
           if (adjustment) {
+            hasAllergenConflict = true
+            
             if (!allergenAdjustmentsMap.has(String(customerId))) {
               allergenAdjustmentsMap.set(String(customerId), {
                 customerName,
@@ -204,14 +208,25 @@ export async function GET(request: NextRequest) {
             }
 
             const customerAdjustment = allergenAdjustmentsMap.get(String(customerId))!
-            const mealKey = `${mealName}|${adjustment}`
+            const mealKey = `${mealName}|${adjustment}|${tierName}`
             const currentAdj = customerAdjustment.meals.get(mealKey)
             customerAdjustment.meals.set(mealKey, {
               adjustment,
               quantity: (currentAdj?.quantity || 0) + quantity,
               mealName,
+              tierName: tierName,
             })
           }
+        }
+
+        // Only add to tier aggregation if there's NO allergen conflict
+        // Meals with allergen conflicts should ONLY appear in allergen adjustments
+        if (!hasAllergenConflict) {
+          const current = mealMap.get(mealName) || { quantity: 0, category }
+          mealMap.set(mealName, {
+            quantity: current.quantity + quantity,
+            category,
+          })
         }
       }
     }
@@ -280,7 +295,7 @@ export async function GET(request: NextRequest) {
 
     // Allergen Adjustments Section
     csvLines.push('=== ALLERGEN ADJUSTMENTS ===')
-    csvLines.push('Customer Name,Allergens,Meal,Adjustment,Quantity')
+    csvLines.push('Customer Name,Allergens,Meal,Adjustment,Quantity,Tier')
 
     for (const adjustment of Array.from(allergenAdjustmentsMap.values()).sort((a, b) =>
       a.customerName.localeCompare(b.customerName),
@@ -293,7 +308,8 @@ export async function GET(request: NextRequest) {
         a.mealName.localeCompare(b.mealName),
       )) {
         if (!mealData || !mealData.mealName) continue
-        const line = `${escapeCsvValue(adjustment.customerName)},${escapeCsvValue(allergensStr)},${escapeCsvValue(mealData.mealName)},${escapeCsvValue(mealData.adjustment || '')},${mealData.quantity ?? 0}`
+        const tierName = mealData.tierName || 'Unknown'
+        const line = `${escapeCsvValue(adjustment.customerName)},${escapeCsvValue(allergensStr)},${escapeCsvValue(mealData.mealName)},${escapeCsvValue(mealData.adjustment || '')},${mealData.quantity ?? 0},${escapeCsvValue(tierName)}`
         if (line) {
           csvLines.push(line)
         }

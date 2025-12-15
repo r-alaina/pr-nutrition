@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { calculateTotalAllergenCharges } from '@/utilities/allergenCharges'
 
 interface MenuItem {
   id: number | string
@@ -93,8 +94,14 @@ export default function GuestCheckoutFormClient() {
       .filter((item) => item.meal.category === 'snack')
       .reduce((sum, item) => sum + (item.meal.price || 0) * item.quantity, 0)
 
-    // Allergen charge: $5 if any allergies selected
-    const allergenCharge = allergies.length > 0 ? 5.0 : 0
+    // Allergen charge: $5 only if at least one meal actually contains the customer's allergens
+    const allergenCharge = calculateTotalAllergenCharges(
+      selectedMeals.map((item) => ({
+        meal: item.meal as any, // Cast to MenuItem type expected by the function
+        quantity: item.quantity,
+      })),
+      allergies,
+    )
 
     const subtotal = tierPrice + snackTotal + allergenCharge
     const tax = subtotal * 0.0825

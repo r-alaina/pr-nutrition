@@ -20,6 +20,7 @@ interface AllergenAdjustment {
     mealName: string
     adjustment: string
     quantity: number
+    tierName: string
   }>
 }
 
@@ -509,6 +510,16 @@ export default function KitchenReportView() {
                           color: '#000000',
                         }}
                       >
+                        Tier
+                      </th>
+                      <th
+                        style={{
+                          padding: '0.75rem',
+                          textAlign: 'left',
+                          border: '1px solid #e5e7eb',
+                          color: '#000000',
+                        }}
+                      >
                         Adjustment
                       </th>
                       <th
@@ -536,6 +547,15 @@ export default function KitchenReportView() {
                             }}
                           >
                             {meal.mealName}
+                          </td>
+                          <td
+                            style={{
+                              padding: '0.75rem',
+                              border: '1px solid #e5e7eb',
+                              color: '#000000',
+                            }}
+                          >
+                            {meal.tierName || 'Unknown'}
                           </td>
                           <td
                             style={{

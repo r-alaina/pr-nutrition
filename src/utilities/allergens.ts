@@ -1,6 +1,6 @@
 export const ALLERGENS = [
   'Nuts',
-  'Lactose',
+  'Dairy',
   'Gluten',
   'Shellfish',
   'Soy',
@@ -13,15 +13,15 @@ export type Allergen = (typeof ALLERGENS)[number]
 
 /**
  * Normalizes an allergen string to a standard format for comparison.
- * Maps 'dairy' to 'lactose' for backward compatibility.
+ * Maps 'lactose' to 'dairy' for backward compatibility.
  * Removes whitespace and converts to lowercase.
  */
 export function normalizeAllergen(allergen: string): string {
   if (!allergen) return ''
   const normalized = allergen.trim().toLowerCase()
   
-  if (normalized === 'dairy') {
-    return 'lactose'
+  if (normalized === 'lactose') {
+    return 'dairy'
   }
   
   return normalized
@@ -45,7 +45,7 @@ export function formatAllergen(allergen: string): string {
 
 /**
  * Maps an allergen string to its canonical form from ALLERGENS if possible.
- * Handles 'dairy' -> 'Lactose' mapping and case insensitivity.
+ * Handles 'lactose' -> 'Dairy' mapping and case insensitivity.
  */
 export function toCanonicalAllergen(allergen: string): string {
   const normalized = normalizeAllergen(allergen)
