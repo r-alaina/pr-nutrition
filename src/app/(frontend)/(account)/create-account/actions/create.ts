@@ -41,7 +41,7 @@ export async function create({ email, password, firstName, lastName }: CreatePar
             password,
             firstName,
             lastName,
-          },
+          } as any,
         })
         // and return success: true if the try succeeds
         return { success: true }
