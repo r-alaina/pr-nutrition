@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
           subscription_frequency: 'weekly',
           meals_per_week: 20,
           preferences_set: true,
-        },
+        } as any,
       })
 
       console.log('Customer created:', customer.id)
@@ -165,11 +165,8 @@ export async function POST(request: NextRequest) {
             .filter(Boolean)
         : []
 
-    // Allergen charge is $5 per order if customer has any allergies (regardless of meal conflicts)
-    const totalAllergenCharges = customerAllergies.length > 0 ? 5.0 : 0
-
-    // Calculate allergen charges breakdown for reporting
-    const { allergenCharges } = calculateAllergenCharges(formattedMeals, customerAllergies)
+    // Calculate allergen charges - only charge $5 if at least one meal actually contains the customer's allergens
+    const { allergenCharges, totalAllergenCharges } = calculateAllergenCharges(formattedMeals, customerAllergies)
 
     // Determine week_half from selected meals
     const mealWeeks = new Set(
@@ -249,8 +246,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Save the order to the database
+    // Create a proper req object - customer should be treated as the user for access control
+    // Ensure customer ID is a number for access control comparison
+    const customerId = typeof customer.id === 'number' ? customer.id : parseInt(String(customer.id), 10)
     const reqObj = {
-      user: customer,
+      user: {
+        ...customer,
+        id: customerId,
+        collection: 'customers',
+      },
       payload,
     } as any
 
@@ -262,56 +266,66 @@ export async function POST(request: NextRequest) {
       totalAmount: orderResponse.totalAmount,
     })
 
-    const savedOrder = await payload.create({
-      collection: 'orders',
-      data: {
-        orderNumber,
-        customer: typeof customer.id === 'number' ? customer.id : parseInt(String(customer.id), 10),
-        status: 'pending',
-        orderItems: orderItems.map((item) => ({
-          menuItem:
-            typeof item.menuItem.id === 'number'
-              ? item.menuItem.id
-              : parseInt(String(item.menuItem.id), 10),
-          quantity: item.quantity,
-          weekHalf:
-            item.weekHalf === 'firstHalf' || item.weekHalf === 'secondHalf'
-              ? item.weekHalf
-              : 'firstHalf',
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-        })),
-        allergenCharges,
-        totalAllergenCharges,
-        subtotal: orderResponse.subtotal,
-        taxAmount: orderResponse.taxAmount,
-        totalAmount: orderResponse.totalAmount,
-        tier: tier?.id
-          ? typeof tier.id === 'number'
-            ? tier.id
-            : parseInt(String(tier.id), 10)
-          : null,
-        subscriptionFrequency: 'weekly',
-        mealsPerWeek: 20,
-        weekHalf: weekHalf,
-        notes: `Guest order placed by ${customerInfo.name} (${customerInfo.email}). Phone: ${customerInfo.phone}`,
-      },
-      req: reqObj,
-    })
+    try {
+      const savedOrder = await payload.create({
+        collection: 'orders',
+        data: {
+          orderNumber,
+          customer: typeof customer.id === 'number' ? customer.id : parseInt(String(customer.id), 10),
+          status: 'pending',
+          orderItems: orderItems.map((item) => ({
+            menuItem:
+              typeof item.menuItem.id === 'number'
+                ? item.menuItem.id
+                : parseInt(String(item.menuItem.id), 10),
+            quantity: item.quantity,
+            weekHalf:
+              item.weekHalf === 'firstHalf' || item.weekHalf === 'secondHalf'
+                ? item.weekHalf
+                : 'firstHalf',
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+          })),
+          allergenCharges,
+          totalAllergenCharges,
+          subtotal: orderResponse.subtotal,
+          taxAmount: orderResponse.taxAmount,
+          totalAmount: orderResponse.totalAmount,
+          tier: tier?.id
+            ? typeof tier.id === 'number'
+              ? tier.id
+              : parseInt(String(tier.id), 10)
+            : null,
+          subscriptionFrequency: 'weekly',
+          mealsPerWeek: 20,
+          weekHalf: weekHalf,
+          notes: `Guest order placed by ${customerInfo.firstName} ${customerInfo.lastName} (${customerInfo.email}). Phone: ${customerInfo.phone}`,
+        },
+        req: reqObj,
+      })
 
-    console.log('Order saved to database:', savedOrder.id)
-    console.log('Kitchen order should be created automatically via afterChange hook')
+      console.log('Order saved to database:', savedOrder.id)
+      console.log('Kitchen order should be created automatically via afterChange hook')
 
-    // Return success with order data
-    return NextResponse.json({
-      message: 'Order submitted successfully',
-      order: {
-        ...orderResponse,
-        id: savedOrder.id,
-        orderNumber: savedOrder.orderNumber || orderNumber,
-        weekHalf: weekHalf,
-      },
-    })
+      // Return success with order data
+      return NextResponse.json({
+        message: 'Order submitted successfully',
+        order: {
+          ...orderResponse,
+          id: savedOrder.id,
+          orderNumber: savedOrder.orderNumber || orderNumber,
+          weekHalf: weekHalf,
+        },
+      })
+    } catch (orderError) {
+      console.error('Error creating order:', orderError)
+      if (orderError instanceof Error) {
+        console.error('Error message:', orderError.message)
+        console.error('Error stack:', orderError.stack)
+      }
+      // Re-throw to be caught by outer catch
+      throw orderError
+    }
   } catch (error) {
     console.error('Error submitting guest order:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'

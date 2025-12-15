@@ -285,19 +285,29 @@ export const Orders: CollectionConfig = {
                   collection: 'menu-items',
                   id: typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem,
                 })
+                // Clean allergens array - remove id fields and only keep allergen strings
+                const allergens = (menuItem.allergens || []).map((a: any) => {
+                  if (typeof a === 'string') {
+                    return { allergen: a }
+                  }
+                  return { allergen: a.allergen || '' }
+                }).filter((a: any) => a.allergen)
+                
                 return {
                   mealName: menuItem.name,
                   quantity: item.quantity,
-                  allergens: menuItem.allergens || [],
+                  allergens: allergens,
                 }
               }),
             )
 
-            // Prepare allergen charges summary
+            // Prepare allergen charges summary - remove any id fields
             const allergenChargesSummary = (doc.allergenCharges || []).map((charge: any) => ({
               mealName: charge.mealName,
-              allergens: charge.matchingAllergens.map((a: any) => ({ allergen: a.allergen })),
-              charge: charge.totalAllergenCharge,
+              allergens: (charge.matchingAllergens || []).map((a: any) => ({ 
+                allergen: typeof a === 'string' ? a : (a.allergen || '')
+              })).filter((a: any) => a.allergen),
+              charge: charge.totalAllergenCharge || 0,
             }))
 
             // Calculate pickup date - handle 'both' case
@@ -305,30 +315,87 @@ export const Orders: CollectionConfig = {
               doc.weekHalf === 'both' ? 'firstHalf' : doc.weekHalf || 'firstHalf'
             const pickupDate = calculatePickupDate(weekHalfForPickup)
 
-            // Create kitchen order - system hook operation, access control will allow it
-            await req.payload.create({
-              collection: 'kitchen-orders',
-              data: {
-                orderNumber: doc.orderNumber,
-                customerName: customer.firstName && customer.lastName ? `${customer.firstName} ${customer.lastName}` : customer.email || 'Unknown',
-                customerEmail: customer.email,
-                customerPhone: null, // Can be added if phone field exists
-                weekHalf: doc.weekHalf || 'firstHalf',
-                orderItems: orderItemsWithDetails,
-                allergenCharges: allergenChargesSummary,
-                totalAllergenCharges: doc.totalAllergenCharges || 0,
-                pickupDate: pickupDate.toISOString().split('T')[0],
-                status: 'pending',
-              },
-              // Don't pass req.user so access control treats it as system operation
-              req: {
-                payload: req.payload,
-              } as any,
-            })
+            // Create kitchen order - system hook operation
+            console.log('Attempting to create kitchen order for:', doc.orderNumber)
+            
+            // Get customer name safely (using type assertion since types may be out of sync)
+            const customerFirstName = (customer as any).firstName || ''
+            const customerLastName = (customer as any).lastName || ''
+            const customerName = customerFirstName && customerLastName 
+              ? `${customerFirstName} ${customerLastName}` 
+              : customer.email || 'Unknown'
+            
+            try {
+              // Create a new req object without user to bypass access control
+              const systemReq = {
+                ...req,
+                user: undefined,
+              } as any
 
-            console.log('Kitchen order created successfully for order:', doc.orderNumber)
+              // Clean data to remove any id fields from nested objects
+              const cleanOrderItems = orderItemsWithDetails.map((item: any) => {
+                const { id, ...cleanItem } = item
+                return {
+                  mealName: cleanItem.mealName,
+                  quantity: cleanItem.quantity,
+                  allergens: (cleanItem.allergens || []).map((a: any) => {
+                    const { id: allergenId, ...cleanAllergen } = typeof a === 'string' 
+                      ? { allergen: a } 
+                      : a
+                    return { allergen: cleanAllergen.allergen || cleanAllergen }
+                  }).filter((a: any) => a.allergen),
+                }
+              })
+
+              const cleanAllergenCharges = allergenChargesSummary.map((charge: any) => {
+                const { id: chargeId, ...cleanCharge } = charge
+                return {
+                  mealName: cleanCharge.mealName,
+                  allergens: (cleanCharge.allergens || []).map((a: any) => {
+                    const { id: allergenId, ...cleanAllergen } = typeof a === 'string'
+                      ? { allergen: a }
+                      : a
+                    return { allergen: cleanAllergen.allergen || cleanAllergen }
+                  }).filter((a: any) => a.allergen),
+                  charge: cleanCharge.charge || 0,
+                }
+              })
+
+              const kitchenOrder = await req.payload.create({
+                collection: 'kitchen-orders',
+                data: {
+                  orderNumber: doc.orderNumber,
+                  customerName: customerName,
+                  customerEmail: customer.email,
+                  customerPhone: null, // Can be added if phone field exists
+                  weekHalf: doc.weekHalf || 'firstHalf',
+                  orderItems: cleanOrderItems,
+                  allergenCharges: cleanAllergenCharges,
+                  totalAllergenCharges: doc.totalAllergenCharges || 0,
+                  pickupDate: pickupDate.toISOString().split('T')[0],
+                  status: 'pending',
+                },
+                req: systemReq,
+              })
+
+              console.log('Kitchen order created successfully:', kitchenOrder.id, 'for order:', doc.orderNumber)
+            } catch (createError) {
+              console.error('Error creating kitchen order:', createError)
+              if (createError instanceof Error) {
+                console.error('Error message:', createError.message)
+                console.error('Error stack:', createError.stack)
+                console.error('Error name:', createError.name)
+              }
+              // Log the full error object
+              console.error('Full error object:', JSON.stringify(createError, Object.getOwnPropertyNames(createError)))
+              // Don't throw error to prevent order creation from failing
+            }
           } catch (error) {
-            console.error('Error creating kitchen order:', error)
+            console.error('Error in afterChange hook:', error)
+            if (error instanceof Error) {
+              console.error('Error message:', error.message)
+              console.error('Error stack:', error.stack)
+            }
             // Don't throw error to prevent order creation from failing
           }
         }

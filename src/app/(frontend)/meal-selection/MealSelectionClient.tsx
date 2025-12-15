@@ -328,11 +328,7 @@ export default function MealSelectionClient({
                                   allergen(s) you&apos;re sensitive to
                                 </p>
                                 <p className="text-xs text-yellow-700 mt-1">
-                                  Additional $
-                                  {(
-                                    getMatchingAllergens(item, user.allergies || []).length * 5
-                                  ).toFixed(2)}{' '}
-                                  charge per meal
+                                  Additional $5.00 charge per order if any allergens
                                 </p>
                               </div>
                             )}
@@ -465,7 +461,7 @@ export default function MealSelectionClient({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4 mt-8">
           <Link
             href="/"
             className="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"

@@ -308,7 +308,11 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                       : 'Not specified'}
                   </p>
                   <p>
-                    <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
+                    <strong>Frequency:</strong>{' '}
+                    {user.subscription_frequency
+                      ? user.subscription_frequency.charAt(0).toUpperCase() +
+                        user.subscription_frequency.slice(1)
+                      : 'Not specified'}
                   </p>
                   <p>
                     <strong>Meals per Week:</strong> {user.meals_per_week || 0}
@@ -396,12 +400,12 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
           <div className="space-y-3 text-green-800">
             {order.weekHalf === 'firstHalf' && (
               <p className="font-semibold">
-                Please pick up your order on <strong>Sunday & Monday</strong> (First Half)
+                Please pick up your order on Sunday & Monday (First Half)
               </p>
             )}
             {order.weekHalf === 'secondHalf' && (
               <p className="font-semibold">
-                Please pick up your order on <strong>Wednesday & Thursday</strong> (Second Half)
+                Please pick up your order on Wednesday & Thursday (Second Half)
               </p>
             )}
             {order.weekHalf === 'both' && (
@@ -409,10 +413,10 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 <p className="font-semibold mb-2">Please pick up your order according to:</p>
                 <ul className="list-disc list-inside space-y-1 ml-2">
                   <li>
-                    <strong>First Half:</strong> Sunday & Monday
+                    First Half: Sunday & Monday
                   </li>
                   <li>
-                    <strong>Second Half:</strong> Wednesday & Thursday
+                    Second Half: Wednesday & Thursday
                   </li>
                 </ul>
               </div>
