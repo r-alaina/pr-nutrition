@@ -50,8 +50,7 @@ export const MenuItems: CollectionConfig = {
       type: 'select',
       required: true,
       options: [
-        { label: 'Lunch Meal', value: 'lunch' },
-        { label: 'Dinner Meal', value: 'dinner' },
+        { label: 'Lunch/Dinner', value: 'main' },
         { label: 'Premium Meal', value: 'premium' },
         { label: 'Breakfast (Small)', value: 'breakfast-small' },
         { label: 'Breakfast (Large)', value: 'breakfast-large' },

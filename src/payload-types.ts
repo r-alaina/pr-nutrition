@@ -271,7 +271,7 @@ export interface MenuItem {
    * Price for snacks only (a la carte). Meals are priced by tier subscription.
    */
   price?: number | null;
-  category: 'lunch' | 'dinner' | 'premium' | 'breakfast-small' | 'breakfast-large' | 'dessert' | 'salad' | 'snack';
+  category: 'main' | 'premium' | 'breakfast-small' | 'breakfast-large' | 'dessert' | 'salad' | 'snack';
   active?: boolean | null;
   allergens?:
     | {
