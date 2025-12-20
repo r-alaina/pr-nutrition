@@ -131,8 +131,7 @@ export default async function MealSelectionPage() {
   const categoryOrder = [
     { key: 'main', label: 'Lunch/Dinner' },
     { key: 'premium', label: 'Premium Meals' },
-    { key: 'breakfast-small', label: 'Breakfast (Small)' },
-    { key: 'breakfast-large', label: 'Breakfast (Large)' },
+    { key: 'breakfast', label: 'Breakfast' },
     { key: 'dessert', label: 'Desserts' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },

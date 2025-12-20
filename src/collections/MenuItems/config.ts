@@ -52,8 +52,7 @@ export const MenuItems: CollectionConfig = {
       options: [
         { label: 'Lunch/Dinner', value: 'main' },
         { label: 'Premium Meal', value: 'premium' },
-        { label: 'Breakfast (Small)', value: 'breakfast-small' },
-        { label: 'Breakfast (Large)', value: 'breakfast-large' },
+        { label: 'Breakfast', value: 'breakfast' },
         { label: 'Dessert', value: 'dessert' },
         { label: 'Salad', value: 'salad' },
         { label: 'Snack', value: 'snack' },
