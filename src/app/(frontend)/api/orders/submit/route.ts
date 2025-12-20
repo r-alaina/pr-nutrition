@@ -60,8 +60,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'No meals selected' }, { status: 400 })
     }
 
-    // Generate order number
-    const orderNumber = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+    // Determine the "Week Of" date (Closest Sunday)
+    // For now, assuming current date is within the order window for the "upcoming" week.
+    // In a real scenario, this might need more robust logic based on cutoff times.
+    const today = new Date()
+    const currentDay = today.getDay()
+    const daysToLastSunday = currentDay === 0 ? 0 : currentDay
+    const weekOfDate = new Date(today)
+    weekOfDate.setDate(today.getDate() - daysToLastSunday)
+    weekOfDate.setHours(0, 0, 0, 0)
+
+    // Check for existing order
+    const existingOrders = await payload.find({
+      collection: 'orders',
+      where: {
+        and: [
+          { customer: { equals: user.id } },
+          { weekOf: { equals: weekOfDate.toISOString() } },
+          { status: { not_equals: 'cancelled' } }
+        ]
+      }
+    })
+
+    const existingOrder = existingOrders.totalDocs > 0 ? existingOrders.docs[0] : null
+    const isUpdate = !!existingOrder
+
+    // Generate order number (reuse if updating)
+    const orderNumber = existingOrder ? existingOrder.orderNumber : `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
 
     // Separate snacks from meals
     const meals = selectedMeals.filter((item) => item.meal.category !== 'snack')
@@ -77,6 +102,10 @@ export async function POST(request: NextRequest) {
     // Calculate totals based on user's tier and subscription frequency
     const tier = typeof user.tier === 'object' && user.tier !== null ? (user.tier as Tier) : null
     const subscriptionFrequency = user.subscription_frequency
+    // Logic: If monthly, we treat it as "weekly" for price calculation purposes, but handle payment differently
+    // Effectively, we calculate the "Value" of the order first.
+
+    const isMonthlyPlan = subscriptionFrequency === 'monthly'
 
     // Determine week_half from selected meals - if meals from both halves, store as combined
     // Otherwise, use the week_half from the meals
@@ -88,18 +117,17 @@ export async function POST(request: NextRequest) {
 
     let mealSubtotal = 0
     let snackSubtotal = 0
+    let isCreditUsed = false
+    let creditsToDeduct = 0
 
-    // Calculate meal pricing (tier-based or a la carte)
-    if (tier && subscriptionFrequency && meals.length > 0) {
-      // Logic for new dynamic pricing
+    // Determine Pricing
+    if (tier && meals.length > 0) {
       // 1. Get user configuration
       const daysPerWeek = parseInt(user.days_per_week || '5')
       const mealsPerDay = parseInt(user.meals_per_day || '2') // Default to 2 if not set
       const includeBreakfast = user.include_breakfast || false
 
       // 2. Determine Breakfast Price based on Tier
-      // Lower tiers: Tier 1, Tier 1+, Tier 2 -> $6.50
-      // Higher tiers: Tier 2+, Tier 3, Tier 3+ -> $8.00
       const lowerBreakfastTiers = ['Tier 1', 'Tier 1+', 'Tier 2']
       const breakfastPrice = lowerBreakfastTiers.includes(tier.tier_name) ? 6.50 : 8.00
 
@@ -108,19 +136,51 @@ export async function POST(request: NextRequest) {
       const weeklyBreakfastCost = includeBreakfast ? (daysPerWeek * breakfastPrice) : 0
       const totalBaseWeekly = weeklyMealCost + weeklyBreakfastCost
 
-      // 4. Apply Frequency Discount
-      if (subscriptionFrequency === 'weekly') {
-         // 10% Discount
-         mealSubtotal = totalBaseWeekly * 0.90
-      } else if (subscriptionFrequency === 'monthly') {
-         // 15% Discount (x4 weeks)
-         mealSubtotal = (totalBaseWeekly * 4) * 0.85
+      // 4. Calculate Final Meal Price
+      if (isUpdate) {
+        // If updating, we keep the original payment method/amount for the base plan
+        // BUT, if it was credit, it remains credit. If it was cash, it remains cash.
+        // Complex logic: For now, if updating, we assume the base plan is already "paid" or committed.
+        // We only recalculate potential add-ons or re-validate.
+        // Simpler approach: Re-calculate everything. existingOrder.isCreditUsed determines if we charge $0.
+        isCreditUsed = existingOrder.isCreditUsed || false
+
+        if (isCreditUsed) {
+          mealSubtotal = 0 // Already paid via credit
+        } else {
+          // Re-charge? Or diff?
+          // Since we don't handle real payments yet, we just calculate the owed amount.
+          // If monthly without credit, it's the full monthly price.
+          // If weekly, it's the weekly price.
+          // HOWEVER, if updating, we shouldn't double charge.
+          // Let's assume for this refactor that "Payment" is handled externally or logic is straightforward.
+
+          // If weekly plan:
+          if (!isMonthlyPlan) {
+            mealSubtotal = totalBaseWeekly * 0.90 // 10% discount
+          }
+        }
       } else {
-         // Fallback to weekly
-         mealSubtotal = totalBaseWeekly * 0.90
+        // New Order
+        if (isMonthlyPlan) {
+          const currentCredits = user.plan_credits || 0
+          if (currentCredits > 0) {
+            // Use Credit
+            isCreditUsed = true
+            mealSubtotal = 0
+            creditsToDeduct = 1
+          } else {
+            // Charge Full Monthly Price (4 weeks)
+            // 15% Discount
+            mealSubtotal = (totalBaseWeekly * 4) * 0.85
+            // Grant 3 credits (for future weeks) - user gets 1 week "now" + 3 credits
+          }
+        } else {
+          // Weekly Plan
+          mealSubtotal = totalBaseWeekly * 0.90 // 10% discount
+        }
       }
     }
-    // Meals are not available a la carte - require tier subscription
 
     // Snacks are always a la carte
     snacks.forEach((item) => {
@@ -153,24 +213,20 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Meals are priced by tier subscription, not individually
-        // Calculate a per-meal price based on the tier pricing for order tracking
+        // Meal pricing for display
+        // If credit used or part of monthly bundle, unit price effectively 0 for this specific order item display
+        // to avoid confusion, or show "avg price".
+        // Let's keep it simple: specific order items have 0 price if covered by plan subtotal?
+        // Or distribute subtotal.
+        // Distributed logic from before:
         let unitPrice = 0
-        if (tier && subscriptionFrequency) {
-           // Re-calculate the effective unit price based on the subtotal
-           // Total Subtotal / Total Meal Count
-           const daysPerWeek = parseInt(user.days_per_week || '5')
-           const mealsPerDay = parseInt(user.meals_per_day || '2')
-           const includeBreakfast = user.include_breakfast || false
-           
-           const mealsPerWeek = daysPerWeek * (mealsPerDay + (includeBreakfast ? 1 : 0))
-           const totalMeals = subscriptionFrequency === 'monthly' ? mealsPerWeek * 4 : mealsPerWeek
-           
-           if (totalMeals > 0) {
-             unitPrice = mealSubtotal / totalMeals
-           }
+        if (tier && meals.length > 0) {
+          // Only calculate unit price if there is a subtotal to distribute
+          if (mealSubtotal > 0) {
+            // ... distribution logic ... using simple division for now
+            unitPrice = mealSubtotal / meals.length
+          }
         }
-        // Meals are not available a la carte - require tier subscription
 
         const totalPrice = unitPrice * item.quantity
 
@@ -182,8 +238,8 @@ export async function POST(request: NextRequest) {
           },
           quantity: item.quantity,
           weekHalf: itemWeekHalf,
-          unitPrice: Math.round(unitPrice * 100) / 100, // Round to 2 decimal places
-          totalPrice: Math.round(totalPrice * 100) / 100, // Round to 2 decimal places
+          unitPrice: Math.round(unitPrice * 100) / 100,
+          totalPrice: Math.round(totalPrice * 100) / 100,
         }
       },
     )
@@ -194,10 +250,8 @@ export async function POST(request: NextRequest) {
     const taxAmount = subtotalWithAllergens * taxRate
     const totalAmount = subtotalWithAllergens + taxAmount
 
-    // For now, just return the order data without saving to database
-    // This avoids any database migration issues
     const orderResponse = {
-      id: `order-${orderNumber}`,
+      id: existingOrder ? existingOrder.id : `order-${orderNumber}`,
       orderNumber,
       status: 'pending',
       orderItems,
@@ -208,58 +262,116 @@ export async function POST(request: NextRequest) {
       taxAmount: Math.round(taxAmount * 100) / 100,
       totalAmount: Math.round(totalAmount * 100) / 100,
       createdAt: new Date().toISOString(),
+      isCreditUsed,
     }
 
-    // Save the order to the database
-    // Create a proper req object for Payload with user and payload context
-    // We cast to any for 'req' because strict typing for generic PayloadRequest is complex in this context
-    // and Payload's local API create method expects a specific Request definition.
-    // However, we can improve this by using Partial<PayloadRequest>.
-    const reqObj = {
-      user,
-      payload,
+    // DB Operations
+    let savedOrder;
+
+    if (isUpdate) {
+      // Log changes
+      await payload.create({
+        collection: 'order-logs',
+        data: {
+          order: existingOrder.id,
+          customer: user.id,
+          changeDescription: `Order updated by customer. Previous total: ${existingOrder.totalAmount}, New total: ${totalAmount}`,
+          previousItems: existingOrder.orderItems,
+          newItems: orderItems.map(item => ({ id: item.menuItem.id, quantity: item.quantity })),
+        }
+      })
+
+      // Update Order
+      savedOrder = await payload.update({
+        collection: 'orders',
+        id: existingOrder.id,
+        data: {
+          orderItems: orderItems.map((item) => ({
+            menuItem: item.menuItem.id,
+            quantity: item.quantity,
+            weekHalf: item.weekHalf,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+          })),
+          allergenCharges,
+          totalAllergenCharges,
+          subtotal: orderResponse.subtotal,
+          taxAmount: orderResponse.taxAmount,
+          totalAmount: orderResponse.totalAmount,
+          weekHalf: weekHalf,
+          notes: `Order updated by ${user.firstName} ${user.lastName}`,
+        }
+      })
+
+    } else {
+      // Create New Order
+      // Prepare data
+      const reqObj = {
+        user,
+        payload,
+      }
+
+      savedOrder = await payload.create({
+        collection: 'orders',
+        data: {
+          orderNumber,
+          customer: user.id,
+          status: 'pending',
+          weekOf: weekOfDate.toISOString(),
+          isCreditUsed,
+          orderItems: orderItems.map((item) => ({
+            menuItem: item.menuItem.id,
+            quantity: item.quantity,
+            weekHalf: item.weekHalf,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+          })),
+          allergenCharges,
+          totalAllergenCharges,
+          subtotal: orderResponse.subtotal,
+          taxAmount: orderResponse.taxAmount,
+          totalAmount: orderResponse.totalAmount,
+          tier: tier?.id || null,
+          subscriptionFrequency: (subscriptionFrequency as 'weekly' | 'monthly' | 'a_la_carte') || null,
+          mealsPerWeek: user.meals_per_week || null,
+          weekHalf: weekHalf,
+          notes: `Order placed by ${user.firstName} ${user.lastName}`,
+        },
+        req: reqObj as unknown as PayloadRequest,
+      })
+
+      // Handle Credits
+      if (creditsToDeduct > 0) {
+        await payload.update({
+          collection: 'customers',
+          id: user.id,
+          data: {
+            plan_credits: (user.plan_credits || 0) - creditsToDeduct
+          }
+        })
+      } else if (isMonthlyPlan && !isCreditUsed) {
+        // Purchases a new plan block
+        await payload.update({
+          collection: 'customers',
+          id: user.id,
+          data: {
+            plan_credits: 3 // Set to 3 for future use
+          }
+        })
+      }
     }
 
-    const savedOrder = await payload.create({
-      collection: 'orders',
-      data: {
-        orderNumber,
-        customer: user.id,
-        status: 'pending',
-        orderItems: orderItems.map((item) => ({
-          menuItem: item.menuItem.id,
-          quantity: item.quantity,
-          weekHalf:
-            item.weekHalf === 'firstHalf' || item.weekHalf === 'secondHalf'
-              ? item.weekHalf
-              : 'firstHalf',
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-        })),
-        allergenCharges,
-        totalAllergenCharges,
-        subtotal: orderResponse.subtotal,
-        taxAmount: orderResponse.taxAmount,
-        totalAmount: orderResponse.totalAmount,
-        tier: tier?.id || null,
-        subscriptionFrequency: (subscriptionFrequency as 'weekly' | 'monthly' | 'a_la_carte') || null,
-        mealsPerWeek: user.meals_per_week || null,
-        weekHalf: weekHalf,
-        notes: `Order placed by ${user.firstName} ${user.lastName}`,
-      },
-      req: reqObj as unknown as PayloadRequest,
-    })
+    const orderResult = savedOrder as Order
 
-    console.log('Order saved to database:', savedOrder.id)
-    console.log('Kitchen order should be created automatically via afterChange hook')
+    console.log('Order saved/updated:', orderResult.id)
 
     // Return success with order data
     return NextResponse.json({
-      message: 'Order submitted successfully',
+      message: isUpdate ? 'Order updated successfully' : 'Order submitted successfully',
       order: {
         ...orderResponse,
-        id: savedOrder.id,
-        orderNumber: savedOrder.orderNumber || orderNumber,
+        id: orderResult.id,
+        orderNumber: orderResult.orderNumber || orderNumber,
       },
     })
   } catch (error) {

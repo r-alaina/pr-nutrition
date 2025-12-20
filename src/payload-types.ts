@@ -75,6 +75,7 @@ export interface Config {
     'weekly-menus': WeeklyMenu;
     orders: Order;
     'kitchen-orders': KitchenOrder;
+    'order-logs': OrderLog;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -88,6 +89,7 @@ export interface Config {
     'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'kitchen-orders': KitchenOrdersSelect<false> | KitchenOrdersSelect<true>;
+    'order-logs': OrderLogsSelect<false> | OrderLogsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -185,9 +187,13 @@ export interface Customer {
    */
   tier?: (number | null) | Tier;
   /**
-   * Current credit balance
+   * Current monetary credit balance
    */
   credit_balance?: number | null;
+  /**
+   * Number of weekly credits remaining (for monthly plans)
+   */
+  plan_credits?: number | null;
   /**
    * Credit balance expiration date
    */
@@ -390,6 +396,14 @@ export interface Order {
    * Total allergen charges for entire order
    */
   totalAllergenCharges: number;
+  /**
+   * The start date (Sunday) of the week this order is for
+   */
+  weekOf?: string | null;
+  /**
+   * Whether this order used a monthly plan credit
+   */
+  isCreditUsed?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -493,6 +507,36 @@ export interface KitchenOrder {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-logs".
+ */
+export interface OrderLog {
+  id: number;
+  order: number | Order;
+  customer: number | Customer;
+  changeDescription: string;
+  previousItems?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  newItems?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -525,6 +569,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'kitchen-orders';
         value: number | KitchenOrder;
+      } | null)
+    | ({
+        relationTo: 'order-logs';
+        value: number | OrderLog;
       } | null);
   globalSlug?: string | null;
   user:
@@ -611,6 +659,7 @@ export interface CustomersSelect<T extends boolean = true> {
   lastName?: T;
   tier?: T;
   credit_balance?: T;
+  plan_credits?: T;
   credit_bal_exp?: T;
   active?: T;
   preferences_set?: T;
@@ -744,6 +793,8 @@ export interface OrdersSelect<T extends boolean = true> {
         id?: T;
       };
   totalAllergenCharges?: T;
+  weekOf?: T;
+  isCreditUsed?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -822,6 +873,19 @@ export interface KitchenOrdersSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "order-logs_select".
+ */
+export interface OrderLogsSelect<T extends boolean = true> {
+  order?: T;
+  customer?: T;
+  changeDescription?: T;
+  previousItems?: T;
+  newItems?: T;
   updatedAt?: T;
   createdAt?: T;
 }

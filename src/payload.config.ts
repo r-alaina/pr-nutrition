@@ -14,6 +14,7 @@ import { Tiers } from './collections/Tiers/config'
 import { WeeklyMenus } from './collections/WeeklyMenus/config'
 import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
+import { OrderLogs } from './collections/OrderLogs/config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,7 +29,7 @@ export default buildConfig({
       titleSuffix: '- PR Meal Preps Admin',
     },
   },
-  collections: [Users, Customers, MenuItems, Tiers, WeeklyMenus, Orders, KitchenOrders],
+  collections: [Users, Customers, MenuItems, Tiers, WeeklyMenus, Orders, KitchenOrders, OrderLogs],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import type { MenuItem, Customer } from '@/payload-types'
+import type { MenuItem, Customer, Order } from '@/payload-types'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 import {
   calculateTotalAllergenCharges,
@@ -32,21 +32,78 @@ export default function MealSelectionClient({
   const [selectedSecondHalfMeals, setSelectedSecondHalfMeals] = useState<
     { meal: MenuItem; quantity: number }[]
   >([])
-  const mealsPerWeek = user.meals_per_week || 10
+  const [existingOrder, setExistingOrder] = useState<Order | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Combine meals for allergen calculation
+  useEffect(() => {
+    const fetchCurrentOrder = async () => {
+      try {
+        const res = await fetch('/api/orders/current')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.order) {
+            setExistingOrder(data.order)
+            // Parse existing items
+            const firstHalf: { meal: MenuItem; quantity: number }[] = []
+            const secondHalf: { meal: MenuItem; quantity: number }[] = []
+
+            data.order.orderItems.forEach((item: any) => {
+              const menuItem = item.menuItem as MenuItem
+              const formattedItem = { meal: menuItem, quantity: item.quantity }
+              if (item.weekHalf === 'secondHalf') {
+                secondHalf.push(formattedItem)
+              } else {
+                firstHalf.push(formattedItem)
+              }
+            })
+            setSelectedFirstHalfMeals(firstHalf)
+            setSelectedSecondHalfMeals(secondHalf)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch current order', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchCurrentOrder()
+  }, [])
+
+  // Calculate Limits based on user plan
+  const daysPerWeek = parseInt(user.days_per_week || '5', 10)
+  const mealsPerDay = parseInt(user.meals_per_day || '2', 10)
+
+  // Weekly limits
+  const weeklyBreakfastLimit = user.include_breakfast ? daysPerWeek : 0
+  const weeklyMainLimit = daysPerWeek * mealsPerDay
+
+  // Adjust for frequency (Monthly = x4) - NOW REMOVED, we order 1 week at a time
+  const isMonthly = user.subscription_frequency === 'monthly'
+  // const multiplier = isMonthly ? 4 : 1 
+  const multiplier = 1 // Always display 1 week's worth of meals per order
+
+  const breakfastLimit = weeklyBreakfastLimit * multiplier
+  const mainLimit = weeklyMainLimit * multiplier
+
+  // Combine meals for calculations
   const selectedMeals = [...selectedFirstHalfMeals, ...selectedSecondHalfMeals]
 
-  // Separate meals from snacks
-
+  // Separate meals by type
+  const selectedBreakfasts = selectedMeals.filter((item) => item.meal.category === 'breakfast')
+  const selectedMains = selectedMeals.filter(
+    (item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack',
+  )
   const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack')
+
+  // Calculate counts
+  const breakfastCount = selectedBreakfasts.reduce((total, item) => total + item.quantity, 0)
+  const mainCount = selectedMains.reduce((total, item) => total + item.quantity, 0)
 
   // Calculate allergen charges for display
   const allergenCharges = calculateTotalAllergenCharges(selectedMeals, user.allergies || [])
 
   const handleMealToggle = (meal: MenuItem, half: 'firstHalf' | 'secondHalf') => {
     const setter = half === 'firstHalf' ? setSelectedFirstHalfMeals : setSelectedSecondHalfMeals
-
 
     setter((prev) => {
       const existingIndex = prev.findIndex((item) => item.meal.id === meal.id)
@@ -55,25 +112,43 @@ export default function MealSelectionClient({
         // Remove meal
         return prev.filter((item) => item.meal.id !== meal.id)
       } else {
-        // Snacks don't count toward meal limit
+        // Snacks are unlimited
         if (meal.category === 'snack') {
           return [...prev, { meal, quantity: 1 }]
         }
-        // Add meal if under total limit (across both halves)
-        const currentMealTotal = prev
-          .filter((item) => item.meal.category !== 'snack')
-          .reduce((total, item) => total + item.quantity, 0)
 
-        // Get the total from the other half
-        const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
-        const otherHalfTotal = otherHalf
-          .filter((item) => item.meal.category !== 'snack')
-          .reduce((total, item) => total + item.quantity, 0)
+        // Logic for Breakfast
+        if (meal.category === 'breakfast') {
+          // Check limits across both halves
+          const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
+          const otherHalfBreakfasts = otherHalf
+            .filter((item) => item.meal.category === 'breakfast')
+            .reduce((total, item) => total + item.quantity, 0)
 
-        // Total meals across both halves cannot exceed mealsPerWeek
-        if (currentMealTotal + otherHalfTotal < mealsPerWeek) {
-          return [...prev, { meal, quantity: 1 }]
+          const currentHalfBreakfasts = prev
+            .filter((item) => item.meal.category === 'breakfast')
+            .reduce((total, item) => total + item.quantity, 0)
+
+          if (currentHalfBreakfasts + otherHalfBreakfasts < breakfastLimit) {
+            return [...prev, { meal, quantity: 1 }]
+          }
         }
+        // Logic for Mains (Lunch/Dinner/Premium/etc)
+        else {
+          const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
+          const otherHalfMains = otherHalf
+            .filter((item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack')
+            .reduce((total, item) => total + item.quantity, 0)
+
+          const currentHalfMains = prev
+            .filter((item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack')
+            .reduce((total, item) => total + item.quantity, 0)
+
+          if (currentHalfMains + otherHalfMains < mainLimit) {
+            return [...prev, { meal, quantity: 1 }]
+          }
+        }
+
         return prev
       }
     })
@@ -88,7 +163,6 @@ export default function MealSelectionClient({
     const currentMeals = half === 'firstHalf' ? selectedFirstHalfMeals : selectedSecondHalfMeals
 
     if (quantity <= 0) {
-      // Remove meal if quantity is 0 or negative
       setter((prev) => prev.filter((item) => item.meal.id !== mealId))
       return
     }
@@ -96,29 +170,33 @@ export default function MealSelectionClient({
     const meal = currentMeals.find((item) => item.meal.id === mealId)?.meal
     if (!meal) return
 
-    // Snacks don't count toward meal limit
+    // Snacks are unlimited
     if (meal.category === 'snack') {
       setter((prev) => prev.map((item) => (item.meal.id === mealId ? { ...item, quantity } : item)))
       return
     }
 
-    // For meals, check against total limit across both halves
-    const currentMealTotal = currentMeals
-      .filter((item) => item.meal.category !== 'snack')
-      .reduce((total, item) => total + item.quantity, 0)
-    const currentMealQuantity = currentMeals.find((item) => item.meal.id === mealId)?.quantity || 0
+    // Check limits
+    const isBreakfast = meal.category === 'breakfast'
+    const limit = isBreakfast ? breakfastLimit : mainLimit
 
-    // Get the total from the other half
+    // Calculate current totals EXCLUDING this item
     const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
-    const otherHalfTotal = otherHalf
-      .filter((item) => item.meal.category !== 'snack')
+
+    const filterFn = isBreakfast
+      ? (item: { meal: MenuItem }) => item.meal.category === 'breakfast'
+      : (item: { meal: MenuItem }) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack'
+
+    const otherHalfCount = otherHalf
+      .filter(filterFn)
       .reduce((total, item) => total + item.quantity, 0)
 
-    // Calculate new total across both halves
-    const newCurrentHalfTotal = currentMealTotal - currentMealQuantity + quantity
-    const newTotal = newCurrentHalfTotal + otherHalfTotal
+    const currentHalfCount = currentMeals
+      .filter(filterFn)
+      .filter(item => item.meal.id !== mealId) // Exclude current item being changed
+      .reduce((total, item) => total + item.quantity, 0)
 
-    if (newTotal <= mealsPerWeek) {
+    if (otherHalfCount + currentHalfCount + quantity <= limit) {
       setter((prev) => prev.map((item) => (item.meal.id === mealId ? { ...item, quantity } : item)))
     }
   }
@@ -134,38 +212,19 @@ export default function MealSelectionClient({
     return selected ? selected.quantity : 0
   }
 
-  const getTotalSelectedMeals = (half?: 'firstHalf' | 'secondHalf') => {
-    if (half === 'firstHalf') {
-      return selectedFirstHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
-        .reduce((total, item) => total + item.quantity, 0)
-    }
-    if (half === 'secondHalf') {
-      return selectedSecondHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
-        .reduce((total, item) => total + item.quantity, 0)
-    }
-    return (
-      selectedFirstHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
-        .reduce((total, item) => total + item.quantity, 0) +
-      selectedSecondHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
-        .reduce((total, item) => total + item.quantity, 0)
-    )
-  }
-
   const getTotalSelectedSnacks = () => {
     return selectedSnacks.reduce((total, item) => total + item.quantity, 0)
   }
 
-  // Total meals across both halves cannot exceed mealsPerWeek
-  const totalSelectedMeals = getTotalSelectedMeals()
-  const canSelectMoreTotal = totalSelectedMeals < mealsPerWeek
+  const canSelectMoreBreakfast = breakfastCount < breakfastLimit
+  const canSelectMoreMain = mainCount < mainLimit
 
-  // For the current tab, check if we can add more meals (respecting total limit)
-  const currentTabTotal = getTotalSelectedMeals(activeTab)
-  const currentCanSelectMore = canSelectMoreTotal && currentTabTotal < mealsPerWeek
+  // Determine if a specific item can be selected/incremented
+  const canSelectMoreOfResult = (meal: MenuItem) => {
+    if (meal.category === 'snack') return true
+    if (meal.category === 'breakfast') return canSelectMoreBreakfast
+    return canSelectMoreMain
+  }
 
   // Calculate snack total price
   const snackTotal = selectedSnacks.reduce((total, item) => {
@@ -186,8 +245,7 @@ export default function MealSelectionClient({
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Choose Your Meals</h1>
           <p className="text-xl text-gray-600 mb-6">
-            Select up to {mealsPerWeek} meals total (split between first and second half) for your{' '}
-            {user.subscription_frequency} plan
+            Select your meals for your {user.subscription_frequency} plan
           </p>
 
           {/* Tabs for First Half / Second Half */}
@@ -195,22 +253,20 @@ export default function MealSelectionClient({
             <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
               <button
                 onClick={() => setActiveTab('firstHalf')}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'firstHalf'
-                    ? 'bg-[#5CB85C] text-white'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'firstHalf'
+                  ? 'bg-[#5CB85C] text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+                  }`}
               >
                 First Half Menu
                 <span className="block text-xs mt-1">Sunday & Monday Pickup</span>
               </button>
               <button
                 onClick={() => setActiveTab('secondHalf')}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'secondHalf'
-                    ? 'bg-[#5CB85C] text-white'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'secondHalf'
+                  ? 'bg-[#5CB85C] text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+                  }`}
               >
                 Second Half Menu
                 <span className="block text-xs mt-1">Wednesday & Thursday Pickup</span>
@@ -220,29 +276,30 @@ export default function MealSelectionClient({
 
           {/* Selection Summary */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 max-w-2xl mx-auto mb-6">
-            <div className="mb-3">
-              <p className="text-sm text-emerald-700 font-medium mb-1">Total Meals Selected</p>
-              <p className="text-emerald-800 font-semibold text-lg">
-                {totalSelectedMeals} of {mealsPerWeek} meals
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4 border-t border-emerald-200 pt-3">
-              <div>
-                <p className="text-sm text-emerald-700 font-medium mb-1">First Half</p>
-                <p className="text-emerald-800 font-semibold">
-                  {getTotalSelectedMeals('firstHalf')} meals
+            <p className="text-sm text-emerald-700 font-medium mb-3 border-b border-emerald-200 pb-2">
+              Your Plan Includes
+            </p>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="text-center">
+                <p className="text-sm text-emerald-700 mb-1">Breakfasts</p>
+                <p className="text-emerald-800 font-bold text-2xl">
+                  {breakfastCount} <span className="text-base font-normal text-emerald-600">/ {breakfastLimit}</span>
+                </p>
+                {breakfastLimit === 0 && (
+                  <div className="text-xs text-red-500 mt-1">Not included in plan</div>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="text-sm text-emerald-700 mb-1">Main Meals</p>
+                <p className="text-emerald-800 font-bold text-2xl">
+                  {mainCount} <span className="text-base font-normal text-emerald-600">/ {mainLimit}</span>
                 </p>
               </div>
-              <div>
-                <p className="text-sm text-emerald-700 font-medium mb-1">Second Half</p>
-                <p className="text-emerald-800 font-semibold">
-                  {getTotalSelectedMeals('secondHalf')} meals
-                </p>
-              </div>
             </div>
+
             {getTotalSelectedSnacks() > 0 && (
-              <p className="text-emerald-700 text-sm mt-3 text-center border-t border-emerald-200 pt-3">
-                {getTotalSelectedSnacks()} snack(s) selected
+              <p className="text-emerald-700 text-sm mt-4 text-center border-t border-emerald-200 pt-3">
+                {getTotalSelectedSnacks()} a la carte snack(s) selected
               </p>
             )}
           </div>
@@ -259,19 +316,18 @@ export default function MealSelectionClient({
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((item) => {
                   const isSelected = isMealSelected(item, activeTab)
-                  const canSelect = currentCanSelectMore || isSelected
+                  const canSelect = canSelectMoreOfResult(item) || isSelected
 
                   return (
                     <div
                       key={item.id}
                       onClick={() => canSelect && handleMealToggle(item, activeTab)}
-                      className={`bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : canSelect
-                            ? 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                            : 'border-gray-200 opacity-50 cursor-not-allowed'
-                      }`}
+                      className={`bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all cursor-pointer ${isSelected
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : canSelect
+                          ? 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                          : 'border-gray-200 opacity-50 cursor-not-allowed'
+                        }`}
                     >
                       <div className="p-6">
                         <div className="flex justify-between items-start mb-4">
@@ -310,11 +366,10 @@ export default function MealSelectionClient({
                                 return (
                                   <span
                                     key={index}
-                                    className={`text-xs px-2 py-1 rounded ${
-                                      isUserAllergic
-                                        ? 'bg-red-100 text-red-800 border border-red-300 font-medium'
-                                        : 'bg-gray-100 text-gray-600'
-                                    }`}
+                                    className={`text-xs px-2 py-1 rounded ${isUserAllergic
+                                      ? 'bg-red-100 text-red-800 border border-red-300 font-medium'
+                                      : 'bg-gray-100 text-gray-600'
+                                      }`}
                                   >
                                     {allergen.allergen}
                                   </span>
@@ -341,14 +396,26 @@ export default function MealSelectionClient({
 
                         <div className="flex justify-between items-center">
                           <div>
-                            <div className="text-sm text-gray-500">Included in your plan</div>
-                            <div className="text-lg font-semibold" style={{ color: '#5CB85C' }}>
-                              {user.subscription_frequency === 'weekly'
-                                ? 'Weekly Plan'
-                                : user.subscription_frequency === 'monthly'
-                                  ? 'Monthly Plan'
-                                  : 'Plan'}
-                            </div>
+                            {/* Different label for snacks */}
+                            {item.category === 'snack' ? (
+                              <div>
+                                <div className="text-sm text-gray-500">A La Carte</div>
+                                <div className="text-lg font-semibold text-blue-600">
+                                  ${(item.price || 0).toFixed(2)}
+                                </div>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="text-sm text-gray-500">Included in plan</div>
+                                <div className="text-lg font-semibold" style={{ color: '#5CB85C' }}>
+                                  {user.subscription_frequency === 'weekly'
+                                    ? 'Weekly'
+                                    : user.subscription_frequency === 'monthly'
+                                      ? 'Monthly'
+                                      : 'Plan'}
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {isSelected ? (
@@ -370,11 +437,11 @@ export default function MealSelectionClient({
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   const currentQuantity = getMealQuantity(item, activeTab)
-                                  if (totalSelectedMeals < mealsPerWeek) {
+                                  if (canSelectMoreOfResult(item)) {
                                     handleQuantityChange(item.id, currentQuantity + 1, activeTab)
                                   }
                                 }}
-                                disabled={totalSelectedMeals >= mealsPerWeek}
+                                disabled={!canSelectMoreOfResult(item)}
                                 className="w-8 h-8 rounded-full bg-emerald-200 hover:bg-emerald-300 flex items-center justify-center text-emerald-600 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 +
@@ -412,19 +479,29 @@ export default function MealSelectionClient({
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Meals per Week</p>
-              <p className="font-semibold text-gray-900">{mealsPerWeek}</p>
+              <p className="text-sm text-gray-600">Plan Allocation</p>
+              <div className="font-semibold text-gray-900 text-sm">
+                {weeklyBreakfastLimit > 0 ? (
+                  <div>{weeklyBreakfastLimit} Breakfasts / week</div>
+                ) : null}
+                <div>{weeklyMainLimit} Main Meals / week</div>
+                {isMonthly && <div className="text-xs text-gray-500">(x4 for Monthly)</div>}
+              </div>
             </div>
             <div>
               <p className="text-sm text-gray-600">Plan Price</p>
               <p className="font-semibold text-lg" style={{ color: '#5CB85C' }}>
-                $
-                {user.subscription_frequency === 'weekly'
-                  ? 'Weekly Plan Price'
-                  : user.subscription_frequency === 'monthly'
-                    ? 'Monthly Plan Price'
-                  : 'Start Subscription'
-                }
+                {existingOrder?.isCreditUsed || (isMonthly && (user.plan_credits || 0) > 0) ? (
+                  <span>Paid with Plan Credit</span>
+                ) : (
+                  <span>$
+                    {user.subscription_frequency === 'weekly'
+                      ? 'Weekly Plan Price'
+                      : user.subscription_frequency === 'monthly'
+                        ? 'Monthly Plan Price'
+                        : 'Start Subscription'
+                    }</span>
+                )}
               </p>
             </div>
           </div>
@@ -468,12 +545,18 @@ export default function MealSelectionClient({
           </Link>
           <button
             onClick={async () => {
-              // Check if both halves have meals or at least one half is complete
-              // Check if both halves have meals or at least one half is complete
-
               if (selectedMeals.length === 0) {
                 alert('Please select at least one meal before proceeding.')
                 return
+              }
+
+              const isBreakfastComplete = breakfastCount === breakfastLimit
+              const isMainComplete = mainCount === mainLimit
+
+              if (!isMainComplete) {
+                if (!confirm(`You have selected ${mainCount} of ${mainLimit} main meals. Are you sure you want to proceed?`)) {
+                  return
+                }
               }
 
               // Combine meals from both halves, tagging each with its week_half
@@ -489,8 +572,6 @@ export default function MealSelectionClient({
               ]
 
               try {
-                console.log('Submitting order with meals:', mealsWithHalf)
-
                 // Submit order to API
                 const response = await fetch('/api/orders/submit', {
                   method: 'POST',
@@ -502,17 +583,12 @@ export default function MealSelectionClient({
                   }),
                 })
 
-                console.log('Response status:', response.status)
-                console.log('Response ok:', response.ok)
-
                 if (!response.ok) {
                   const errorData = await response.json()
-                  console.error('API error:', errorData)
                   throw new Error(errorData.message || 'Failed to submit order')
                 }
 
                 const { order } = await response.json()
-                console.log('Order response received:', order)
 
                 // Redirect to success page with order data
                 const orderData = encodeURIComponent(JSON.stringify(order))
@@ -524,23 +600,17 @@ export default function MealSelectionClient({
                 alert(`Failed to submit order: ${errorMessage}`)
               }
             }}
-            disabled={totalSelectedMeals === 0 || totalSelectedMeals > mealsPerWeek}
-            className={`px-8 py-3 rounded-lg font-semibold transition-colors ${
-              totalSelectedMeals > 0 && totalSelectedMeals <= mealsPerWeek
-                ? 'text-white hover:bg-emerald-700'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
-            style={{
-              backgroundColor:
-                totalSelectedMeals > 0 && totalSelectedMeals <= mealsPerWeek
-                  ? '#5CB85C'
-                  : undefined,
-            }}
+            disabled={mainCount > mainLimit || breakfastCount > breakfastLimit}
+            className={`px-8 py-3 rounded-lg font-semibold transition-colors ${(mainCount <= mainLimit && breakfastCount <= breakfastLimit)
+              ? 'bg-[#5CB85C] text-white hover:bg-emerald-700'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
           >
-            Submit Order ({totalSelectedMeals}/{mealsPerWeek})
+            Submit Order
           </button>
         </div>
       </div>
     </div>
   )
 }
+

@@ -265,6 +265,21 @@ export const Orders: CollectionConfig = {
         description: 'Total allergen charges for entire order',
       },
     },
+    {
+      name: 'weekOf',
+      type: 'date',
+      admin: {
+        description: 'The start date (Sunday) of the week this order is for',
+      },
+    },
+    {
+      name: 'isCreditUsed',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Whether this order used a monthly plan credit',
+      },
+    },
   ],
   hooks: {
     afterChange: [

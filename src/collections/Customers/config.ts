@@ -55,7 +55,15 @@ export const Customers: CollectionConfig = {
       type: 'number',
       admin: {
         step: 0.01,
-        description: 'Current credit balance',
+        description: 'Current monetary credit balance',
+      },
+    },
+    {
+      name: 'plan_credits',
+      type: 'number',
+      defaultValue: 0,
+      admin: {
+        description: 'Number of weekly credits remaining (for monthly plans)',
       },
     },
     {
