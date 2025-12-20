@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import type { PayloadRequest } from 'payload'
 import config from '@/payload.config'
 import { calculateAllergenCharges } from '@/utilities/allergenCharges'
-import type { Tier, MenuItem } from '@/payload-types'
+import type { Tier, MenuItem, Order } from '@/payload-types'
 
 interface CartItem {
   meal: MenuItem
@@ -205,6 +205,7 @@ export async function POST(request: NextRequest) {
               id: item.meal.id,
               name: item.meal.name,
               description: item.meal.description,
+              category: item.meal.category as string,
             },
             quantity: item.quantity,
             weekHalf: itemWeekHalf,
@@ -235,6 +236,7 @@ export async function POST(request: NextRequest) {
             id: item.meal.id,
             name: item.meal.name,
             description: item.meal.description,
+            category: item.meal.category as string,
           },
           quantity: item.quantity,
           weekHalf: itemWeekHalf,
@@ -289,7 +291,7 @@ export async function POST(request: NextRequest) {
           orderItems: orderItems.map((item) => ({
             menuItem: item.menuItem.id,
             quantity: item.quantity,
-            weekHalf: item.weekHalf,
+            weekHalf: item.weekHalf as 'firstHalf' | 'secondHalf',
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
           })),
@@ -322,7 +324,7 @@ export async function POST(request: NextRequest) {
           orderItems: orderItems.map((item) => ({
             menuItem: item.menuItem.id,
             quantity: item.quantity,
-            weekHalf: item.weekHalf,
+            weekHalf: item.weekHalf as 'firstHalf' | 'secondHalf',
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
           })),

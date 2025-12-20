@@ -40,6 +40,7 @@ export default async function MealSelectionPage() {
         equals: true,
       },
     },
+    limit: 100, // Fetch all active items (increase if needed)
   })
 
   // Separate items for first half, second half, and both halves
@@ -129,12 +130,12 @@ export default async function MealSelectionPage() {
 
   // Category display order and labels
   const categoryOrder = [
+    { key: 'breakfast', label: 'Breakfast' },
     { key: 'main', label: 'Lunch/Dinner' },
     { key: 'premium', label: 'Premium Meals' },
-    { key: 'breakfast', label: 'Breakfast' },
-    { key: 'dessert', label: 'Desserts' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },
+    { key: 'dessert', label: 'Desserts' },
   ]
 
   return (

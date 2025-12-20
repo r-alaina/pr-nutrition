@@ -16,10 +16,12 @@ interface OrderItem {
     name: string
     description: string
     price: number
+    category?: string
   }
   quantity: number
   unitPrice: number
   totalPrice: number
+  weekHalf?: 'firstHalf' | 'secondHalf'
 }
 
 interface AllergenCharge {
@@ -40,6 +42,8 @@ interface Order {
   taxAmount: number
   totalAmount: number
   createdAt: string
+  weekOf?: string
+  isCreditUsed?: boolean
 }
 
 export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
@@ -159,95 +163,179 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 <p className="text-gray-600">Order #{order.orderNumber}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Order Date</p>
-                <p className="font-semibold">{formatDate(order.createdAt)}</p>
+                <p className="text-sm text-gray-500">For Week Of</p>
+                <p className="font-semibold">
+                  {(() => {
+                    const date = order.weekOf ? new Date(order.weekOf) : new Date(order.createdAt)
+                    // Adjust to Monday
+                    const mon = new Date(date)
+                    const day = mon.getDay()
+                    const diff = mon.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+                    mon.setDate(diff)
+
+                    const sun = new Date(mon)
+                    sun.setDate(mon.getDate() + 6)
+
+                    return `${mon.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${sun.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                  })()}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Order Items */}
+          {/* Order Items Grouped by Week Half and Category */}
           <div className="px-6 py-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Meal Plan</h3>
-            <div className="space-y-4">
-              {order.orderItems.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{item.menuItem.name}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{item.menuItem.description}</p>
-                    <div className="flex items-center space-x-4 mt-2">
-                      <span className="text-sm text-gray-500">Quantity: {item.quantity}</span>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Your Meal Plan</h3>
+
+            {(() => {
+              // Group items by First/Second Half
+              const firstHalfItems = order.orderItems.filter(item => !item.weekHalf || item.weekHalf === 'firstHalf')
+              const secondHalfItems = order.orderItems.filter(item => item.weekHalf === 'secondHalf')
+
+              // Helper to group by Category inside a half
+              const groupByCategory = (items: OrderItem[]) => {
+                const grouped = {
+                  breakfast: items.filter(i => i.menuItem.category === 'breakfast'),
+                  main: items.filter(i => !i.menuItem.category || (i.menuItem.category !== 'breakfast' && i.menuItem.category !== 'snack')),
+                  snack: items.filter(i => i.menuItem.category === 'snack')
+                }
+                return grouped
+              }
+
+              const renderItemGroup = (title: string, items: OrderItem[]) => {
+                if (items.length === 0) return null
+                return (
+                  <div className="mb-4">
+                    <h5 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">{title}</h5>
+                    <div className="space-y-3">
+                      {items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-start py-2 border-b border-gray-100 last:border-0 hover:bg-gray-50 rounded pl-2">
+                          <div className="flex-1">
+                            <div className="flex justify-between">
+                              <h4 className="font-medium text-gray-900">{item.menuItem.name}</h4>
+                              <span className="text-sm font-medium text-gray-600">x{item.quantity}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">{item.menuItem.description}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )
+              }
 
-            {/* Subscription Details */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
-              <div className="text-sm text-blue-800">
-                <p>
-                  <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
-                </p>
-                <p>
-                  <strong>Meals per Week:</strong> {user.meals_per_week || 0}
-                </p>
-              </div>
-            </div>
+              const renderHalfSection = (title: string, items: OrderItem[], subtitle: string) => {
+                if (items.length === 0) return null
+                const grouped = groupByCategory(items)
+                return (
+                  <div className="mb-8 last:mb-0 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                    <div className="mb-4 pb-2 border-b border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-800">{title}</h4>
+                      <p className="text-sm text-gray-500">{subtitle}</p>
+                    </div>
 
-            {/* Allergen Charges Summary */}
-            {order.allergenCharges && order.allergenCharges.length > 0 && (
-              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-900 mb-2">
-                  Allergen Accommodation Charges
-                </h4>
-                <p className="text-sm text-yellow-700 mb-3">
-                  Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
-                  order)
-                </p>
-                {order.allergenCharges.map((charge, index) => (
-                  <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
-                    <p className="text-sm text-yellow-800">
-                      <strong>{charge.mealName}</strong> (Qty: {charge.quantity})
-                    </p>
-                    <p className="text-xs text-yellow-700 ml-4">
-                      Allergens: {charge.matchingAllergens.map((a) => a.allergen).join(', ')}
-                    </p>
+                    {renderItemGroup('Breakfast', grouped.breakfast)}
+                    {renderItemGroup('Lunch / Dinner', grouped.main)}
+                    {renderItemGroup('Snacks', grouped.snack)}
                   </div>
-                ))}
-                <div className="border-t border-yellow-300 pt-2 mt-2">
-                  <p className="text-sm font-semibold text-yellow-900">
-                    Total Allergen Charges: ${order.totalAllergenCharges?.toFixed(2) || '0.00'}
+                )
+              }
+
+              return (
+                <div className="space-y-6">
+                  {renderHalfSection('First Half', firstHalfItems, 'Pickup Sunday or Monday')}
+                  {renderHalfSection('Second Half', secondHalfItems, 'Pickup Wednesday or Thursday')}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Subscription Details */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold text-blue-900 mb-2">Subscription Details</h4>
+            <div className="text-sm text-blue-800">
+              <p>
+                <strong>Tier:</strong> {(typeof user.tier === 'object' && user.tier?.tier_name) || 'Not specified'}
+              </p>
+              <p>
+                <strong>Frequency:</strong> {user.subscription_frequency || 'Not specified'}
+              </p>
+              <p>
+                <strong>Meals per Week:</strong> {user.meals_per_week || 0}
+              </p>
+            </div>
+          </div>
+
+          {/* Allergen Charges Summary */}
+          {order.allergenCharges && order.allergenCharges.length > 0 && (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-semibold text-yellow-900 mb-2">
+                Allergen Accommodation Charges
+              </h4>
+              <p className="text-sm text-yellow-700 mb-3">
+                Additional charge for meals containing allergens you&apos;re sensitive to ($5.00 per
+                order)
+              </p>
+              {order.allergenCharges.map((charge, index) => (
+                <div key={index} className="mb-3 p-3 bg-white rounded border border-yellow-300">
+                  <p className="text-sm text-yellow-800">
+                    <strong>{charge.mealName}</strong> (Qty: {charge.quantity})
+                  </p>
+                  <p className="text-xs text-yellow-700 ml-4">
+                    Allergens: {charge.matchingAllergens.map((a) => a.allergen).join(', ')}
                   </p>
                 </div>
+              ))}
+              <div className="border-t border-yellow-300 pt-2 mt-2">
+                <p className="text-sm font-semibold text-yellow-900">
+                  Total Allergen Charges: ${order.totalAllergenCharges?.toFixed(2) || '0.00'}
+                </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Order Summary */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="space-y-2">
+              {/* Itemized breakdown for extra charges */}
+              {(() => {
+                if (order.isCreditUsed) {
+                  const snacks = order.orderItems.filter(i => i.menuItem.category === 'snack')
+                  if (snacks.length > 0) {
+                    return (
+                      <div className="border-b border-gray-200 pb-2 mb-2">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">Extra Charges:</p>
+                        {snacks.map((item, idx) => (
+                          <div key={idx} className="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>{item.quantity}x {item.menuItem.name}</span>
+                            <span>{formatCurrency(item.totalPrice)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  }
+                }
+                return null
+              })()}
+
               <div className="flex justify-between">
                 <span className="text-gray-600">
-                  {user.subscription_frequency === 'weekly'
-                    ? 'Weekly Plan:'
-                    : user.subscription_frequency === 'monthly'
-                      ? 'Monthly Plan:'
-                      : 'Plan:'}
+                  {order.isCreditUsed
+                    ? 'Subtotal:'
+                    : user.subscription_frequency === 'weekly'
+                      ? 'Weekly Plan:'
+                      : user.subscription_frequency === 'monthly'
+                        ? 'Monthly Plan:'
+                        : 'Plan:'}
                 </span>
                 <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
               </div>
-              {order.totalAllergenCharges && order.totalAllergenCharges > 0 && (
+              {(order.totalAllergenCharges || 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Allergen Accommodation:</span>
                   <span className="font-semibold text-orange-600">
-                    +{formatCurrency(order.totalAllergenCharges)}
+                    +{formatCurrency(order.totalAllergenCharges || 0)}
                   </span>
                 </div>
               )}
@@ -260,11 +348,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 <span style={{ color: '#5CB85C' }}>{formatCurrency(order.totalAmount)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-2">
-                {user.subscription_frequency === 'weekly'
-                  ? 'Charged weekly'
-                  : user.subscription_frequency === 'monthly'
-                    ? 'Charged monthly'
-                    : 'One-time charge'}
+                {order.totalAmount > 0 ? 'Payment due at pickup' : 'Paid with Plan Credit'}
               </div>
             </div>
           </div>
@@ -308,10 +392,10 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
           >
-            Place Another Order
+            Edit your order
           </Link>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
