@@ -7,8 +7,8 @@ type LayoutProps = {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <html>
-      <body>
+    <html suppressHydrationWarning>
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>

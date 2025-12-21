@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import type { MenuItem } from '@/payload-types'
+import { BreakfastIcon, MainIcon, SnackIcon, SaladIcon } from '../../components/CategoryIcons'
 
 interface Tier {
   id: string
@@ -18,6 +19,59 @@ interface GuestMealSelectionClientProps {
   groupedFirstHalf: Record<string, MenuItem[]>
   groupedSecondHalf: Record<string, MenuItem[]>
   categoryOrder: Array<{ key: string; label: string }>
+}
+
+// Helper to get card styles based on category
+const getCardStyles = (category: string) => {
+  switch (category) {
+    case 'breakfast':
+    case 'breakfast-small':
+    case 'breakfast-large':
+      return {
+        borderColor: 'border-brand-orange',
+        bgColor: 'bg-orange-50',
+        textColor: 'text-brand-orange',
+        buttonColor: 'bg-brand-orange',
+        hoverColor: 'hover:bg-orange-600',
+        lightBg: 'bg-orange-100',
+        Icon: BreakfastIcon,
+        iconColor: 'bg-brand-orange',
+      }
+    case 'snack':
+    case 'dessert':
+      return {
+        borderColor: 'border-purple-500',
+        bgColor: 'bg-purple-50',
+        textColor: 'text-purple-600',
+        buttonColor: 'bg-purple-600',
+        hoverColor: 'hover:bg-purple-700',
+        lightBg: 'bg-purple-100',
+        Icon: SnackIcon,
+        iconColor: 'bg-purple-500',
+      }
+    case 'salad':
+      return {
+        borderColor: 'border-green-500',
+        bgColor: 'bg-green-50',
+        textColor: 'text-green-600',
+        buttonColor: 'bg-green-600',
+        hoverColor: 'hover:bg-green-700',
+        lightBg: 'bg-green-100',
+        Icon: SaladIcon,
+        iconColor: 'bg-green-500',
+      }
+    default: // Main/Premium
+      return {
+        borderColor: 'border-brand-primary',
+        bgColor: 'bg-green-50',
+        textColor: 'text-brand-primary',
+        buttonColor: 'bg-brand-primary',
+        hoverColor: 'hover:bg-brand-dark',
+        lightBg: 'bg-brand-primary/10',
+        Icon: MainIcon,
+        iconColor: 'bg-brand-primary',
+      }
+  }
 }
 
 export default function GuestMealSelectionClient({
@@ -71,27 +125,27 @@ export default function GuestMealSelectionClient({
 
   // Combine meals for display
   const selectedMeals = [...selectedFirstHalfMeals, ...selectedSecondHalfMeals]
-  const selectedMealsOnly = selectedMeals.filter((item) => item.meal.category !== 'snack')
-  const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack')
+  const selectedMealsOnly = selectedMeals.filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
+  const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack' || item.meal.category === 'dessert')
 
   const totalSelectedMeals = selectedMealsOnly.reduce((total, item) => total + item.quantity, 0)
 
   const getTotalSelectedMeals = (half?: 'firstHalf' | 'secondHalf') => {
     if (half === 'firstHalf') {
       return selectedFirstHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
+        .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
         .reduce((total, item) => total + item.quantity, 0)
     }
     if (half === 'secondHalf') {
       return selectedSecondHalfMeals
-        .filter((item) => item.meal.category !== 'snack')
+        .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
         .reduce((total, item) => total + item.quantity, 0)
     }
     const firstHalfTotal = selectedFirstHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
+      .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
       .reduce((total, item) => total + item.quantity, 0)
     const secondHalfTotal = selectedSecondHalfMeals
-      .filter((item) => item.meal.category !== 'snack')
+      .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
       .reduce((total, item) => total + item.quantity, 0)
     return firstHalfTotal + secondHalfTotal
   }
@@ -122,19 +176,19 @@ export default function GuestMealSelectionClient({
         // Remove meal
         return prev.filter((item) => item.meal.id !== meal.id)
       } else {
-        // Snacks don't count toward meal limit
-        if (meal.category === 'snack') {
+        // Snacks/Desserts don't count toward meal limit
+        if (meal.category === 'snack' || meal.category === 'dessert') {
           return [...prev, { meal, quantity: 1 }]
         }
         // Add meal if under total limit (across both halves)
         const currentMealTotal = prev
-          .filter((item) => item.meal.category !== 'snack')
+          .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
           .reduce((total, item) => total + item.quantity, 0)
 
         // Get the total from the other half
         const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
         const otherHalfTotal = otherHalf
-          .filter((item) => item.meal.category !== 'snack')
+          .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
           .reduce((total, item) => total + item.quantity, 0)
 
         // Total meals across both halves cannot exceed mealsPerWeek
@@ -163,22 +217,22 @@ export default function GuestMealSelectionClient({
     const meal = currentMeals.find((item) => item.meal.id === mealId)?.meal
     if (!meal) return
 
-    // Snacks don't count toward meal limit
-    if (meal.category === 'snack') {
+    // Snacks/Desserts don't count toward meal limit
+    if (meal.category === 'snack' || meal.category === 'dessert') {
       setter((prev) => prev.map((item) => (item.meal.id === mealId ? { ...item, quantity } : item)))
       return
     }
 
     // For meals, check against total limit across both halves
     const currentMealTotal = currentMeals
-      .filter((item) => item.meal.category !== 'snack')
+      .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
       .reduce((total, item) => total + item.quantity, 0)
     const currentMealQuantity = currentMeals.find((item) => item.meal.id === mealId)?.quantity || 0
 
     // Get the total from the other half
     const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
     const otherHalfTotal = otherHalf
-      .filter((item) => item.meal.category !== 'snack')
+      .filter((item) => item.meal.category !== 'snack' && item.meal.category !== 'dessert')
       .reduce((total, item) => total + item.quantity, 0)
 
     // Calculate new total across both halves
@@ -326,11 +380,10 @@ export default function GuestMealSelectionClient({
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      pathname === link.href
-                        ? 'text-[#5CB85C] bg-green-50'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${pathname === link.href
+                      ? 'text-[#5CB85C] bg-green-50'
+                      : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -355,22 +408,20 @@ export default function GuestMealSelectionClient({
             <div className="inline-flex rounded-lg border border-gray-300 bg-white p-1">
               <button
                 onClick={() => setActiveTab('firstHalf')}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'firstHalf'
-                    ? 'bg-[#5CB85C] text-white'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'firstHalf'
+                  ? 'bg-[#5CB85C] text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+                  }`}
               >
                 First Half Menu
                 <span className="block text-xs mt-1">Sunday & Monday Pickup</span>
               </button>
               <button
                 onClick={() => setActiveTab('secondHalf')}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'secondHalf'
-                    ? 'bg-[#5CB85C] text-white'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
+                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'secondHalf'
+                  ? 'bg-[#5CB85C] text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+                  }`}
               >
                 Second Half Menu
                 <span className="block text-xs mt-1">Wednesday & Thursday Pickup</span>
@@ -419,102 +470,138 @@ export default function GuestMealSelectionClient({
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map((item) => {
                   const isSelected = isMealSelected(item, activeTab)
-                  const canSelect = currentCanSelectMore || isSelected
+                  const canSelect = currentCanSelectMore || isSelected || item.category === 'snack' || item.category === 'dessert'
+                  const styles = getCardStyles(item.category || 'default');
 
                   return (
                     <div
                       key={item.id}
                       onClick={() => canSelect && handleMealToggle(item, activeTab)}
-                      className={`bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : canSelect
-                            ? 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                            : 'border-gray-200 opacity-50 cursor-not-allowed'
-                      }`}
+                      className={`relative bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all cursor-pointer ${isSelected
+                        ? styles.borderColor + ' ' + styles.bgColor
+                        : canSelect
+                          ? 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
+                          : 'border-gray-200 opacity-50 cursor-not-allowed'
+                        }`}
                     >
-                      <div className="p-6">
+                      {/* Watermark Icon */}
+                      <div
+                        className={`absolute -right-4 -top-4 w-32 h-32 opacity-5 pointer-events-none z-0 transform rotate-12 ${styles.iconColor}`}
+                        style={{
+                          maskImage: `url('${item.category === 'breakfast' || item.category.includes('breakfast')
+                            ? '/assets/icons/breakfast.png'
+                            : item.category === 'snack' || item.category === 'dessert'
+                              ? '/assets/icons/snack.png'
+                              : item.category === 'salad'
+                                ? '/assets/icons/salad.png'
+                                : '/assets/icons/main.png'
+                            }')`,
+                          maskSize: 'contain',
+                          maskRepeat: 'no-repeat',
+                          maskPosition: 'center',
+                          WebkitMaskImage: `url('${item.category === 'breakfast' || item.category.includes('breakfast')
+                            ? '/assets/icons/breakfast.png'
+                            : item.category === 'snack' || item.category === 'dessert'
+                              ? '/assets/icons/snack.png'
+                              : item.category === 'salad'
+                                ? '/assets/icons/salad.png'
+                                : '/assets/icons/main.png'
+                            }')`,
+                          WebkitMaskSize: 'contain',
+                          WebkitMaskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center',
+                        }}
+                      />
+
+                      <div className="p-6 relative z-10">
                         <div className="flex justify-between items-start mb-4">
-                          <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
+                          <div className="flex-1 pr-4">
+                            {/* Category Label with Icon */}
+                            <div className={`flex items-center gap-2 mb-2 ${styles.textColor} font-medium text-sm uppercase tracking-wider`}>
+                              <styles.Icon className={`w-5 h-5 ${styles.iconColor}`} />
+                              <span>{item.category === 'dessert' ? 'Snack' : item.category === 'premium' ? 'Main' : item.category.replace('-', ' ')}</span>
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 leading-tight">{item.name}</h3>
+                          </div>
+
                           {item.category === 'premium' && (
-                            <span
-                              className="text-white text-xs font-semibold px-2 py-1 rounded"
-                              style={{ backgroundColor: '#F7931E' }}
-                            >
+                            <span className="bg-brand-orange text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                               Premium
                             </span>
                           )}
                           {isSelected && (
-                            <div className="text-emerald-600">
-                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <div className={styles.textColor}>
+                              <svg className="w-8 h-8 drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
                                 <path
                                   fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                   clipRule="evenodd"
                                 />
                               </svg>
                             </div>
                           )}
                         </div>
-                        <p className="text-gray-600 mb-4 leading-relaxed">{item.description}</p>
+
+                        <p className="text-gray-600 mb-6 leading-relaxed line-clamp-3 min-h-[4.5em]">{item.description}</p>
 
                         {/* Allergens */}
                         {item.allergens && item.allergens.length > 0 && (
-                          <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-1">Allergens:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {item.allergens.map((allergen, index) => (
-                                <span
-                                  key={index}
-                                  className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600"
-                                >
-                                  {allergen.allergen}
-                                </span>
-                              ))}
-                            </div>
+                          <div className="mb-6 flex flex-wrap gap-2">
+                            {item.allergens.map((allergen, index) => (
+                              <span
+                                key={index}
+                                className="text-xs px-2.5 py-1 rounded-md bg-gray-100 text-gray-600 font-medium"
+                              >
+                                {allergen.allergen}
+                              </span>
+                            ))}
                           </div>
                         )}
 
-                        <div className="flex justify-between items-center mt-6">
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
                           <div>
-                            <div className="text-sm text-gray-500 mb-1">Included in your plan</div>
-                            <div className="text-lg font-semibold" style={{ color: '#5CB85C' }}>
-                              {guestTier?.tier_name || 'Tier Plan'}
+                            <div className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">
+                              {item.category === 'snack' || item.category === 'dessert' ? 'Price' : 'Included in Plan'}
+                            </div>
+                            <div className={`text-lg font-bold ${styles.textColor}`}>
+                              {item.category === 'snack' || item.category === 'dessert'
+                                ? (item.price ? `$${item.price.toFixed(2)}` : 'A la carte')
+                                : (guestTier?.tier_name || 'Tier Plan')}
                             </div>
                           </div>
 
                           {isSelected ? (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center bg-white rounded-full border border-gray-200 shadow-sm p-1">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   const currentQuantity = getMealQuantity(item, activeTab)
                                   handleQuantityChange(item.id, currentQuantity - 1, activeTab)
                                 }}
-                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 font-bold transition-colors"
+                                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold transition-colors"
                               >
                                 -
                               </button>
-                              <span className="text-lg font-semibold text-emerald-600 min-w-[2rem] text-center">
+                              <span className={`w-10 text-center font-bold text-lg ${styles.textColor}`}>
                                 {getMealQuantity(item, activeTab)}
                               </span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   const currentQuantity = getMealQuantity(item, activeTab)
-                                  if (totalSelectedMeals < mealsPerWeek) {
+                                  if (totalSelectedMeals < mealsPerWeek || item.category === 'snack' || item.category === 'dessert') {
                                     handleQuantityChange(item.id, currentQuantity + 1, activeTab)
                                   }
                                 }}
-                                disabled={totalSelectedMeals >= mealsPerWeek}
-                                className="w-8 h-8 rounded-full bg-emerald-200 hover:bg-emerald-300 flex items-center justify-center text-emerald-600 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                disabled={totalSelectedMeals >= mealsPerWeek && item.category !== 'snack' && item.category !== 'dessert'}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${styles.buttonColor} ${styles.hoverColor}`}
                               >
                                 +
                               </button>
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-500">
-                              {canSelect ? 'Click to select' : 'Limit reached'}
+                            <span className={`text-sm font-semibold ${canSelect ? styles.textColor : 'text-gray-400'}`}>
+                              {canSelect ? 'Click to Select' : 'Limit Reached'}
                             </span>
                           )}
                         </div>
@@ -543,7 +630,7 @@ export default function GuestMealSelectionClient({
               <div>
                 <p className="text-sm text-gray-600">Plan Price</p>
                 <p className="font-semibold text-lg" style={{ color: '#5CB85C' }}>
-                  ${guestTier.weekly_price.toFixed(2)}/week
+                  ${(guestTier.weekly_price || 0).toFixed(2)}/week
                 </p>
               </div>
             </div>
@@ -574,11 +661,10 @@ export default function GuestMealSelectionClient({
           <button
             onClick={handleContinue}
             disabled={selectedMeals.length === 0 || totalSelectedMeals > mealsPerWeek}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
-              selectedMeals.length > 0 && totalSelectedMeals <= mealsPerWeek
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${selectedMeals.length > 0 && totalSelectedMeals <= mealsPerWeek
+              ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              }`}
           >
             Continue to Checkout ({totalSelectedMeals}/{mealsPerWeek})
           </button>

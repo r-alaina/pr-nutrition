@@ -20,6 +20,7 @@ export default function GuestCheckoutClient() {
   const [tiers, setTiers] = useState<Tier[]>([])
   const [selectedTier, setSelectedTier] = useState<Tier | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   const getLinkClass = (path: string) => {
     const isActive = pathname === path
@@ -40,6 +41,7 @@ export default function GuestCheckoutClient() {
 
   useEffect(() => {
     // Fetch tiers
+    setIsLoading(true)
     fetch('/api/tiers')
       .then((res) => {
         if (!res.ok) {
@@ -58,6 +60,9 @@ export default function GuestCheckoutClient() {
       .catch((err) => {
         console.error('Error fetching tiers:', err)
         setTiers([])
+      })
+      .finally(() => {
+        setIsLoading(false)
       })
   }, [])
 
@@ -173,11 +178,10 @@ export default function GuestCheckoutClient() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      pathname === link.href
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${pathname === link.href
                         ? 'text-[#5CB85C] bg-green-50'
                         : 'text-gray-700 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -200,16 +204,25 @@ export default function GuestCheckoutClient() {
 
         {/* Calorie Tier Cards */}
         <div className="grid grid-cols-2 gap-6 mb-8">
-          {tiers.length > 0 ? (
+          {isLoading ? (
+            // Loading Skeletons
+            <>
+              {[1, 2].map((i) => (
+                <div key={i} className="p-8 border-2 border-gray-100 rounded-lg bg-gray-50/50 animate-pulse h-48 flex flex-col items-center justify-center">
+                  <div className="h-6 w-32 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-8 w-48 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </>
+          ) : tiers.length > 0 ? (
             tiers.map((tier) => (
               <div
                 key={tier.id}
                 onClick={() => handleTierSelect(tier)}
-                className={`p-8 border-2 rounded-lg cursor-pointer transition-all text-center relative ${
-                  selectedTier?.id === tier.id
+                className={`p-8 border-2 rounded-lg cursor-pointer transition-all text-center relative ${selectedTier?.id === tier.id
                     ? 'border-emerald-500 bg-emerald-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 {selectedTier?.id === tier.id && (
                   <div className="absolute top-3 right-3">
@@ -233,9 +246,7 @@ export default function GuestCheckoutClient() {
           ) : (
             <div className="col-span-2 text-center py-12">
               <p className="text-gray-500 text-lg">
-                {tiers.length === 0
-                  ? 'No tiers available. Please contact support.'
-                  : 'Loading tiers...'}
+                No tiers available. Please contact support.
               </p>
             </div>
           )}
@@ -258,4 +269,3 @@ export default function GuestCheckoutClient() {
     </div>
   )
 }
-

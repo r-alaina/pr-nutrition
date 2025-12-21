@@ -7,35 +7,83 @@ import type { MenuItem } from '@/payload-types'
 export default async function GuestMealSelectionPage() {
   const payload = await getPayload({ config })
 
-  // Get all active menu items
-  const allMenuItems = await payload.find({
-    collection: 'menu-items',
+  // Try to find an active Weekly Menu
+  const weeklyMenus = await payload.find({
+    collection: 'weekly-menus' as any,
     where: {
-      active: {
-        equals: true,
+      status: {
+        equals: 'active',
       },
     },
+    limit: 1,
   })
 
-  // Filter items by availability settings
-  const firstHalfItems = allMenuItems.docs.filter((item) => {
-    if (item.category === 'snack') return true // Snacks always available
-    if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
-    if (item.availability?.firstHalf) return true
-    return false
-  })
+  let firstHalfDocs: MenuItem[] = []
+  let secondHalfDocs: MenuItem[] = []
 
-  const secondHalfItems = allMenuItems.docs.filter((item) => {
-    if (item.category === 'snack') return true // Snacks always available
-    if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
-    if (item.availability?.secondHalf) return true
-    return false
-  })
+  if (weeklyMenus.docs.length > 0) {
+    const activeMenu = weeklyMenus.docs[0] as any
+
+    // Helper to filter valid items
+    const getValidItems = (items: any[]): MenuItem[] => {
+      if (!items) return []
+      return items.filter((item) => item && typeof item === 'object' && 'id' in item) as MenuItem[]
+    }
+
+    const mainFirst = getValidItems(activeMenu.firstHalfMains)
+    const saladFirst = getValidItems(activeMenu.firstHalfSalads)
+    const mainSecond = getValidItems(activeMenu.secondHalfMains)
+    const saladSecond = getValidItems(activeMenu.secondHalfSalads)
+    const breakfasts = getValidItems(activeMenu.breakfasts)
+    const snacks = getValidItems(activeMenu.snacks)
+
+    // Combine for display
+    firstHalfDocs = [...mainFirst, ...saladFirst, ...breakfasts, ...snacks]
+    secondHalfDocs = [...mainSecond, ...saladSecond, ...breakfasts, ...snacks]
+
+    // Serialize to ensure plain objects
+    firstHalfDocs = JSON.parse(JSON.stringify(firstHalfDocs))
+    secondHalfDocs = JSON.parse(JSON.stringify(secondHalfDocs))
+  } else {
+    // Fallback: Get all active menu items
+    const allMenuItems = await payload.find({
+      collection: 'menu-items',
+      where: {
+        active: {
+          equals: true,
+        },
+      },
+    })
+
+    // Sanitize documents
+    const docs = JSON.parse(JSON.stringify(allMenuItems.docs)) as MenuItem[]
+
+    // Filter items by availability settings
+    firstHalfDocs = docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (item.category === 'breakfast' || item.category === 'breakfast-small' || item.category === 'breakfast-large') return true // Breakfast always available
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.firstHalf) return true
+      return false
+    })
+
+    secondHalfDocs = docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (item.category === 'breakfast' || item.category === 'breakfast-small' || item.category === 'breakfast-large') return true // Breakfast always available
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.secondHalf) return true
+      return false
+    })
+  }
 
   // Group menu items by category for each half
-  const groupedFirstHalf = firstHalfItems.reduce(
+  const groupedFirstHalf = firstHalfDocs.reduce(
     (acc, item) => {
-      const category = item.category
+      let category = item.category
+      if (category === 'premium') category = 'main'
+      if (category === 'dessert') category = 'snack'
+      if (category === 'breakfast-small' || category === 'breakfast-large') category = 'breakfast'
+
       if (!acc[category]) {
         acc[category] = []
       }
@@ -45,9 +93,13 @@ export default async function GuestMealSelectionPage() {
     {} as Record<string, MenuItem[]>,
   )
 
-  const groupedSecondHalf = secondHalfItems.reduce(
+  const groupedSecondHalf = secondHalfDocs.reduce(
     (acc, item) => {
-      const category = item.category
+      let category = item.category
+      if (category === 'premium') category = 'main'
+      if (category === 'dessert') category = 'snack'
+      if (category === 'breakfast-small' || category === 'breakfast-large') category = 'breakfast'
+
       if (!acc[category]) {
         acc[category] = []
       }
@@ -59,12 +111,8 @@ export default async function GuestMealSelectionPage() {
 
   // Category display order and labels
   const categoryOrder = [
-    { key: 'lunch', label: 'Lunch Meals' },
-    { key: 'dinner', label: 'Dinner Meals' },
-    { key: 'premium', label: 'Premium Meals' },
-    { key: 'breakfast-small', label: 'Breakfast (Small)' },
-    { key: 'breakfast-large', label: 'Breakfast (Large)' },
-    { key: 'dessert', label: 'Desserts' },
+    { key: 'breakfast', label: 'Breakfast' },
+    { key: 'main', label: 'Lunch & Dinner' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },
   ]
