@@ -143,8 +143,18 @@ export default function CreateForm({ redirectPath }: CreateFormProps): ReactElem
           </button>
         </form>
 
-        {/* Login Link */}
+        {/* Guest Checkout Link */}
         <div className="mt-6 text-center">
+          <Link
+            href="/guest-checkout"
+            className="block w-full text-center text-[#5CB85C] hover:underline font-medium py-2 border border-[#5CB85C] rounded-xl hover:bg-green-50 transition-colors"
+          >
+            Continue as Guest
+          </Link>
+        </div>
+
+        {/* Login Link */}
+        <div className="mt-4 text-center">
           <p className="text-gray-600">
             Already have an account?{' '}
             <Link

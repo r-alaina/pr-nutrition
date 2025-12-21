@@ -1,23 +1,10 @@
-import { getUser } from '@/app/(frontend)/(auth)/actions/getUser'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import MealSelectionClient from './MealSelectionClient'
+import GuestMealSelectionClient from './GuestMealSelectionClient'
 import type { MenuItem } from '@/payload-types'
 
-export default async function MealSelectionPage() {
-  const user = await getUser()
-
-  if (!user) {
-    // Redirect to login if not authenticated
-    return <div>Redirecting to login...</div>
-  }
-
-  // Check if user has preferences set up
-  if (!user.preferences_set) {
-    // Redirect to order-now for preference setup
-    return <div>Redirecting to preference setup...</div>
-  }
-
+export default async function GuestMealSelectionPage() {
   const payload = await getPayload({ config })
 
   // Get all active menu items
@@ -28,7 +15,6 @@ export default async function MealSelectionPage() {
         equals: true,
       },
     },
-    limit: 100, // Fetch all active items (increase if needed)
   })
 
   // Filter items by availability settings
@@ -73,20 +59,21 @@ export default async function MealSelectionPage() {
 
   // Category display order and labels
   const categoryOrder = [
-    { key: 'breakfast', label: 'Breakfast' },
-    { key: 'main', label: 'Lunch/Dinner' },
+    { key: 'lunch', label: 'Lunch Meals' },
+    { key: 'dinner', label: 'Dinner Meals' },
     { key: 'premium', label: 'Premium Meals' },
+    { key: 'breakfast-small', label: 'Breakfast (Small)' },
+    { key: 'breakfast-large', label: 'Breakfast (Large)' },
+    { key: 'dessert', label: 'Desserts' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },
-    { key: 'dessert', label: 'Desserts' },
   ]
 
   return (
-    <MealSelectionClient
+    <GuestMealSelectionClient
       groupedFirstHalf={groupedFirstHalf}
       groupedSecondHalf={groupedSecondHalf}
       categoryOrder={categoryOrder}
-      user={user}
     />
   )
 }

@@ -5,10 +5,7 @@ import OrderSuccessClient from './OrderSuccessClient'
 export default async function OrderSuccessPage() {
   const user = await getUser()
 
-  if (!user) {
-    // Redirect to login if not authenticated
-    return <div>Redirecting to login...</div>
-  }
-
-  return <OrderSuccessClient user={user} />
+  // Allow both authenticated and guest users to see the success page
+  // Guest users will have order data in URL params
+  return <OrderSuccessClient user={user || null} />
 }

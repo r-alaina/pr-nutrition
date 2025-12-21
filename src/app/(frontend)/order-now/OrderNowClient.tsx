@@ -132,7 +132,7 @@ export default function OrderNowClient({ isNewUser, user, userPreferences }: Ord
     if (isNewUser) {
       switch (currentStep) {
         case 1:
-          return 'Choose the tier that matches your nutritional needs. Not sure which tier is right for you? We highly recommend calling us at (956) 424-2247 or stopping by our office so Peggy, our registered dietitian, can help determine the best tier for your specific goals and needs.'
+          return 'Choose the tier that matches your nutritional needs.'
         case 2:
           return "Select the number of meals you'd like per week."
         case 3:

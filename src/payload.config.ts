@@ -11,7 +11,6 @@ import Users from './collections/Users/config'
 import { Customers } from './collections/Customers/config'
 import { MenuItems } from './collections/MenuItems/config'
 import { Tiers } from './collections/Tiers/config'
-import { WeeklyMenus } from './collections/WeeklyMenus/config'
 import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
 import { OrderLogs } from './collections/OrderLogs/config'
@@ -29,7 +28,7 @@ export default buildConfig({
       titleSuffix: '- PR Meal Preps Admin',
     },
   },
-  collections: [Users, Customers, MenuItems, Tiers, WeeklyMenus, Orders, KitchenOrders, OrderLogs],
+  collections: [Users, Customers, MenuItems, Tiers, Orders, KitchenOrders, OrderLogs],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
