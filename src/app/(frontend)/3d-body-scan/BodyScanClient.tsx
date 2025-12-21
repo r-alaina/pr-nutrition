@@ -13,13 +13,27 @@ export default function BodyScanClient({ user }: BodyScanClientProps) {
       <AuthenticatedHeader user={user} />
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">3D Body Scan</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Get detailed insights into your body composition and track your progress with precision
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">Visualize Your Transformation</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-10">
+            Get detailed insights into your body composition and track your progress with precision using our Fit3D ProScanner.
           </p>
+
+          <div className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+            {/* Hero Image */}
+            <img
+              src="/images/fit3D/fit3d.png"
+              alt="Fit3D Scanner"
+              className="w-full h-auto object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-center pb-8">
+              <p className="text-white font-medium text-lg bg-black/30 backdrop-blur-sm px-6 py-2 rounded-full border border-white/20">
+                State-of-the-art Body Scanning Technology
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* What You'll Get Section */}
