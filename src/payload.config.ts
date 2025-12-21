@@ -15,6 +15,7 @@ import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
 import { OrderLogs } from './collections/OrderLogs/config'
 import { WeeklyMenu } from './collections/WeeklyMenu/config'
+import { LogoutButton } from './components/LogoutButton'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -27,6 +28,9 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: '- PR Meal Preps Admin',
+    },
+    components: {
+      afterNavLinks: [LogoutButton as any],
     },
   },
   collections: [Users, Customers, MenuItems, Tiers, Orders, KitchenOrders, OrderLogs, WeeklyMenu],
