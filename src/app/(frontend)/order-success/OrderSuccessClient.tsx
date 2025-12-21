@@ -249,10 +249,8 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
         {/* Contact Info Box */}
         <div className="bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg p-6 mb-8">
           <p className="text-sm text-blue-800 text-center">
-            Not sure which tier is right for you? We highly recommend calling us at{' '}
-            <span className="font-bold text-blue-900">(956) 424-2247</span> or stopping by our
-            office so Peggy, our registered dietitian, can help determine the best tier for your
-            specific goals and needs.
+            Have any questions? Please call us at{' '}
+            <span className="font-bold text-blue-900">(956) 424-2247</span>
           </p>
         </div>
 
@@ -267,7 +265,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">For Week Of</p>
-                <p className="font-semibold">
+                <p className="font-semibold text-gray-900">
                   {(() => {
                     const date = order.weekOf ? new Date(order.weekOf) : new Date(order.createdAt)
                     // Adjust to Monday
@@ -347,8 +345,8 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
 
               return (
                 <div className="space-y-6">
-                  {renderHalfSection('First Half', firstHalfItems, 'Pickup Sunday or Monday')}
-                  {renderHalfSection('Second Half', secondHalfItems, 'Pickup Wednesday or Thursday')}
+                  {renderHalfSection('First Half', firstHalfItems, 'Pickup Sunday 3:30PM - 6PM or Monday 10AM-6PM')}
+                  {renderHalfSection('Second Half', secondHalfItems, 'Pickup Wednesday 3:30PM - 6PM or Thursday 10AM-6PM')}
                 </div>
               )
             })()}
