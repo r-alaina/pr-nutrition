@@ -484,13 +484,28 @@ export default function SharedHomeContent() {
                         Your health insurance may pay for your visits! We are an "In-Network" Preferred Provider with major carriers.
                     </p>
 
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-8 opacity-75 grayscale hover:grayscale-0 transition-all duration-500">
-                        {['BCBS', 'UHC', 'CIGNA', 'MEDICAID', 'AMBETTER', 'MEDICARE'].map((provider) => (
-                            <div key={provider} className="text-2xl font-bold text-gray-400 border-2 border-gray-200 rounded-xl px-6 py-3 select-none">
-                                {provider}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 items-center justify-items-center">
+                        {[
+                            { name: 'Blue Cross Blue Shield', src: '/images/insurance/Blue-Cross-Blue-Shield-Logo.jpg' },
+                            { name: 'UnitedHealthcare', src: '/images/insurance/UnitedHealthcare-logo.png' },
+                            { name: 'Cigna', src: '/images/insurance/Cigna-Logo.png' },
+                            { name: 'Medicaid', src: '/images/insurance/medicaid-logo.jpg' },
+                            { name: 'Ambetter', src: '/images/insurance/ambetter-logo.png' },
+                            { name: 'Medicare', src: '/images/insurance/Medicare-logo.png' },
+                        ].map((provider) => (
+                            <div key={provider.name} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center h-24 w-full max-w-[160px]">
+                                <Image
+                                    src={provider.src}
+                                    alt={`${provider.name} logo`}
+                                    width={120}
+                                    height={60}
+                                    className="w-auto h-auto max-h-16 max-w-full object-contain"
+                                />
                             </div>
                         ))}
                     </div>
+
+
                     <div className="mt-12">
                         <Link href="/about" className="text-brand-primary font-medium hover:underline text-lg">
                             See full list of covered employers &rarr;
