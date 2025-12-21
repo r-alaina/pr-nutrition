@@ -64,12 +64,12 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
 
   const getLinkClass = (path: string) => {
     const isActive = pathname === path
-    return `font-medium transition-colors ${isActive ? 'text-[#5CB85C]' : 'text-gray-700'}`
+    return `font-medium transition-colors ${isActive ? 'text-brand-primary' : 'text-gray-700'}`
   }
 
   const getLinkStyle = (path: string) => {
     const isActive = pathname === path
-    return isActive ? { color: '#5CB85C' } : { color: '#6B7280' }
+    return isActive ? { color: 'var(--color-brand-primary)' } : { color: '#6B7280' }
   }
 
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
         {renderHeader()}
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
             <p className="text-gray-600">Loading your order...</p>
           </div>
         </div>
@@ -193,10 +193,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
             </p>
             <Link
               href={user ? '/meal-selection' : '/guest-checkout'}
-              className="inline-flex items-center px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors"
-              style={{ backgroundColor: '#5CB85C' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+              className="inline-flex items-center px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors bg-brand-primary hover:bg-brand-dark"
             >
               {user ? 'Back to Meal Selection' : 'Back to Order'}
             </Link>
@@ -326,14 +323,18 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 )
               }
 
-              const renderHalfSection = (title: string, items: OrderItem[], subtitle: string) => {
+              const renderHalfSection = (title: string, items: OrderItem[], subtitle: string, type: 'first' | 'second') => {
                 if (items.length === 0) return null
                 const grouped = groupByCategory(items)
+
+                const bgClass = type === 'first' ? 'bg-brand-primary/5 border-brand-primary/10' : 'bg-brand-orange/5 border-brand-orange/10'
+                const headerClass = type === 'first' ? 'text-brand-dark' : 'text-brand-red'
+
                 return (
-                  <div className="mb-8 last:mb-0 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
-                    <div className="mb-4 pb-2 border-b border-gray-200">
-                      <h4 className="text-lg font-bold text-gray-800">{title}</h4>
-                      <p className="text-sm text-gray-500">{subtitle}</p>
+                  <div className={`mb-8 last:mb-0 p-4 rounded-lg border ${bgClass}`}>
+                    <div className="mb-4 pb-2 border-b border-gray-200/50">
+                      <h4 className={`text-lg font-bold ${headerClass}`}>{title}</h4>
+                      <p className="text-sm text-gray-600">{subtitle}</p>
                     </div>
 
                     {renderItemGroup('Breakfast', grouped.breakfast)}
@@ -345,8 +346,8 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
 
               return (
                 <div className="space-y-6">
-                  {renderHalfSection('First Half', firstHalfItems, 'Pickup Sunday 3:30PM - 6PM or Monday 10AM-6PM')}
-                  {renderHalfSection('Second Half', secondHalfItems, 'Pickup Wednesday 3:30PM - 6PM or Thursday 10AM-6PM')}
+                  {renderHalfSection('First Half', firstHalfItems, 'Pickup Sunday 3:30PM - 6PM or Monday 10AM-6PM', 'first')}
+                  {renderHalfSection('Second Half', secondHalfItems, 'Pickup Wednesday 3:30PM - 6PM or Thursday 10AM-6PM', 'second')}
                 </div>
               )
             })()}
@@ -449,7 +450,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               </div>
               <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
                 <span className="text-gray-900">Total:</span>
-                <span style={{ color: '#5CB85C' }}>{formatCurrency(order.totalAmount)}</span>
+                <span className="text-brand-primary">{formatCurrency(order.totalAmount)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-2">
                 {order.totalAmount > 0 ? 'Payment due at pickup' : 'Paid with Plan Credit'}
@@ -459,9 +460,9 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
         </div >
 
         {/* Next Steps */}
-        < div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8" >
-          <h3 className="text-lg font-semibold text-green-900 mb-3">Pickup Information</h3>
-          <div className="space-y-3 text-green-800">
+        < div className="bg-brand-primary/10 border border-brand-primary/20 rounded-lg p-6 mb-8" >
+          <h3 className="text-lg font-semibold text-brand-dark mb-3">Pickup Information</h3>
+          <div className="space-y-3 text-brand-dark">
             {order.weekHalf === 'firstHalf' && (
               <p className="font-semibold">
                 Please pick up your order on Sunday & Monday (First Half)
@@ -490,7 +491,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                 Please pick up your order according to your selected week half
               </p>
             )}
-            <p className="text-sm text-green-700 mt-4">
+            <p className="text-sm text-brand-dark/80 mt-4">
               We&apos;ll start preparing your meals according to your preferences and have them
               ready for pickup.
             </p>
@@ -507,10 +508,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
           </Link>
           <Link
             href={user ? '/meal-selection' : '/guest-checkout'}
-            className="inline-flex items-center justify-center px-8 py-3 text-white rounded-lg font-semibold transition-colors"
-            style={{ backgroundColor: '#5CB85C' }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+            className="inline-flex items-center justify-center px-8 py-3 text-white rounded-lg font-semibold transition-colors bg-brand-primary hover:bg-brand-dark"
           >
             Edit your order
           </Link>

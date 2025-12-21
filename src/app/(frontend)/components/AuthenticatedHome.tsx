@@ -17,10 +17,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
       {/* Hero Section */}
       <section
-        className="py-20 relative"
-        style={{
-          background: 'linear-gradient(135deg, #5CB85C 0%, #4A9D4A 100%)',
-        }}
+        className="py-20 relative bg-gradient-to-br from-brand-primary to-brand-dark"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="bg-white rounded-2xl p-8 max-w-3xl mx-auto mb-12 shadow-lg">
@@ -52,10 +49,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link
               href="/order-now"
-              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg flex items-center justify-center"
-              style={{ backgroundColor: '#F7931E' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#E8851C')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#F7931E')}
+              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg flex items-center justify-center bg-brand-orange hover:bg-orange-600"
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -68,10 +62,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             </Link>
             <Link
               href="/menu"
-              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg"
-              style={{ backgroundColor: '#5CB85C' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+              className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg bg-brand-primary hover:bg-brand-dark"
             >
               View Menu
             </Link>
@@ -123,10 +114,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
           </p>
           <Link
             href="/fit3d"
-            className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg inline-block"
-            style={{ backgroundColor: '#5CB85C' }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+            className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg inline-block bg-brand-primary hover:bg-brand-dark"
           >
             Learn More About Fit 3D
           </Link>
@@ -138,10 +126,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Link
             href="/menu"
-            className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg inline-block"
-            style={{ backgroundColor: '#5CB85C' }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
+            className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg inline-block bg-brand-primary hover:bg-brand-dark"
           >
             Browse Our Meal Plans
           </Link>
@@ -162,14 +147,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
-                  style={{ backgroundColor: '#5CB85C' }}
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold bg-brand-primary"
                 >
                   1
                 </div>
                 <div
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: '#F7931E' }}
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-brand-orange"
                 >
                   <span className="text-white text-xs font-bold">!</span>
                 </div>
@@ -184,14 +167,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
-                  style={{ backgroundColor: '#5CB85C' }}
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold bg-brand-primary"
                 >
                   2
                 </div>
                 <div
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: '#F7931E' }}
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-brand-orange"
                 >
                   <span className="text-white text-xs font-bold">!</span>
                 </div>
@@ -206,14 +187,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
-                  style={{ backgroundColor: '#5CB85C' }}
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold bg-brand-primary"
                 >
                   3
                 </div>
                 <div
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: '#F7931E' }}
+                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center bg-brand-orange"
                 >
                   <span className="text-white text-xs font-bold">!</span>
                 </div>
@@ -243,14 +222,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(92, 184, 92, 0.1)' }}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-primary/10"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-6 h-6 text-brand-primary"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={{ color: '#5CB85C' }}
                   >
                     <path
                       fillRule="evenodd"
@@ -272,14 +249,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
               <div className="flex items-start space-x-4">
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(92, 184, 92, 0.1)' }}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-primary/10"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-6 h-6 text-brand-primary"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={{ color: '#5CB85C' }}
                   >
                     <path
                       fillRule="evenodd"
@@ -301,14 +276,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
               <div className="flex items-start space-x-4">
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(92, 184, 92, 0.1)' }}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-primary/10"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-6 h-6 text-brand-primary"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={{ color: '#5CB85C' }}
                   >
                     <path
                       fillRule="evenodd"
@@ -328,14 +301,12 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
 
               <div className="flex items-start space-x-4">
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'rgba(92, 184, 92, 0.1)' }}
+                  className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-brand-primary/10"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-6 h-6 text-brand-primary"
                     fill="currentColor"
                     viewBox="0 0 20 20"
-                    style={{ color: '#5CB85C' }}
                   >
                     <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l5-10A1 1 0 0019 1H3z" />
                   </svg>
@@ -354,7 +325,7 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-brand-dark text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="col-span-2">

@@ -136,11 +136,10 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                       key={link.href}
                       href={link.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        pathname === link.href
-                          ? 'text-[#5CB85C] bg-green-50'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${pathname === link.href
+                        ? 'text-[#5CB85C] bg-green-50'
+                        : 'text-gray-700 hover:bg-gray-50'
+                        }`}
                     >
                       {link.label}
                     </Link>
@@ -197,76 +196,85 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
             <div key={key} className="mb-16">
               <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">{label}</h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-lg shadow-md overflow-hidden border hover:shadow-lg transition-shadow"
-                  >
-                    <div className="p-6">
-                      <div className="text-center mb-4">
-                        <div className="flex justify-center items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
-                          {item.category === 'premium' && (
-                            <span
-                              className="text-white text-xs font-semibold px-2 py-1 rounded"
-                              style={{ backgroundColor: '#F7931E' }}
-                            >
-                              Premium
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="text-gray-600 mb-4 leading-relaxed text-center">
-                        {item.description}
-                      </p>
+                {items.map((item) => {
+                  const getCardStyles = () => {
+                    switch (item.category) {
+                      case 'breakfast':
+                        return 'border-brand-orange/20 bg-brand-orange/5 hover:border-brand-orange/50 hover:shadow-lg'
+                      case 'snack':
+                        return 'border-purple-500/20 bg-purple-500/5 hover:border-purple-500/50 hover:shadow-lg'
+                      default: // Main
+                        return 'border-brand-primary/20 bg-brand-primary/5 hover:border-brand-primary/50 hover:shadow-lg'
+                    }
+                  }
 
-                      {/* Allergens */}
-                      {item.allergens && item.allergens.length > 0 && (
-                        <div className="mb-4">
-                          <p className="text-sm text-gray-500 mb-1">Allergens:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {item.allergens.map((allergen, index) => (
+                  return (
+                    <div
+                      key={item.id}
+                      className={`rounded-lg shadow-md overflow-hidden border transition-all ${getCardStyles()}`}
+                    >
+                      <div className="p-6">
+                        <div className="text-center mb-4">
+                          <div className="flex justify-center items-center gap-2 mb-2">
+                            <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
+                            {item.category === 'premium' && (
                               <span
-                                key={index}
-                                className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded"
+                                className="text-white text-xs font-semibold px-2 py-1 rounded bg-brand-orange"
                               >
-                                {allergen.allergen}
+                                Premium
                               </span>
-                            ))}
+                            )}
                           </div>
                         </div>
-                      )}
+                        <p className="text-gray-600 mb-4 leading-relaxed text-center">
+                          {item.description}
+                        </p>
 
-                      <div className="flex flex-col items-center space-y-3">
-                        {item.category === 'snack' && item.price ? (
-                          <span className="text-2xl font-bold" style={{ color: '#5CB85C' }}>
-                            ${(item.price || 0).toFixed(2)}
-                          </span>
-                        ) : (
-                          user &&
-                          user.preferences_set && (
-                            <span className="text-lg text-gray-600">
-                              {item.category === 'snack'
-                                ? 'A la carte'
-                                : 'Included in subscription'}
-                            </span>
-                          )
+                        {/* Allergens */}
+                        {item.allergens && item.allergens.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-sm text-gray-500 mb-1">Allergens:</p>
+                            <div className="flex flex-wrap gap-1">
+                              {item.allergens.map((allergen, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-white/50 border border-gray-200 text-gray-600 text-xs px-2 py-1 rounded"
+                                >
+                                  {allergen.allergen}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         )}
-                        <Link
-                          href={
-                            user && user.preferences_set ? '/meal-selection' : '/order-now'
-                          }
-                          className="text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold"
-                          style={{ backgroundColor: '#5CB85C' }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4A9D4A')}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#5CB85C')}
-                        >
-                          {user && user.preferences_set ? 'Order Meals' : 'Order Now'}
-                        </Link>
+
+                        <div className="flex flex-col items-center space-y-3">
+                          {item.category === 'snack' && item.price ? (
+                            <span className="text-2xl font-bold text-purple-600">
+                              ${(item.price || 0).toFixed(2)}
+                            </span>
+                          ) : (
+                            user &&
+                            user.preferences_set && (
+                              <span className="text-lg text-gray-600">
+                                {item.category === 'snack'
+                                  ? 'A la carte'
+                                  : 'Included in subscription'}
+                              </span>
+                            )
+                          )}
+                          <Link
+                            href={
+                              user && user.preferences_set ? '/meal-selection' : '/order-now'
+                            }
+                            className="text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold bg-brand-primary hover:bg-brand-dark"
+                          >
+                            {user && user.preferences_set ? 'Order Meals' : 'Order Now'}
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )
@@ -286,7 +294,7 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
             Start Ordering
           </Link>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }

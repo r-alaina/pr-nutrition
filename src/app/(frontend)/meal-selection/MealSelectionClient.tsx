@@ -318,30 +318,38 @@ export default function MealSelectionClient({
                   const isSelected = isMealSelected(item, activeTab)
                   const canSelect = canSelectMoreOfResult(item) || isSelected
 
+                  const getCardStyles = () => {
+                    if (isSelected) return 'border-brand-primary bg-brand-primary/10 shadow-md'
+                    if (!canSelect) return 'border-gray-200 opacity-50 cursor-not-allowed bg-gray-50'
+
+                    switch (item.category) {
+                      case 'breakfast':
+                        return 'border-brand-orange/20 bg-brand-orange/5 hover:border-brand-orange/50 hover:shadow-lg'
+                      case 'snack':
+                        return 'border-purple-500/20 bg-purple-500/5 hover:border-purple-500/50 hover:shadow-lg'
+                      default: // Main
+                        return 'border-brand-primary/20 bg-brand-primary/5 hover:border-brand-primary/50 hover:shadow-lg'
+                    }
+                  }
+
                   return (
                     <div
                       key={item.id}
                       onClick={() => canSelect && handleMealToggle(item, activeTab)}
-                      className={`bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all cursor-pointer ${isSelected
-                        ? 'border-emerald-500 bg-emerald-50'
-                        : canSelect
-                          ? 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                          : 'border-gray-200 opacity-50 cursor-not-allowed'
-                        }`}
+                      className={`rounded-lg border-2 transition-all cursor-pointer overflow-hidden ${getCardStyles()}`}
                     >
                       <div className="p-6">
                         <div className="flex justify-between items-start mb-4">
                           <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
                           {item.category === 'premium' && (
                             <span
-                              className="text-white text-xs font-semibold px-2 py-1 rounded"
-                              style={{ backgroundColor: '#F7931E' }}
+                              className="text-white text-xs font-semibold px-2 py-1 rounded bg-brand-orange"
                             >
                               Premium
                             </span>
                           )}
                           {isSelected && (
-                            <div className="text-emerald-600">
+                            <div className="text-brand-primary">
                               <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path
                                   fillRule="evenodd"
@@ -368,7 +376,7 @@ export default function MealSelectionClient({
                                     key={index}
                                     className={`text-xs px-2 py-1 rounded ${isUserAllergic
                                       ? 'bg-red-100 text-red-800 border border-red-300 font-medium'
-                                      : 'bg-gray-100 text-gray-600'
+                                      : 'bg-white/50 text-gray-600 border border-gray-200'
                                       }`}
                                   >
                                     {allergen.allergen}
@@ -390,20 +398,20 @@ export default function MealSelectionClient({
                           </div>
                         )}
 
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center text-gray-900">
                           <div>
                             {/* Different label for snacks */}
                             {item.category === 'snack' ? (
                               <div>
                                 <div className="text-sm text-gray-500">A La Carte</div>
-                                <div className="text-lg font-semibold text-blue-600">
+                                <div className="text-lg font-semibold text-purple-600">
                                   ${(item.price || 0).toFixed(2)}
                                 </div>
                               </div>
                             ) : (
                               <div>
                                 <div className="text-sm text-gray-500">Included in plan</div>
-                                <div className="text-lg font-semibold" style={{ color: '#5CB85C' }}>
+                                <div className="text-lg font-semibold text-brand-primary">
                                   {user.subscription_frequency === 'weekly'
                                     ? 'Weekly'
                                     : user.subscription_frequency === 'monthly'
@@ -422,11 +430,11 @@ export default function MealSelectionClient({
                                   const currentQuantity = getMealQuantity(item, activeTab)
                                   handleQuantityChange(item.id, currentQuantity - 1, activeTab)
                                 }}
-                                className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 font-bold"
+                                className="w-8 h-8 rounded-full bg-white hover:bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 font-bold shadow-sm"
                               >
                                 -
                               </button>
-                              <span className="text-lg font-semibold text-emerald-600 min-w-[2rem] text-center">
+                              <span className="text-lg font-semibold text-brand-primary min-w-[2rem] text-center">
                                 {getMealQuantity(item, activeTab)}
                               </span>
                               <button
@@ -438,7 +446,7 @@ export default function MealSelectionClient({
                                   }
                                 }}
                                 disabled={!canSelectMoreOfResult(item)}
-                                className="w-8 h-8 rounded-full bg-emerald-200 hover:bg-emerald-300 flex items-center justify-center text-emerald-600 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-8 h-8 rounded-full bg-brand-primary text-white hover:bg-brand-dark flex items-center justify-center font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                               >
                                 +
                               </button>
