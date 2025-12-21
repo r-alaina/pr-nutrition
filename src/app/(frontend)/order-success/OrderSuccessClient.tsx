@@ -432,7 +432,7 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
                         ? 'Monthly Plan:'
                         : 'Plan:'}
                 </span >
-                <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
+                <span className="font-semibold text-gray-900">{formatCurrency(order.subtotal)}</span>
               </div >
               {(order.totalAllergenCharges || 0) > 0 && (
                 <div className="flex justify-between">
@@ -445,10 +445,10 @@ export default function OrderSuccessClient({ user }: OrderSuccessClientProps) {
               }
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax (8.25%):</span>
-                <span className="font-semibold">{formatCurrency(order.taxAmount)}</span>
+                <span className="font-semibold text-gray-900">{formatCurrency(order.taxAmount)}</span>
               </div>
               <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
-                <span>Total:</span>
+                <span className="text-gray-900">Total:</span>
                 <span style={{ color: '#5CB85C' }}>{formatCurrency(order.totalAmount)}</span>
               </div>
               <div className="text-xs text-gray-500 mt-2">
