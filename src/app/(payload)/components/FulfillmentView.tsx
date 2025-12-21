@@ -20,25 +20,62 @@ interface PackingSlip {
     notes?: string
 }
 
+interface MissingCustomer {
+    id: string
+    name: string
+    email: string
+    planType: string
+    credits: number
+    phone: string
+}
+
 export default function FulfillmentView() {
+    // Tab State
+    const [activeTab, setActiveTab] = useState<'fulfillment' | 'missing'>('fulfillment')
+
+    // Fulfillment State
     const [slips, setSlips] = useState<PackingSlip[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [search, setSearch] = useState('')
     const [weekHalf, setWeekHalf] = useState<string>('firstHalf')
+    const [search, setSearch] = useState('')
 
+    // Missing Orders State
+    const [missingCustomers, setMissingCustomers] = useState<MissingCustomer[]>([])
+
+    // Common State
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    // Load Data based on Tab
     useEffect(() => {
-        fetchData()
+        if (activeTab === 'fulfillment') {
+            fetchFulfillment()
+        } else {
+            fetchMissing()
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [weekHalf])
+    }, [activeTab, weekHalf])
 
-    const fetchData = async () => {
+    const fetchFulfillment = async () => {
         try {
             setLoading(true)
             const res = await fetch(`/api/fulfillment?weekHalf=${weekHalf}`)
-            if (!res.ok) throw new Error('Failed to fetch')
+            if (!res.ok) throw new Error('Failed to fetch slips')
             const data = await res.json()
             setSlips(data)
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Unknown error')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const fetchMissing = async () => {
+        try {
+            setLoading(true)
+            const res = await fetch(`/api/missing-orders`)
+            if (!res.ok) throw new Error('Failed to fetch missing orders')
+            const data = await res.json()
+            setMissingCustomers(data.customers || [])
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Unknown error')
         } finally {
@@ -55,123 +92,224 @@ export default function FulfillmentView() {
         window.print()
     }
 
+    const copyEmails = () => {
+        const emails = missingCustomers.map(c => c.email).join(', ')
+        navigator.clipboard.writeText(emails)
+        alert(`Copied ${missingCustomers.length} emails to clipboard!`)
+    }
+
     return (
         <div className="fulfillment-page">
-            {/* Hide controls when printing */}
+            {/* Header / Controls */}
             <div className="no-print" style={{ padding: '2rem', paddingBottom: '0.5rem', background: '#f6f6f6' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <h1 style={{ margin: 0 }}>Fulfillment & Packing</h1>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <button
-                            onClick={handlePrint}
-                            style={{ padding: '10px 20px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                        >
-                            Print Packing Slips
-                        </button>
+                        {activeTab === 'fulfillment' && (
+                            <button
+                                onClick={handlePrint}
+                                style={{ padding: '10px 20px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                Print Packing Slips
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {/* Week Half Toggle */}
-                    <div style={{ display: 'flex', background: '#fff', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ccc' }}>
-                        <button
-                            onClick={() => setWeekHalf('firstHalf')}
-                            style={{
-                                padding: '8px 16px',
-                                border: 'none',
-                                background: weekHalf === 'firstHalf' ? '#eee' : '#fff',
-                                fontWeight: weekHalf === 'firstHalf' ? 'bold' : 'normal',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            First Half
-                        </button>
-                        <button
-                            onClick={() => setWeekHalf('secondHalf')}
-                            style={{
-                                padding: '8px 16px',
-                                border: 'none',
-                                background: weekHalf === 'secondHalf' ? '#eee' : '#fff',
-                                fontWeight: weekHalf === 'secondHalf' ? 'bold' : 'normal',
-                                cursor: 'pointer',
-                                borderLeft: '1px solid #ccc'
-                            }}
-                        >
-                            Second Half
-                        </button>
-                    </div>
-
-                    {/* Search */}
-                    <input
-                        type="text"
-                        placeholder="Search customer..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', minWidth: '300px' }}
-                    />
+                {/* Main Tabs */}
+                <div style={{ display: 'flex', borderBottom: '2px solid #ddd', marginBottom: '20px' }}>
+                    <button
+                        onClick={() => setActiveTab('fulfillment')}
+                        style={{
+                            padding: '10px 20px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeTab === 'fulfillment' ? '3px solid #333' : '3px solid transparent',
+                            fontWeight: activeTab === 'fulfillment' ? 'bold' : 'normal',
+                            cursor: 'pointer',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        Packing Slips
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('missing')}
+                        style={{
+                            padding: '10px 20px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeTab === 'missing' ? '3px solid #333' : '3px solid transparent',
+                            fontWeight: activeTab === 'missing' ? 'bold' : 'normal',
+                            cursor: 'pointer',
+                            fontSize: '1rem'
+                        }}
+                    >
+                        Missing Orders <span style={{ background: '#d00', color: '#fff', borderRadius: '10px', padding: '2px 8px', fontSize: '0.8rem', marginLeft: '5px' }}>Check</span>
+                    </button>
                 </div>
+
+                {/* Sub-Controls (Fulfillment Only) */}
+                {activeTab === 'fulfillment' && (
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
+                        {/* Week Half Toggle */}
+                        <div style={{ display: 'flex', background: '#fff', borderRadius: '4px', overflow: 'hidden', border: '1px solid #ccc' }}>
+                            <button
+                                onClick={() => setWeekHalf('firstHalf')}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: weekHalf === 'firstHalf' ? '#eee' : '#fff',
+                                    fontWeight: weekHalf === 'firstHalf' ? 'bold' : 'normal',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                First Half
+                            </button>
+                            <button
+                                onClick={() => setWeekHalf('secondHalf')}
+                                style={{
+                                    padding: '8px 16px',
+                                    border: 'none',
+                                    background: weekHalf === 'secondHalf' ? '#eee' : '#fff',
+                                    fontWeight: weekHalf === 'secondHalf' ? 'bold' : 'normal',
+                                    cursor: 'pointer',
+                                    borderLeft: '1px solid #ccc'
+                                }}
+                            >
+                                Second Half
+                            </button>
+                        </div>
+
+                        {/* Search */}
+                        <input
+                            type="text"
+                            placeholder="Search customer..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', minWidth: '300px' }}
+                        />
+                    </div>
+                )}
             </div>
 
             <div style={{ padding: '2rem' }}>
                 {loading && <p>Loading...</p>}
                 {error && <p style={{ color: 'red' }}>{error}</p>}
 
-                <div className="slip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-                    {filteredSlips.map(slip => (
-                        <div key={slip.orderNumber} className="packing-slip" style={{
-                            background: '#fff',
-                            padding: '20px',
-                            borderRadius: '8px',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                            border: '1px solid #eee'
-                        }}>
-                            <div style={{ borderBottom: '2px solid #333', paddingBottom: '10px', marginBottom: '15px' }}>
-                                <h2 style={{ margin: '0 0 5px 0', fontSize: '1.4rem' }}>{slip.customerName}</h2>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.9rem' }}>
-                                    <span>{slip.tierName}</span>
-                                    <span>{slip.orderNumber}</span>
+                {/* VIEW 1: Fulfillment Cards */}
+                {activeTab === 'fulfillment' && !loading && (
+                    <div className="slip-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
+                        {filteredSlips.map(slip => (
+                            <div key={slip.orderNumber} className="packing-slip" style={{
+                                background: '#fff',
+                                padding: '20px',
+                                borderRadius: '8px',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                                border: '1px solid #eee'
+                            }}>
+                                <div style={{ borderBottom: '2px solid #333', paddingBottom: '10px', marginBottom: '15px' }}>
+                                    <h2 style={{ margin: '0 0 5px 0', fontSize: '1.4rem' }}>{slip.customerName}</h2>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.9rem' }}>
+                                        <span>{slip.tierName}</span>
+                                        <span>{slip.orderNumber}</span>
+                                    </div>
+                                </div>
+
+                                {slip.allergies && slip.allergies.length > 0 && (
+                                    <div style={{ background: '#ffebeb', padding: '10px', borderRadius: '4px', marginBottom: '15px', color: '#d00', fontWeight: 'bold' }}>
+                                        Allergies: {slip.allergies.join(', ')}
+                                    </div>
+                                )}
+
+                                {slip.notes && (
+                                    <div style={{ background: '#fff8e1', padding: '10px', borderRadius: '4px', marginBottom: '15px', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                                        Note: {slip.notes}
+                                    </div>
+                                )}
+
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid #eee' }}>
+                                            <th style={{ textAlign: 'left', padding: '5px' }}>Item</th>
+                                            <th style={{ textAlign: 'right', padding: '5px', width: '50px' }}>Qty</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {slip.items.map((item, idx) => (
+                                            <tr key={idx} style={{ borderBottom: '1px solid #f9f9f9' }}>
+                                                <td style={{ padding: '8px 5px' }}>
+                                                    <div style={{ fontWeight: 'bold' }}>{item.mealName}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#888' }}>{item.category}</div>
+                                                </td>
+                                                <td style={{ textAlign: 'right', padding: '8px 5px', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                                                    {item.quantity}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#aaa' }}>
+                                    {slip.weekHalf === 'firstHalf' ? 'First Half (Sun/Mon)' : 'Second Half (Wed/Thu)'} Pickup
                                 </div>
                             </div>
+                        ))}
+                    </div>
+                )}
 
-                            {slip.allergies && slip.allergies.length > 0 && (
-                                <div style={{ background: '#ffebeb', padding: '10px', borderRadius: '4px', marginBottom: '15px', color: '#d00', fontWeight: 'bold' }}>
-                                    Allergies: {slip.allergies.join(', ')}
-                                </div>
-                            )}
+                {/* VIEW 2: Missing Orders Table */}
+                {activeTab === 'missing' && !loading && (
+                    <div style={{ background: '#fff', borderRadius: '8px', padding: '20px', border: '1px solid #eee' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <div>
+                                <h2 style={{ marginTop: 0 }}>Missing Orders</h2>
+                                <p style={{ color: '#666' }}>Active customers who have NOT placed an order for this week.</p>
+                            </div>
+                            <button
+                                onClick={copyEmails}
+                                style={{ padding: '10px 20px', background: '#0070f3', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', height: '40px' }}
+                            >
+                                Copy All Emails
+                            </button>
+                        </div>
 
-                            {slip.notes && (
-                                <div style={{ background: '#fff8e1', padding: '10px', borderRadius: '4px', marginBottom: '15px', fontStyle: 'italic', fontSize: '0.9rem' }}>
-                                    Note: {slip.notes}
-                                </div>
-                            )}
-
+                        {missingCustomers.length === 0 ? (
+                            <p style={{ fontStyle: 'italic', color: '#888' }}>Good news! All active customers have placed orders.</p>
+                        ) : (
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
-                                    <tr style={{ borderBottom: '1px solid #eee' }}>
-                                        <th style={{ textAlign: 'left', padding: '5px' }}>Item</th>
-                                        <th style={{ textAlign: 'right', padding: '5px', width: '50px' }}>Qty</th>
+                                    <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+                                        <th style={{ padding: '10px' }}>Name</th>
+                                        <th style={{ padding: '10px' }}>Email</th>
+                                        <th style={{ padding: '10px' }}>Phone</th>
+                                        <th style={{ padding: '10px' }}>Plan</th>
+                                        <th style={{ padding: '10px', textAlign: 'right' }}>Credits</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {slip.items.map((item, idx) => (
-                                        <tr key={idx} style={{ borderBottom: '1px solid #f9f9f9' }}>
-                                            <td style={{ padding: '8px 5px' }}>
-                                                <div style={{ fontWeight: 'bold' }}>{item.mealName}</div>
-                                                <div style={{ fontSize: '0.8rem', color: '#888' }}>{item.category}</div>
+                                    {missingCustomers.map(customer => (
+                                        <tr key={customer.id} style={{ borderBottom: '1px solid #f9f9f9' }}>
+                                            <td style={{ padding: '10px' }}>{customer.name}</td>
+                                            <td style={{ padding: '10px', color: '#0070f3' }}>{customer.email}</td>
+                                            <td style={{ padding: '10px' }}>{customer.phone || '-'}</td>
+                                            <td style={{ padding: '10px' }}>
+                                                <span style={{
+                                                    padding: '2px 8px',
+                                                    borderRadius: '10px',
+                                                    background: customer.planType === 'monthly' ? '#e6fffa' : '#f0f0f0',
+                                                    color: customer.planType === 'monthly' ? '#007e6c' : '#333',
+                                                    fontSize: '0.85rem'
+                                                }}>
+                                                    {customer.planType}
+                                                </span>
                                             </td>
-                                            <td style={{ textAlign: 'right', padding: '8px 5px', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                                                {item.quantity}
-                                            </td>
+                                            <td style={{ padding: '10px', textAlign: 'right' }}>{customer.credits}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '0.8rem', color: '#aaa' }}>
-                                {slip.weekHalf === 'firstHalf' ? 'First Half (Sun/Mon)' : 'Second Half (Wed/Thu)'} Pickup
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <style jsx global>{`

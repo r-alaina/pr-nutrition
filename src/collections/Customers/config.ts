@@ -70,6 +70,14 @@ export const Customers: CollectionConfig = {
       required: true,
     },
     {
+      name: 'phone',
+      type: 'text',
+      admin: {
+        description: 'Contact phone number',
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'tier',
       type: 'relationship',
       relationTo: 'tiers',
