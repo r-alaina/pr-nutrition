@@ -4,9 +4,16 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Footer from '@/components/Footer'
 
-export default function SharedHomeContent() {
+interface SharedHomeContentProps {
+    challengeBanner?: React.ReactNode
+}
+
+export default function SharedHomeContent({ challengeBanner }: SharedHomeContentProps) {
     return (
         <>
+            {/* Announcement Banner */}
+            {challengeBanner}
+
             {/* Hero Section */}
             <section
                 className="py-20 relative bg-gradient-to-br from-brand-primary to-brand-dark"

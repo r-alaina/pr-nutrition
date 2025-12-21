@@ -8,7 +8,11 @@ import SharedHomeContent from './SharedHomeContent'
 
 
 
-export default function UnauthenticatedHome() {
+interface UnauthenticatedHomeProps {
+  challengeBanner?: React.ReactNode
+}
+
+export default function UnauthenticatedHome({ challengeBanner }: UnauthenticatedHomeProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -126,7 +130,7 @@ export default function UnauthenticatedHome() {
         </div>
       </header>
 
-      <SharedHomeContent />
+      <SharedHomeContent challengeBanner={challengeBanner} />
     </div>
   )
 }

@@ -71,7 +71,31 @@ export const Challenges: CollectionConfig = {
             required: true,
             admin: {
                 step: 0.01,
-                description: 'Price for the full 21-day challenge',
+                description: 'Base/Display Price (e.g. "Starting at...")',
+            },
+        },
+        {
+            name: 'tierPricing',
+            type: 'array',
+            label: 'Pricing per Tier',
+            fields: [
+                {
+                    name: 'tier',
+                    type: 'relationship',
+                    relationTo: 'tiers',
+                    required: true,
+                },
+                {
+                    name: 'price',
+                    type: 'number',
+                    required: true,
+                    admin: {
+                        step: 0.01,
+                    },
+                },
+            ],
+            admin: {
+                description: 'Define specific price for each tier for this challenge.',
             },
         },
         {

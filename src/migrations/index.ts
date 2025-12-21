@@ -4,6 +4,9 @@ import * as migration_20251214_221223_add_meal_preferences from './20251214_2212
 import * as migration_20251214_224859_remove_tier_prices from './20251214_224859_remove_tier_prices';
 import * as migration_20251221_042908_add_weekly_menu from './20251221_042908_add_weekly_menu';
 import * as migration_20251221_044511_update_weekly_menu from './20251221_044511_update_weekly_menu';
+import * as migration_20251221_151300_add_challenges from './20251221_151300_add_challenges';
+
+import * as migration_20251221_163000_add_challenge_tier_pricing from './20251221_163000_add_challenge_tier_pricing';
 
 export const migrations = [
   {
@@ -35,5 +38,15 @@ export const migrations = [
     up: migration_20251221_044511_update_weekly_menu.up,
     down: migration_20251221_044511_update_weekly_menu.down,
     name: '20251221_044511_update_weekly_menu'
+  },
+  {
+    up: migration_20251221_151300_add_challenges.up,
+    down: migration_20251221_151300_add_challenges.down,
+    name: '20251221_151300_add_challenges'
+  },
+  {
+    up: migration_20251221_163000_add_challenge_tier_pricing.up,
+    down: migration_20251221_163000_add_challenge_tier_pricing.down,
+    name: '20251221_163000_add_challenge_tier_pricing'
   },
 ];
