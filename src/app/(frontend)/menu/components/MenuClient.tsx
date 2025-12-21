@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { useState } from 'react'
 import type { MenuItem, Customer } from '@/payload-types'
+import { BreakfastIcon, MainIcon, SnackIcon, SaladIcon } from '../../components/CategoryIcons'
 import AuthenticatedHeader from '../../components/AuthenticatedHeader'
 
 interface MenuClientProps {
@@ -202,18 +203,42 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                       case 'breakfast':
                         return 'border-brand-orange/20 bg-brand-orange/5 hover:border-brand-orange/50 hover:shadow-lg'
                       case 'snack':
+                      case 'dessert':
                         return 'border-purple-500/20 bg-purple-500/5 hover:border-purple-500/50 hover:shadow-lg'
-                      default: // Main
+                      default: // Main & Premium & Salad
                         return 'border-brand-primary/20 bg-brand-primary/5 hover:border-brand-primary/50 hover:shadow-lg'
                     }
                   }
 
+                  const Icon =
+                    item.category === 'breakfast'
+                      ? BreakfastIcon
+                      : item.category === 'salad'
+                        ? SaladIcon
+                        : item.category === 'snack' || item.category === 'dessert'
+                          ? SnackIcon
+                          : MainIcon
+
+                  const iconColor =
+                    item.category === 'breakfast'
+                      ? 'bg-brand-orange'
+                      : item.category === 'salad'
+                        ? 'bg-brand-primary'
+                        : item.category === 'snack' || item.category === 'dessert'
+                          ? 'bg-purple-500'
+                          : 'bg-brand-primary'
+
                   return (
                     <div
                       key={item.id}
-                      className={`rounded-lg shadow-md overflow-hidden border transition-all ${getCardStyles()}`}
+                      className={`rounded-lg shadow-md overflow-hidden border transition-all relative ${getCardStyles()}`}
                     >
-                      <div className="p-6">
+                      {/* Watermark Icon */}
+                      <div className="absolute -bottom-6 -right-6 w-32 h-32 opacity-20 pointer-events-none select-none z-0">
+                        <Icon className={`w-full h-full ${iconColor}`} />
+                      </div>
+
+                      <div className="p-6 relative z-10">
                         <div className="text-center mb-4">
                           <div className="flex justify-center items-center gap-2 mb-2">
                             <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
@@ -248,7 +273,7 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                         )}
 
                         <div className="flex flex-col items-center space-y-3">
-                          {item.category === 'snack' && item.price ? (
+                          {(item.category === 'snack' || item.category === 'dessert') && item.price ? (
                             <span className="text-2xl font-bold text-purple-600">
                               ${(item.price || 0).toFixed(2)}
                             </span>
@@ -256,7 +281,7 @@ export default function MenuClient({ groupedItems, categoryOrder, user }: MenuCl
                             user &&
                             user.preferences_set && (
                               <span className="text-lg text-gray-600">
-                                {item.category === 'snack'
+                                {item.category === 'snack' || item.category === 'dessert'
                                   ? 'A la carte'
                                   : 'Included in subscription'}
                               </span>

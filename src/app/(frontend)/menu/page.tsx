@@ -61,7 +61,10 @@ export default async function MenuPage() {
   // Group menu items by category
   const groupedItems = menuItemsDocs.reduce(
     (acc, item) => {
-      const category = item.category
+      let category = item.category
+      if (category === 'premium') category = 'main'
+      if (category === 'dessert') category = 'snack'
+
       if (!acc[category]) {
         acc[category] = []
       }
@@ -73,10 +76,8 @@ export default async function MenuPage() {
 
   // Category display order and labels
   const categoryOrder = [
-    { key: 'main', label: 'Lunch/Dinner' },
-    { key: 'premium', label: 'Premium Meals' },
     { key: 'breakfast', label: 'Breakfast' },
-    { key: 'dessert', label: 'Desserts' },
+    { key: 'main', label: 'Lunch/Dinner' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },
   ]

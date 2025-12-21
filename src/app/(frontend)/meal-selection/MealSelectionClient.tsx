@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { MenuItem, Customer, Order } from '@/payload-types'
+import { BreakfastIcon, MainIcon, SnackIcon, SaladIcon } from '../components/CategoryIcons'
 import AuthenticatedHeader from '../components/AuthenticatedHeader'
 import {
   calculateTotalAllergenCharges,
@@ -91,9 +92,14 @@ export default function MealSelectionClient({
   // Separate meals by type
   const selectedBreakfasts = selectedMeals.filter((item) => item.meal.category === 'breakfast')
   const selectedMains = selectedMeals.filter(
-    (item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack',
+    (item) =>
+      item.meal.category !== 'breakfast' &&
+      item.meal.category !== 'snack' &&
+      item.meal.category !== 'dessert',
   )
-  const selectedSnacks = selectedMeals.filter((item) => item.meal.category === 'snack')
+  const selectedSnacks = selectedMeals.filter(
+    (item) => item.meal.category === 'snack' || item.meal.category === 'dessert',
+  )
 
   // Calculate counts
   const breakfastCount = selectedBreakfasts.reduce((total, item) => total + item.quantity, 0)
@@ -112,8 +118,8 @@ export default function MealSelectionClient({
         // Remove meal
         return prev.filter((item) => item.meal.id !== meal.id)
       } else {
-        // Snacks are unlimited
-        if (meal.category === 'snack') {
+        // Snacks and Desserts are unlimited
+        if (meal.category === 'snack' || meal.category === 'dessert') {
           return [...prev, { meal, quantity: 1 }]
         }
 
@@ -137,11 +143,21 @@ export default function MealSelectionClient({
         else {
           const otherHalf = half === 'firstHalf' ? selectedSecondHalfMeals : selectedFirstHalfMeals
           const otherHalfMains = otherHalf
-            .filter((item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack')
+            .filter(
+              (item) =>
+                item.meal.category !== 'breakfast' &&
+                item.meal.category !== 'snack' &&
+                item.meal.category !== 'dessert',
+            )
             .reduce((total, item) => total + item.quantity, 0)
 
           const currentHalfMains = prev
-            .filter((item) => item.meal.category !== 'breakfast' && item.meal.category !== 'snack')
+            .filter(
+              (item) =>
+                item.meal.category !== 'breakfast' &&
+                item.meal.category !== 'snack' &&
+                item.meal.category !== 'dessert',
+            )
             .reduce((total, item) => total + item.quantity, 0)
 
           if (currentHalfMains + otherHalfMains < mainLimit) {
@@ -332,13 +348,36 @@ export default function MealSelectionClient({
                     }
                   }
 
+                  const Icon =
+                    item.category === 'breakfast'
+                      ? BreakfastIcon
+                      : item.category === 'salad'
+                        ? SaladIcon
+                        : item.category === 'snack' || item.category === 'dessert'
+                          ? SnackIcon
+                          : MainIcon
+
+                  const iconColor =
+                    item.category === 'breakfast'
+                      ? 'bg-brand-orange'
+                      : item.category === 'salad'
+                        ? 'bg-brand-primary'
+                        : item.category === 'snack' || item.category === 'dessert'
+                          ? 'bg-purple-500'
+                          : 'bg-brand-primary'
+
                   return (
                     <div
                       key={item.id}
                       onClick={() => canSelect && handleMealToggle(item, activeTab)}
-                      className={`rounded-lg border-2 transition-all cursor-pointer overflow-hidden ${getCardStyles()}`}
+                      className={`rounded-lg border-2 transition-all cursor-pointer overflow-hidden relative ${getCardStyles()}`}
                     >
-                      <div className="p-6">
+                      {/* Watermark Icon */}
+                      <div className="absolute -bottom-6 -right-6 w-32 h-32 opacity-20 pointer-events-none select-none z-0">
+                        <Icon className={`w-full h-full ${iconColor}`} />
+                      </div>
+
+                      <div className="p-6 relative z-10">
                         <div className="flex justify-between items-start mb-4">
                           <h3 className="text-xl font-semibold text-gray-900">{item.name}</h3>
                           {item.category === 'premium' && (
@@ -617,4 +656,3 @@ export default function MealSelectionClient({
     </div>
   )
 }
-

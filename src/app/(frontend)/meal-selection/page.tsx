@@ -86,7 +86,10 @@ export default async function MealSelectionPage() {
   // Group menu items by category for each half
   const groupedFirstHalf = firstHalfDocs.reduce(
     (acc, item) => {
-      const category = item.category
+      let category = item.category
+      if (category === 'premium') category = 'main'
+      if (category === 'dessert') category = 'snack'
+
       if (!acc[category]) {
         acc[category] = []
       }
@@ -98,7 +101,10 @@ export default async function MealSelectionPage() {
 
   const groupedSecondHalf = secondHalfDocs.reduce(
     (acc, item) => {
-      const category = item.category
+      let category = item.category
+      if (category === 'premium') category = 'main'
+      if (category === 'dessert') category = 'snack'
+
       if (!acc[category]) {
         acc[category] = []
       }
@@ -112,10 +118,8 @@ export default async function MealSelectionPage() {
   const categoryOrder = [
     { key: 'breakfast', label: 'Breakfast' },
     { key: 'main', label: 'Lunch/Dinner' },
-    { key: 'premium', label: 'Premium Meals' },
     { key: 'salad', label: 'Salads' },
     { key: 'snack', label: 'Snacks' },
-    { key: 'dessert', label: 'Desserts' },
   ]
 
   return (
