@@ -411,14 +411,14 @@ export const Orders: CollectionConfig = {
                 await req.payload.update({
                   collection: 'kitchen-orders',
                   id: existingId,
-                  data: kitchenOrderData,
+                  data: kitchenOrderData as any,
                   req: systemReq,
                 })
               } else {
                 // Create new
                 await req.payload.create({
                   collection: 'kitchen-orders',
-                  data: kitchenOrderData,
+                  data: kitchenOrderData as any,
                   req: systemReq,
                 })
               }

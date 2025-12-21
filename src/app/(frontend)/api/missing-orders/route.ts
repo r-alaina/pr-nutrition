@@ -64,7 +64,9 @@ export async function GET() {
 
                 // Check if Cycle is still active (within 28 days of start date)
                 // If cycle_start_date is missing, we fallback to createdAt or assume active
-                const cycleStart = c.cycle_start_date ? new Date(c.cycle_start_date) : new Date(c.createdAt)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const cycleStartDate = (c as any).cycle_start_date
+                const cycleStart = cycleStartDate ? new Date(cycleStartDate) : new Date(c.createdAt)
 
                 // Calculate difference in days
                 const diffTime = Math.abs(today.getTime() - cycleStart.getTime())
@@ -85,7 +87,8 @@ export async function GET() {
                 email: c.email,
                 planType: c.subscription_frequency || 'Unknown',
                 credits: c.plan_credits || c.credit_balance || 0,
-                phone: c.phone || 'No phone',
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                phone: (c as any).phone || 'No phone',
             }))
 
         return NextResponse.json({

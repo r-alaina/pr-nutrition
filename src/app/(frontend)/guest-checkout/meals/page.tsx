@@ -61,7 +61,7 @@ export default async function GuestMealSelectionPage() {
     // Filter items by availability settings
     firstHalfDocs = docs.filter((item) => {
       if (item.category === 'snack') return true // Snacks always available
-      if (item.category === 'breakfast' || item.category === 'breakfast-small' || item.category === 'breakfast-large') return true // Breakfast always available
+      if ((item.category as string) === 'breakfast' || (item.category as string) === 'breakfast-small' || (item.category as string) === 'breakfast-large') return true // Breakfast always available
       if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
       if (item.availability?.firstHalf) return true
       return false
@@ -69,7 +69,7 @@ export default async function GuestMealSelectionPage() {
 
     secondHalfDocs = docs.filter((item) => {
       if (item.category === 'snack') return true // Snacks always available
-      if (item.category === 'breakfast' || item.category === 'breakfast-small' || item.category === 'breakfast-large') return true // Breakfast always available
+      if ((item.category as string) === 'breakfast' || (item.category as string) === 'breakfast-small' || (item.category as string) === 'breakfast-large') return true // Breakfast always available
       if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
       if (item.availability?.secondHalf) return true
       return false
@@ -82,7 +82,7 @@ export default async function GuestMealSelectionPage() {
       let category = item.category
       if (category === 'premium') category = 'main'
       if (category === 'dessert') category = 'snack'
-      if (category === 'breakfast-small' || category === 'breakfast-large') category = 'breakfast'
+      if ((category as string) === 'breakfast-small' || (category as string) === 'breakfast-large') category = 'breakfast'
 
       if (!acc[category]) {
         acc[category] = []
@@ -98,7 +98,7 @@ export default async function GuestMealSelectionPage() {
       let category = item.category
       if (category === 'premium') category = 'main'
       if (category === 'dessert') category = 'snack'
-      if (category === 'breakfast-small' || category === 'breakfast-large') category = 'breakfast'
+      if ((category as string) === 'breakfast-small' || (category as string) === 'breakfast-large') category = 'breakfast'
 
       if (!acc[category]) {
         acc[category] = []
