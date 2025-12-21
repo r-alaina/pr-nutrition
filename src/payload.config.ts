@@ -16,6 +16,8 @@ import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
 import { OrderLogs } from './collections/OrderLogs/config'
 import { WeeklyMenu } from './collections/WeeklyMenu/config'
+import { Challenges } from './collections/Challenges/config'
+import { ChallengeParticipants } from './collections/ChallengeParticipants/config'
 import { LogoutButton } from './components/LogoutButton'
 import { AdminStyles } from './components/AdminStyles'
 
@@ -45,6 +47,8 @@ export default buildConfig({
     Tiers,
     OrderLogs,
     DietaryRestrictions,
+    Challenges,
+    ChallengeParticipants,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

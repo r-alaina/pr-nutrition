@@ -281,6 +281,24 @@ export const Orders: CollectionConfig = {
         description: 'Whether this order used a monthly plan credit',
       },
     },
+    {
+      name: 'challengeId',
+      type: 'relationship',
+      relationTo: 'challenges' as any,
+      admin: {
+        description: 'If set, this order is part of a 21-day challenge',
+      },
+    },
+    {
+      name: 'challengeWeek',
+      type: 'number',
+      min: 1,
+      max: 3,
+      admin: {
+        description: 'Week number within the challenge (1, 2, or 3)',
+        condition: (data) => Boolean(data.challengeId),
+      },
+    },
   ],
   hooks: {
     afterChange: [
