@@ -104,20 +104,46 @@ export default function AuthenticatedHome({ user }: AuthenticatedHomeProps) {
       </section>
 
       {/* Fit 3D Body Scan Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Fit 3D Body Scan</h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Track your progress with precision using our state-of-the-art Fit 3D body scanning
-            technology. Get detailed insights into your body composition and see real results over
-            time.
-          </p>
-          <Link
-            href="/fit3d"
-            className="text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg inline-block bg-brand-primary hover:bg-brand-dark"
-          >
-            Learn More About Fit 3D
-          </Link>
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2 relative">
+              <div className="absolute -inset-4 bg-brand-primary/10 rounded-full blur-3xl opacity-50"></div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
+                <Image
+                  src="/images/fit3D/fit3d-proscanner-02.gif"
+                  alt="Fit3D ProScanner Demonstration"
+                  width={600}
+                  height={600}
+                  className="w-full h-auto object-cover"
+                  unoptimized // Required for GIFs
+                />
+              </div>
+            </div>
+
+            <div className="lg:w-1/2">
+              <div className="inline-block px-4 py-1.5 rounded-full bg-brand-primary/10 text-brand-primary font-semibold text-sm mb-6">
+                Visual Transformation Technology
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+                See Your Progress <br />
+                <span className="text-brand-primary">Like Never Before</span>
+              </h2>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                Stop guessing and start seeing results. Our Fit3D ProScanner captures a precise 360° model of your body to track muscle gain and fat loss accurately.
+              </p>
+
+              <Link
+                href="/fit3d"
+                className="inline-flex items-center justify-center px-8 py-4 rounded-lg text-lg font-semibold transition-all shadow-lg bg-brand-primary text-white hover:bg-brand-dark hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Discover Fit3D
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
