@@ -11,11 +11,13 @@ import Users from './collections/Users/config'
 import { Customers } from './collections/Customers/config'
 import { MenuItems } from './collections/MenuItems/config'
 import { Tiers } from './collections/Tiers/config'
+import { DietaryRestrictions } from './collections/DietaryRestrictions/config'
 import { Orders } from './collections/Orders/config'
 import { KitchenOrders } from './collections/KitchenOrders/config'
 import { OrderLogs } from './collections/OrderLogs/config'
 import { WeeklyMenu } from './collections/WeeklyMenu/config'
 import { LogoutButton } from './components/LogoutButton'
+import { AdminStyles } from './components/AdminStyles'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -30,10 +32,20 @@ export default buildConfig({
       titleSuffix: '- PR Meal Preps Admin',
     },
     components: {
-      afterNavLinks: [LogoutButton as any],
+      afterNavLinks: [LogoutButton as any, AdminStyles as any],
     },
   },
-  collections: [Users, Customers, MenuItems, Tiers, Orders, KitchenOrders, OrderLogs, WeeklyMenu],
+  collections: [
+    WeeklyMenu,
+    MenuItems,
+    Orders,
+    KitchenOrders,
+    Users,
+    Customers,
+    Tiers,
+    OrderLogs,
+    DietaryRestrictions,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -8,6 +8,7 @@ export const MenuItems: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'category', 'active'],
+    group: 'Operations',
   },
   access: {
     read: () => true,

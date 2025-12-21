@@ -8,6 +8,7 @@ export const OrderLogs: CollectionConfig = {
     admin: {
         useAsTitle: 'id',
         defaultColumns: ['order', 'customer', 'changeDescription', 'createdAt'],
+        group: 'System',
     },
     access: {
         read: ({ req: { user } }) => {

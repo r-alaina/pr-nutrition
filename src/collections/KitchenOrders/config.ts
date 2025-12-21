@@ -7,6 +7,7 @@ export const KitchenOrders: CollectionConfig = {
   admin: {
     useAsTitle: 'orderNumber',
     defaultColumns: ['orderNumber', 'customerName', 'weekHalf', 'status', 'createdAt'],
+    group: 'Operations',
   },
   access: {
     read: ({ req: { user } }) => {

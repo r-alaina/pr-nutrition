@@ -6,6 +6,7 @@ export const Tiers: CollectionConfig = {
   admin: {
     useAsTitle: 'tier_name',
     defaultColumns: ['tier_name', 'single_price'],
+    group: 'System',
   },
   access: {
     read: () => true,

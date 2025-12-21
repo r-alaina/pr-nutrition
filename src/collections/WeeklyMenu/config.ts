@@ -50,6 +50,7 @@ export const WeeklyMenu: CollectionConfig = {
     admin: {
         useAsTitle: 'weekOf',
         defaultColumns: ['weekOf', 'status'],
+        group: 'Operations',
     },
     access: {
         read: () => true,

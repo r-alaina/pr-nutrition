@@ -53,6 +53,7 @@ const Users: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'email',
+    group: 'System',
   },
   auth: true,
   fields: [

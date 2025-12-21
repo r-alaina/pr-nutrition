@@ -8,6 +8,7 @@ export const Customers: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['firstName', 'lastName', 'email', 'tier', 'credit_balance', 'active'],
+    group: 'System',
   },
 
   auth: {

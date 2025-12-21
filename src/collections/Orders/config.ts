@@ -28,6 +28,7 @@ export const Orders: CollectionConfig = {
   admin: {
     useAsTitle: 'orderNumber',
     defaultColumns: ['orderNumber', 'customer', 'status', 'totalAmount', 'createdAt'],
+    group: 'Operations',
   },
   access: {
     read: ({ req: { user } }) => {
@@ -284,8 +285,8 @@ export const Orders: CollectionConfig = {
   hooks: {
     afterChange: [
       async ({ doc, req, operation }) => {
-        // Only create kitchen order on create operation
-        if (operation === 'create' && doc.customer && req.payload) {
+        // Run on create or update to ensure kitchen orders are always in sync
+        if ((operation === 'create' || operation === 'update') && doc.customer && req.payload) {
           try {
             // Get customer information
             const customer = await req.payload.findByID({
@@ -301,13 +302,15 @@ export const Orders: CollectionConfig = {
                   id: typeof item.menuItem === 'object' ? item.menuItem.id : item.menuItem,
                 })
                 // Clean allergens array - remove id fields and only keep allergen strings
-                const allergens = (menuItem.allergens || []).map((a: any) => {
-                  if (typeof a === 'string') {
-                    return { allergen: a }
-                  }
-                  return { allergen: a.allergen || '' }
-                }).filter((a: any) => a.allergen)
-                
+                const allergens = (menuItem.allergens || [])
+                  .map((a: any) => {
+                    if (typeof a === 'string') {
+                      return { allergen: a }
+                    }
+                    return { allergen: a.allergen || '' }
+                  })
+                  .filter((a: any) => a.allergen)
+
                 return {
                   mealName: menuItem.name,
                   quantity: item.quantity,
@@ -319,9 +322,11 @@ export const Orders: CollectionConfig = {
             // Prepare allergen charges summary - remove any id fields
             const allergenChargesSummary = (doc.allergenCharges || []).map((charge: any) => ({
               mealName: charge.mealName,
-              allergens: (charge.matchingAllergens || []).map((a: any) => ({ 
-                allergen: typeof a === 'string' ? a : (a.allergen || '')
-              })).filter((a: any) => a.allergen),
+              allergens: (charge.matchingAllergens || [])
+                .map((a: any) => ({
+                  allergen: typeof a === 'string' ? a : a.allergen || '',
+                }))
+                .filter((a: any) => a.allergen),
               charge: charge.totalAllergenCharge || 0,
             }))
 
@@ -330,16 +335,14 @@ export const Orders: CollectionConfig = {
               doc.weekHalf === 'both' ? 'firstHalf' : doc.weekHalf || 'firstHalf'
             const pickupDate = calculatePickupDate(weekHalfForPickup)
 
-            // Create kitchen order - system hook operation
-            console.log('Attempting to create kitchen order for:', doc.orderNumber)
-            
-            // Get customer name safely (using type assertion since types may be out of sync)
+            // Get customer name safely
             const customerFirstName = (customer as any).firstName || ''
             const customerLastName = (customer as any).lastName || ''
-            const customerName = customerFirstName && customerLastName 
-              ? `${customerFirstName} ${customerLastName}` 
-              : customer.email || 'Unknown'
-            
+            const customerName =
+              customerFirstName && customerLastName
+                ? `${customerFirstName} ${customerLastName}`
+                : customer.email || 'Unknown'
+
             try {
               // Create a new req object without user to bypass access control
               const systemReq = {
@@ -353,12 +356,13 @@ export const Orders: CollectionConfig = {
                 return {
                   mealName: cleanItem.mealName,
                   quantity: cleanItem.quantity,
-                  allergens: (cleanItem.allergens || []).map((a: any) => {
-                    const { id: allergenId, ...cleanAllergen } = typeof a === 'string' 
-                      ? { allergen: a } 
-                      : a
-                    return { allergen: cleanAllergen.allergen || cleanAllergen }
-                  }).filter((a: any) => a.allergen),
+                  allergens: (cleanItem.allergens || [])
+                    .map((a: any) => {
+                      const { id: allergenId, ...cleanAllergen } =
+                        typeof a === 'string' ? { allergen: a } : a
+                      return { allergen: cleanAllergen.allergen || cleanAllergen }
+                    })
+                    .filter((a: any) => a.allergen),
                 }
               })
 
@@ -366,52 +370,63 @@ export const Orders: CollectionConfig = {
                 const { id: chargeId, ...cleanCharge } = charge
                 return {
                   mealName: cleanCharge.mealName,
-                  allergens: (cleanCharge.allergens || []).map((a: any) => {
-                    const { id: allergenId, ...cleanAllergen } = typeof a === 'string'
-                      ? { allergen: a }
-                      : a
-                    return { allergen: cleanAllergen.allergen || cleanAllergen }
-                  }).filter((a: any) => a.allergen),
+                  allergens: (cleanCharge.allergens || [])
+                    .map((a: any) => {
+                      const { id: allergenId, ...cleanAllergen } =
+                        typeof a === 'string' ? { allergen: a } : a
+                      return { allergen: cleanAllergen.allergen || cleanAllergen }
+                    })
+                    .filter((a: any) => a.allergen),
                   charge: cleanCharge.charge || 0,
                 }
               })
 
-              const kitchenOrder = await req.payload.create({
+              const kitchenOrderData = {
+                orderNumber: doc.orderNumber,
+                customerName: customerName,
+                customerEmail: customer.email,
+                customerPhone: null, // Can be added if phone field exists
+                weekHalf: doc.weekHalf || 'firstHalf',
+                orderItems: cleanOrderItems,
+                allergenCharges: cleanAllergenCharges,
+                totalAllergenCharges: doc.totalAllergenCharges || 0,
+                pickupDate: pickupDate.toISOString().split('T')[0],
+                status: 'pending',
+              }
+
+              // Check for existing kitchen order
+              const existingKitchenOrder = await req.payload.find({
                 collection: 'kitchen-orders',
-                data: {
-                  orderNumber: doc.orderNumber,
-                  customerName: customerName,
-                  customerEmail: customer.email,
-                  customerPhone: null, // Can be added if phone field exists
-                  weekHalf: doc.weekHalf || 'firstHalf',
-                  orderItems: cleanOrderItems,
-                  allergenCharges: cleanAllergenCharges,
-                  totalAllergenCharges: doc.totalAllergenCharges || 0,
-                  pickupDate: pickupDate.toISOString().split('T')[0],
-                  status: 'pending',
+                where: {
+                  orderNumber: {
+                    equals: doc.orderNumber,
+                  },
                 },
-                req: systemReq,
+                limit: 1,
               })
 
-              console.log('Kitchen order created successfully:', kitchenOrder.id, 'for order:', doc.orderNumber)
-            } catch (createError) {
-              console.error('Error creating kitchen order:', createError)
-              if (createError instanceof Error) {
-                console.error('Error message:', createError.message)
-                console.error('Error stack:', createError.stack)
-                console.error('Error name:', createError.name)
+              if (existingKitchenOrder.docs.length > 0) {
+                // Update existing
+                const existingId = existingKitchenOrder.docs[0].id
+                await req.payload.update({
+                  collection: 'kitchen-orders',
+                  id: existingId,
+                  data: kitchenOrderData,
+                  req: systemReq,
+                })
+              } else {
+                // Create new
+                await req.payload.create({
+                  collection: 'kitchen-orders',
+                  data: kitchenOrderData,
+                  req: systemReq,
+                })
               }
-              // Log the full error object
-              console.error('Full error object:', JSON.stringify(createError, Object.getOwnPropertyNames(createError)))
-              // Don't throw error to prevent order creation from failing
+            } catch (createError) {
+              console.error('Error syncing kitchen order:', createError)
             }
           } catch (error) {
             console.error('Error in afterChange hook:', error)
-            if (error instanceof Error) {
-              console.error('Error message:', error.message)
-              console.error('Error stack:', error.stack)
-            }
-            // Don't throw error to prevent order creation from failing
           }
         }
       },

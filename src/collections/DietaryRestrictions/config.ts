@@ -5,6 +5,7 @@ export const DietaryRestrictions: CollectionConfig = {
   slug: 'dietary-restrictions',
   admin: {
     useAsTitle: 'restriction_name',
+    group: 'System',
   },
   access: {
     read: () => true,
