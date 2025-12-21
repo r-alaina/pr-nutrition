@@ -28,7 +28,6 @@ export async function GET() {
         const currentWeekOf = currentMenu.weekOf
 
         // 2. Fetch all Active Customers with Monthly Plan
-        // "This should only be for customers with an active (monthly) plan."
         const customers = await payload.find({
             collection: 'customers',
             where: {
@@ -48,7 +47,7 @@ export async function GET() {
                 status: { not_in: ['cancelled'] },
             },
             limit: 2000,
-            depth: 0, // We only need customer IDs
+            depth: 0,
         })
 
         // 4. Create Set of Customer IDs who HAVE ordered
@@ -56,15 +55,36 @@ export async function GET() {
             orders.docs.map(o => typeof o.customer === 'object' ? o.customer.id : o.customer)
         )
 
-        // 5. Filter for Missing
+        // 5. Filter for Missing & Active Cycle
+        const today = new Date()
         const missingCustomers = customers.docs
-            .filter(c => !orderingCustomerIds.has(c.id))
+            .filter(c => {
+                // If they have ordered, they are not missing
+                if (orderingCustomerIds.has(c.id)) return false
+
+                // Check if Cycle is still active (within 28 days of start date)
+                // If cycle_start_date is missing, we fallback to createdAt or assume active
+                const cycleStart = c.cycle_start_date ? new Date(c.cycle_start_date) : new Date(c.createdAt)
+
+                // Calculate difference in days
+                const diffTime = Math.abs(today.getTime() - cycleStart.getTime())
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+                console.log(`Checking ${c.email}: CycleStart=${cycleStart.toISOString()}, DiffDays=${diffDays}`)
+
+                // If cycle started more than 28 days ago, they are "expired" and shouldn't be expected to order
+                // Note: User requests "current date <= 28 days from cycle_start_date"
+                // So if diffDays > 28, we EXCLUDE them (return false)
+                if (diffDays > 28) return false
+
+                return true
+            })
             .map(c => ({
                 id: c.id,
                 name: c.firstName && c.lastName ? `${c.firstName} ${c.lastName}` : c.email,
                 email: c.email,
                 planType: c.subscription_frequency || 'Unknown',
-                credits: c.plan_credits || c.credit_balance || 0, // Prefer plan_credits
+                credits: c.plan_credits || c.credit_balance || 0,
                 phone: c.phone || 'No phone',
             }))
 

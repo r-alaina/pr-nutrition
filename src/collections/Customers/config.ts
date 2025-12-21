@@ -114,6 +114,14 @@ export const Customers: CollectionConfig = {
       defaultValue: true,
     },
     {
+      name: 'cycle_start_date',
+      type: 'date',
+      admin: {
+        description: 'Start date of the current 4-week cycle',
+        position: 'sidebar',
+      },
+    },
+    {
       name: 'preferences_set',
       type: 'checkbox',
       defaultValue: false,
