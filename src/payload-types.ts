@@ -75,6 +75,7 @@ export interface Config {
     orders: Order;
     'kitchen-orders': KitchenOrder;
     'order-logs': OrderLog;
+    'weekly-menus': WeeklyMenu;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -88,6 +89,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     'kitchen-orders': KitchenOrdersSelect<false> | KitchenOrdersSelect<true>;
     'order-logs': OrderLogsSelect<false> | OrderLogsSelect<true>;
+    'weekly-menus': WeeklyMenusSelect<false> | WeeklyMenusSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -508,6 +510,26 @@ export interface OrderLog {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-menus".
+ */
+export interface WeeklyMenu {
+  id: number;
+  /**
+   * Select the Monday of the week this menu is for.
+   */
+  weekOf: string;
+  status: 'draft' | 'active' | 'archived';
+  firstHalfMains?: (number | MenuItem)[] | null;
+  firstHalfSalads?: (number | MenuItem)[] | null;
+  secondHalfMains?: (number | MenuItem)[] | null;
+  secondHalfSalads?: (number | MenuItem)[] | null;
+  breakfasts?: (number | MenuItem)[] | null;
+  snacks?: (number | MenuItem)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -540,6 +562,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'order-logs';
         value: number | OrderLog;
+      } | null)
+    | ({
+        relationTo: 'weekly-menus';
+        value: number | WeeklyMenu;
       } | null);
   globalSlug?: string | null;
   user:
@@ -827,6 +853,22 @@ export interface OrderLogsSelect<T extends boolean = true> {
   changeDescription?: T;
   previousItems?: T;
   newItems?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "weekly-menus_select".
+ */
+export interface WeeklyMenusSelect<T extends boolean = true> {
+  weekOf?: T;
+  status?: T;
+  firstHalfMains?: T;
+  firstHalfSalads?: T;
+  secondHalfMains?: T;
+  secondHalfSalads?: T;
+  breakfasts?: T;
+  snacks?: T;
   updatedAt?: T;
   createdAt?: T;
 }

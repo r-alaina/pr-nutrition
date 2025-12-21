@@ -9,18 +9,57 @@ export default async function MenuPage() {
   const user = await getUser()
   const payload = await getPayload({ config })
 
-  // Get all active menu items
-  const menuItems = await payload.find({
-    collection: 'menu-items',
+  // Try to find an active Weekly Menu
+  const weeklyMenus = await payload.find({
+    collection: 'weekly-menus' as any,
     where: {
-      active: {
-        equals: true,
+      status: {
+        equals: 'active',
       },
     },
+    limit: 1,
   })
 
+  let menuItemsDocs: MenuItem[] = []
+
+  if (weeklyMenus.docs.length > 0) {
+    const activeMenu = weeklyMenus.docs[0] as any
+    const activeItems = new Map<string | number, MenuItem>()
+
+    // Helper to add items
+    const checkAndAdd = (item: any) => {
+      if (item && typeof item === 'object' && 'id' in item) {
+        activeItems.set(item.id, item as MenuItem)
+      }
+    }
+
+    if (activeMenu.firstHalfMains) activeMenu.firstHalfMains.forEach(checkAndAdd)
+    if (activeMenu.firstHalfSalads) activeMenu.firstHalfSalads.forEach(checkAndAdd)
+    if (activeMenu.secondHalfMains) activeMenu.secondHalfMains.forEach(checkAndAdd)
+    if (activeMenu.secondHalfSalads) activeMenu.secondHalfSalads.forEach(checkAndAdd)
+    if (activeMenu.breakfasts) activeMenu.breakfasts.forEach(checkAndAdd)
+    if (activeMenu.snacks) activeMenu.snacks.forEach(checkAndAdd)
+
+    // Snacks are now part of the WeeklyMenu specific selection (or defaults), so no need to fetch separately unless fallback is desired.
+    // For now, trusting the admin configuration.
+
+    menuItemsDocs = Array.from(activeItems.values())
+  } else {
+    // Fallback: Get all active menu items if no Weekly Menu is active
+    const allMenuItems = await payload.find({
+      collection: 'menu-items',
+      where: {
+        active: {
+          equals: true,
+        },
+      },
+      limit: 100,
+    })
+    menuItemsDocs = allMenuItems.docs
+  }
+
   // Group menu items by category
-  const groupedItems = menuItems.docs.reduce(
+  const groupedItems = menuItemsDocs.reduce(
     (acc, item) => {
       const category = item.category
       if (!acc[category]) {

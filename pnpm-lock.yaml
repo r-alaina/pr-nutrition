@@ -26,9 +26,15 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.14
         version: 4.1.14
+      '@types/react-datepicker':
+        specifier: ^7.0.0
+        version: 7.0.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       dotenv:
         specifier: 16.4.7
         version: 16.4.7
@@ -47,6 +53,9 @@ importers:
       react:
         specifier: ^19.2.3
         version: 19.2.3
+      react-datepicker:
+        specifier: ^9.1.0
+        version: 9.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-dom:
         specifier: ^19.2.3
         version: 19.2.3(react@19.2.3)
@@ -2238,6 +2247,10 @@ packages:
   '@types/pg@8.10.2':
     resolution: {integrity: sha512-MKFs9P6nJ+LAeHLU3V0cODEOgyThJ3OAnmOlsZsxux6sfQs3HRXR5bBn7xG5DjckEFhTAxsXi7k7cd0pCMxpJw==}
 
+  '@types/react-datepicker@7.0.0':
+    resolution: {integrity: sha512-4tWwOUq589tozyQPBVEqGNng5DaZkomx5IVNuur868yYdgjH6RaL373/HKiVt1IDoNNXYiTGspm1F7kjrarM8Q==}
+    deprecated: This is a stub types definition. react-datepicker provides its own type definitions, so you do not need this installed.
+
   '@types/react-dom@19.1.6':
     resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
     peerDependencies:
@@ -4311,6 +4324,16 @@ packages:
     peerDependencies:
       react: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+
+  react-datepicker@9.1.0:
+    resolution: {integrity: sha512-lOp+m5bc+ttgtB5MHEjwiVu4nlp4CvJLS/PG1OiOe5pmg9kV73pEqO8H0Geqvg2E8gjqTaL9eRhSe+ZpeKP3nA==}
+    peerDependencies:
+      date-fns-tz: ^3.0.0
+      react: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.9.0 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    peerDependenciesMeta:
+      date-fns-tz:
+        optional: true
 
   react-dom@19.2.3:
     resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
@@ -7624,6 +7647,14 @@ snapshots:
       pg-protocol: 1.10.3
       pg-types: 4.1.0
 
+  '@types/react-datepicker@7.0.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
+    dependencies:
+      react-datepicker: 9.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+    transitivePeerDependencies:
+      - date-fns-tz
+      - react
+      - react-dom
+
   '@types/react-dom@19.1.6(@types/react@19.1.8)':
     dependencies:
       '@types/react': 19.1.8
@@ -10010,6 +10041,14 @@ snapshots:
       '@floating-ui/react': 0.27.16(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       clsx: 2.1.1
       date-fns: 3.6.0
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+
+  react-datepicker@9.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+    dependencies:
+      '@floating-ui/react': 0.27.16(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      clsx: 2.1.1
+      date-fns: 4.1.0
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 

@@ -20,34 +20,71 @@ export default async function MealSelectionPage() {
 
   const payload = await getPayload({ config })
 
-  // Get all active menu items
-  const allMenuItems = await payload.find({
-    collection: 'menu-items',
+  // Try to find an active Weekly Menu
+  const weeklyMenus = await payload.find({
+    collection: 'weekly-menus' as any,
     where: {
-      active: {
-        equals: true,
+      status: {
+        equals: 'active',
       },
     },
-    limit: 100, // Fetch all active items (increase if needed)
+    limit: 1,
   })
 
-  // Filter items by availability settings
-  const firstHalfItems = allMenuItems.docs.filter((item) => {
-    if (item.category === 'snack') return true // Snacks always available
-    if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
-    if (item.availability?.firstHalf) return true
-    return false
-  })
+  let firstHalfDocs: MenuItem[] = []
+  let secondHalfDocs: MenuItem[] = []
 
-  const secondHalfItems = allMenuItems.docs.filter((item) => {
-    if (item.category === 'snack') return true // Snacks always available
-    if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
-    if (item.availability?.secondHalf) return true
-    return false
-  })
+  if (weeklyMenus.docs.length > 0) {
+    const activeMenu = weeklyMenus.docs[0] as any
+
+    // Helper to filter valid items
+    const getValidItems = (items: any[]): MenuItem[] => {
+      if (!items) return []
+      return items.filter(item => item && typeof item === 'object' && 'id' in item) as MenuItem[]
+    }
+
+    const mainFirst = getValidItems(activeMenu.firstHalfMains)
+    const saladFirst = getValidItems(activeMenu.firstHalfSalads)
+    const mainSecond = getValidItems(activeMenu.secondHalfMains)
+    const saladSecond = getValidItems(activeMenu.secondHalfSalads)
+    const breakfasts = getValidItems(activeMenu.breakfasts)
+    const snacks = getValidItems(activeMenu.snacks) // Now coming from the menu itself
+
+    // Combine for display
+    firstHalfDocs = [...mainFirst, ...saladFirst, ...breakfasts, ...snacks]
+    secondHalfDocs = [...mainSecond, ...saladSecond, ...breakfasts, ...snacks]
+
+  } else {
+    // FALLBACK: Old logic
+    // Get all active menu items
+    const allMenuItems = await payload.find({
+      collection: 'menu-items',
+      where: {
+        active: {
+          equals: true,
+        },
+      },
+      limit: 100,
+    })
+
+    // Filter items by availability settings
+    firstHalfDocs = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.firstHalf) return true
+      return false
+    })
+
+    secondHalfDocs = allMenuItems.docs.filter((item) => {
+      if (item.category === 'snack') return true // Snacks always available
+      if (item.availability?.firstHalf && item.availability?.secondHalf) return true // Available for both
+      if (item.availability?.secondHalf) return true
+      return false
+    })
+  }
 
   // Group menu items by category for each half
-  const groupedFirstHalf = firstHalfItems.reduce(
+  const groupedFirstHalf = firstHalfDocs.reduce(
     (acc, item) => {
       const category = item.category
       if (!acc[category]) {
@@ -59,7 +96,7 @@ export default async function MealSelectionPage() {
     {} as Record<string, MenuItem[]>,
   )
 
-  const groupedSecondHalf = secondHalfItems.reduce(
+  const groupedSecondHalf = secondHalfDocs.reduce(
     (acc, item) => {
       const category = item.category
       if (!acc[category]) {
