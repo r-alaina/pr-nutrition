@@ -33,7 +33,7 @@ export default function MealSelectionClient({
     { meal: MenuItem; quantity: number }[]
   >([])
   const [existingOrder, setExistingOrder] = useState<Order | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
 
   useEffect(() => {
     const fetchCurrentOrder = async () => {
@@ -47,7 +47,7 @@ export default function MealSelectionClient({
             const firstHalf: { meal: MenuItem; quantity: number }[] = []
             const secondHalf: { meal: MenuItem; quantity: number }[] = []
 
-            data.order.orderItems.forEach((item: any) => {
+            data.order.orderItems.forEach((item: { menuItem: MenuItem | string, quantity: number, weekHalf?: string }) => {
               const menuItem = item.menuItem as MenuItem
               const formattedItem = { meal: menuItem, quantity: item.quantity }
               if (item.weekHalf === 'secondHalf') {
@@ -63,7 +63,7 @@ export default function MealSelectionClient({
       } catch (err) {
         console.error('Failed to fetch current order', err)
       } finally {
-        setIsLoading(false)
+        // setIsLoading(false) // Removed as isLoading state is removed
       }
     }
     fetchCurrentOrder()
@@ -550,7 +550,7 @@ export default function MealSelectionClient({
                 return
               }
 
-              const isBreakfastComplete = breakfastCount === breakfastLimit
+
               const isMainComplete = mainCount === mainLimit
 
               if (!isMainComplete) {
