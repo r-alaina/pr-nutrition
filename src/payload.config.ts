@@ -2,6 +2,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import { resendAdapter } from '@payloadcms/email-resend'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -61,6 +62,11 @@ export default buildConfig({
     },
   }),
   sharp,
+  email: resendAdapter({
+    defaultFromAddress: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+    defaultFromName: 'PR Nutrition',
+    apiKey: process.env.RESEND_API_KEY || '',
+  }),
   plugins: [
     payloadCloudPlugin(),
     // storage-adapter-placeholder
