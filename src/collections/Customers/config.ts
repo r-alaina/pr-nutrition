@@ -16,7 +16,8 @@ export const Customers: CollectionConfig = {
     maxLoginAttempts: 5,
     lockTime: 600 * 1000, // 10 minutes
     forgotPassword: {
-      generateEmailHTML: async ({ token, user }) => {
+      generateEmailHTML: async (args: any) => {
+        const { token, user } = args || {}
         const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
         const resetPasswordURL = `${serverURL}/reset-password?token=${token}`
 
@@ -25,7 +26,7 @@ export const Customers: CollectionConfig = {
           <html>
             <body>
               <h1>Reset your password</h1>
-              <p>Hello ${user.firstName},</p>
+              <p>Hello ${user?.firstName},</p>
               <p>Click below to reset your password:</p>
               <p>
                 <a href="${resetPasswordURL}">${resetPasswordURL}</a>

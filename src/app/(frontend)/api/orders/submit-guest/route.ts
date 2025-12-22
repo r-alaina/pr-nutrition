@@ -63,9 +63,9 @@ export async function POST(request: NextRequest) {
           ? customerInfo.allergies
           : customerInfo.allergies
             ? customerInfo.allergies
-                .split(',')
-                .map((a: string) => a.trim())
-                .filter(Boolean)
+              .split(',')
+              .map((a: string) => a.trim())
+              .filter(Boolean)
             : []
 
         await payload.update({
@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
         ? customerInfo.allergies
         : customerInfo.allergies
           ? customerInfo.allergies
-              .split(',')
-              .map((a: string) => a.trim())
-              .filter(Boolean)
+            .split(',')
+            .map((a: string) => a.trim())
+            .filter(Boolean)
           : []
 
       customer = await payload.create({
@@ -160,9 +160,9 @@ export async function POST(request: NextRequest) {
       ? customerInfo.allergies
       : customerInfo.allergies
         ? customerInfo.allergies
-            .split(',')
-            .map((a: string) => a.trim())
-            .filter(Boolean)
+          .split(',')
+          .map((a: string) => a.trim())
+          .filter(Boolean)
         : []
 
     // Calculate allergen charges - only charge $5 if at least one meal actually contains the customer's allergens
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
                 : 'firstHalf',
             unitPrice: item.unitPrice,
             totalPrice: item.totalPrice,
-          })),
+          })) as any,
           allergenCharges,
           totalAllergenCharges,
           subtotal: orderResponse.subtotal,
