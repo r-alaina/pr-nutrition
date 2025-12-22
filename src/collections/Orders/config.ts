@@ -32,7 +32,7 @@ export const Orders: CollectionConfig = {
     defaultColumns: ['orderNumber', 'customer', 'status', 'totalAmount', 'createdAt'],
     group: 'Operations',
     components: {
-      beforeList: [OrderStats],
+      beforeList: [OrderStats as any],
     },
   },
   access: {
