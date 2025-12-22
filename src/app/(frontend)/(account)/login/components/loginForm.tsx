@@ -84,9 +84,17 @@ export default function LoginForm({ redirectPath }: LoginFormProps): ReactElemen
 
           {/* Password Field */}
           <div>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
-              Password
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-900">
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-[#5CB85C] hover:underline font-medium"
+              >
+                Forgot Password?
+              </Link>
+            </div>
             <input
               id="password"
               name="password"
