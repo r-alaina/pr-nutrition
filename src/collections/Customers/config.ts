@@ -13,14 +13,22 @@ export const Customers: CollectionConfig = {
 
   auth: {
     tokenExpiration: 12 * 60 * 60, // 12 hours
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // 10 minutes
   },
 
   access: {
     create: () => true,
     read: ({ req: { user } }) => {
       if (!user) return false
-      // Users can only see their own data, admins can see all
-      return checkRole(['admin', 'editor'], user as User)
+      if (checkRole(['admin', 'editor'], user as User)) return true
+
+      // Allow users to read their own data
+      return {
+        id: {
+          equals: user.id,
+        },
+      }
     },
     update: ({ req: { user } }) => {
       if (!user) return false
