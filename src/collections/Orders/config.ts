@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CollectionConfig } from 'payload'
+import { APIError } from 'payload'
 import { checkRole } from '../Users/access/checkRole'
 import type { User } from '@/payload-types'
+import OrderStats from './ui/OrderStats'
 
 // Calculate pickup date based on week half
 function calculatePickupDate(weekHalf: string): Date {
@@ -29,6 +31,9 @@ export const Orders: CollectionConfig = {
     useAsTitle: 'orderNumber',
     defaultColumns: ['orderNumber', 'customer', 'status', 'totalAmount', 'createdAt'],
     group: 'Operations',
+    components: {
+      beforeList: [OrderStats],
+    },
   },
   access: {
     read: ({ req: { user } }) => {
@@ -71,13 +76,8 @@ export const Orders: CollectionConfig = {
       required: true,
       admin: {
         readOnly: true,
+        position: 'sidebar',
       },
-    },
-    {
-      name: 'customer',
-      type: 'relationship',
-      relationTo: 'customers',
-      required: true,
     },
     {
       name: 'status',
@@ -87,103 +87,44 @@ export const Orders: CollectionConfig = {
       options: [
         { label: 'Pending', value: 'pending' },
         { label: 'Confirmed', value: 'confirmed' },
-        { label: 'Preparing', value: 'preparing' },
-        { label: 'Ready for Pickup', value: 'ready' },
         { label: 'Completed', value: 'completed' },
         { label: 'Cancelled', value: 'cancelled' },
       ],
+      admin: {
+        position: 'sidebar',
+      },
     },
     {
-      name: 'orderItems',
-      type: 'array',
-      fields: [
-        {
-          name: 'menuItem',
-          type: 'relationship',
-          relationTo: 'menu-items',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-          min: 1,
-        },
-        {
-          name: 'weekHalf',
-          type: 'select',
-          options: [
-            { label: 'First Half', value: 'firstHalf' },
-            { label: 'Second Half', value: 'secondHalf' },
-          ],
-          admin: {
-            description: 'Which half of the week this item is for',
-          },
-        },
-        {
-          name: 'unitPrice',
-          type: 'number',
-          admin: {
-            step: 0.01,
-            description: 'Individual meal price (0 for tier-based subscriptions)',
-          },
-        },
-        {
-          name: 'totalPrice',
-          type: 'number',
-          admin: {
-            step: 0.01,
-            description: 'Total price for this item (0 for tier-based subscriptions)',
-          },
-        },
+      name: 'paymentStatus',
+      type: 'select',
+      defaultValue: 'unpaid',
+      options: [
+        { label: 'Unpaid', value: 'unpaid' },
+        { label: 'Paid', value: 'paid' },
       ],
-    },
-    {
-      name: 'subtotal',
-      type: 'number',
-      required: true,
       admin: {
-        step: 0.01,
+        position: 'sidebar',
       },
     },
     {
-      name: 'taxAmount',
-      type: 'number',
-      required: true,
-      admin: {
-        step: 0.01,
-      },
-    },
-    {
-      name: 'totalAmount',
-      type: 'number',
-      required: true,
-      admin: {
-        step: 0.01,
-      },
-    },
-    {
-      name: 'tier',
-      type: 'relationship',
-      relationTo: 'tiers',
-      admin: {
-        description: 'Customer tier at time of order',
-      },
-    },
-    {
-      name: 'subscriptionFrequency',
+      name: 'paymentMethod',
       type: 'select',
       options: [
-        { label: 'Weekly', value: 'weekly' },
-        { label: 'Monthly', value: 'monthly' },
-        { label: 'A La Carte', value: 'a_la_carte' },
+        { label: 'By Phone', value: 'phone' },
+        { label: 'In Person', value: 'in_person' },
       ],
+      admin: {
+        position: 'sidebar',
+        condition: (data) => data.paymentStatus === 'paid',
+        description: 'Required if marking as paid manually',
+      },
     },
     {
-      name: 'mealsPerWeek',
-      type: 'number',
+      name: 'weekOf',
+      type: 'date',
       admin: {
-        description: 'Number of meals per week for this order',
+        position: 'sidebar',
+        description: 'The start date (Sunday) of the week this order is for',
       },
     },
     {
@@ -195,112 +136,293 @@ export const Orders: CollectionConfig = {
         { label: 'Both Halves', value: 'both' },
       ],
       admin: {
-        description: 'Which half(s) of the week this order is for (both if meals from both halves)',
+        position: 'sidebar',
+        description: 'Which half(s) of the week this order is for',
       },
     },
     {
-      name: 'notes',
-      type: 'textarea',
-      admin: {
-        description: 'Additional notes for this order',
-      },
-    },
-    {
-      name: 'allergenCharges',
-      type: 'array',
-      fields: [
+      type: 'tabs',
+      tabs: [
         {
-          name: 'mealId',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'mealName',
-          type: 'text',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          required: true,
-        },
-        {
-          name: 'matchingAllergens',
-          type: 'array',
+          label: 'Order Details',
           fields: [
             {
-              name: 'allergen',
-              type: 'text',
+              name: 'customer',
+              type: 'relationship',
+              relationTo: 'customers',
               required: true,
             },
             {
-              name: 'charge',
-              type: 'number',
-              required: true,
+              name: 'orderItems',
+              type: 'array',
+              fields: [
+                {
+                  name: 'menuItem',
+                  type: 'relationship',
+                  relationTo: 'menu-items',
+                  required: true,
+                },
+                {
+                  name: 'quantity',
+                  type: 'number',
+                  required: true,
+                  min: 1,
+                },
+                {
+                  name: 'weekHalf',
+                  type: 'select',
+                  options: [
+                    { label: 'First Half', value: 'firstHalf' },
+                    { label: 'Second Half', value: 'secondHalf' },
+                  ],
+                  admin: {
+                    description: 'Which half of the week this item is for',
+                  },
+                },
+                {
+                  name: 'unitPrice',
+                  type: 'number',
+                  admin: {
+                    step: 0.01,
+                    description: 'Individual meal price (0 for tier-based subscriptions)',
+                  },
+                },
+                {
+                  name: 'totalPrice',
+                  type: 'number',
+                  admin: {
+                    step: 0.01,
+                    description: 'Total price for this item (0 for tier-based subscriptions)',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'notes',
+              type: 'textarea',
               admin: {
-                step: 0.01,
-                description:
-                  'Allergen charge (for tracking purposes, actual charge is $5.00 per order)',
+                description: 'Additional notes for this order',
               },
             },
           ],
         },
         {
-          name: 'totalAllergenCharge',
-          type: 'number',
-          required: true,
-          admin: {
-            step: 0.01,
-            description: 'Total allergen charge for this meal',
-          },
+          label: 'Financials',
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'subtotal',
+                  type: 'number',
+                  required: true,
+                  admin: { step: 0.01 },
+                },
+                {
+                  name: 'taxAmount',
+                  type: 'number',
+                  required: true,
+                  admin: { step: 0.01 },
+                },
+                {
+                  name: 'totalAmount',
+                  type: 'number',
+                  required: true,
+                  admin: { step: 0.01 },
+                },
+              ],
+            },
+            {
+              name: 'isCreditUsed',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                description: 'Whether this order used a monthly plan credit',
+              },
+            },
+            {
+              name: 'totalAllergenCharges',
+              type: 'number',
+              required: true,
+              defaultValue: 0,
+              admin: {
+                step: 0.01,
+                description: 'Total allergen charges for entire order',
+              },
+            },
+            {
+              name: 'allergenCharges',
+              type: 'array',
+              fields: [
+                {
+                  name: 'mealId',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'mealName',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'quantity',
+                  type: 'number',
+                  required: true,
+                },
+                {
+                  name: 'matchingAllergens',
+                  type: 'array',
+                  fields: [
+                    {
+                      name: 'allergen',
+                      type: 'text',
+                      required: true,
+                    },
+                    {
+                      name: 'charge',
+                      type: 'number',
+                      required: true,
+                      admin: {
+                        step: 0.01,
+                        description:
+                          'Allergen charge (for tracking purposes, actual charge is $5.00 per order)',
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: 'totalAllergenCharge',
+                  type: 'number',
+                  required: true,
+                  admin: {
+                    step: 0.01,
+                    description: 'Total allergen charge for this meal',
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Subscription Context',
+          fields: [
+            {
+              name: 'tier',
+              type: 'relationship',
+              relationTo: 'tiers',
+              admin: {
+                description: 'Customer tier at time of order',
+              },
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'subscriptionFrequency',
+                  type: 'select',
+                  options: [
+                    { label: 'Weekly', value: 'weekly' },
+                    { label: 'Monthly', value: 'monthly' },
+                    { label: 'A La Carte', value: 'a_la_carte' },
+                  ],
+                },
+                {
+                  name: 'mealsPerWeek',
+                  type: 'number',
+                  admin: {
+                    description: 'Number of meals per week for this order',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'challengeId',
+              type: 'relationship',
+              relationTo: 'challenges' as any,
+              admin: {
+                description: 'If set, this order is part of a 21-day challenge',
+              },
+            },
+            {
+              name: 'challengeWeek',
+              type: 'number',
+              min: 1,
+              max: 3,
+              admin: {
+                description: 'Week number within the challenge (1, 2, or 3)',
+                condition: (data) => Boolean(data.challengeId),
+              },
+            },
+          ],
+        },
+        {
+          label: 'Audit Log',
+          fields: [
+            {
+              name: 'paymentLogs',
+              type: 'array',
+              admin: {
+                readOnly: true,
+                description: 'Audit trail of payment status changes',
+              },
+              fields: [
+                {
+                  name: 'timestamp',
+                  type: 'date',
+                  required: true,
+                },
+                {
+                  name: 'user',
+                  type: 'relationship',
+                  relationTo: 'users',
+                  required: true,
+                },
+                {
+                  name: 'action',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'method',
+                  type: 'text',
+                },
+              ],
+            },
+          ],
         },
       ],
     },
-    {
-      name: 'totalAllergenCharges',
-      type: 'number',
-      required: true,
-      defaultValue: 0,
-      admin: {
-        step: 0.01,
-        description: 'Total allergen charges for entire order',
-      },
-    },
-    {
-      name: 'weekOf',
-      type: 'date',
-      admin: {
-        description: 'The start date (Sunday) of the week this order is for',
-      },
-    },
-    {
-      name: 'isCreditUsed',
-      type: 'checkbox',
-      defaultValue: false,
-      admin: {
-        description: 'Whether this order used a monthly plan credit',
-      },
-    },
-    {
-      name: 'challengeId',
-      type: 'relationship',
-      relationTo: 'challenges' as any,
-      admin: {
-        description: 'If set, this order is part of a 21-day challenge',
-      },
-    },
-    {
-      name: 'challengeWeek',
-      type: 'number',
-      min: 1,
-      max: 3,
-      admin: {
-        description: 'Week number within the challenge (1, 2, or 3)',
-        condition: (data) => Boolean(data.challengeId),
-      },
-    },
   ],
   hooks: {
+    beforeChange: [
+      ({ data, originalDoc, req }) => {
+        // Validation: Cannot mark as completed if unpaid
+        const isCompleted = data.status === 'completed'
+        // Check current or original payment status
+        const isPaid = (data.paymentStatus || originalDoc?.paymentStatus) === 'paid'
+
+        if (isCompleted && !isPaid) {
+          throw new APIError('Cannot mark order as Completed until it is marked as Paid.', 400)
+        }
+
+        if (data.paymentStatus === 'paid' && originalDoc?.paymentStatus !== 'paid') {
+          const newLog = {
+            timestamp: new Date().toISOString(),
+            user: req.user ? req.user.id : null,
+            action: 'Marked as Paid',
+            method: data.paymentMethod || 'Unknown',
+          }
+
+          const existingLogs = data.paymentLogs || originalDoc?.paymentLogs || []
+
+          return {
+            ...data,
+            paymentLogs: [...existingLogs, newLog],
+          }
+        }
+        return data
+      },
+    ],
     afterChange: [
       async ({ doc, req, operation }) => {
         // Run on create or update to ensure kitchen orders are always in sync

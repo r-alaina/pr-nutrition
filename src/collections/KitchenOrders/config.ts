@@ -149,8 +149,6 @@ export const KitchenOrders: CollectionConfig = {
       defaultValue: 'pending',
       options: [
         { label: 'Pending', value: 'pending' },
-        { label: 'Preparing', value: 'preparing' },
-        { label: 'Ready', value: 'ready' },
         { label: 'Completed', value: 'completed' },
       ],
     },
