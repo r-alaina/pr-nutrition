@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
                 totalAmount: 0,
                 challengeId: challengeId,
                 challengeWeek: weekNumber,
-                isCreditUsed: false,
-                // paymentStatus: 'paid' // Removed as it's not in schema
+                isCreditUsed: true,
+                weekOf: activeMenu.weekOf,
             } as any
         })
 
