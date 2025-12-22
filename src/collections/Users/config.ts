@@ -16,13 +16,24 @@ const Users: CollectionConfig = {
         if (user && checkRole(['admin', 'editor'], user)) {
           return true
         }
-        // For public signups (admin signup page), allow 'admin' role
+
+        // For public signups, DO NOT allow 'admin' or 'editor' roles
         if (data?.roles) {
           const roles = Array.isArray(data.roles) ? data.roles : [data.roles]
-          // Allow 'admin' or 'user' role for public signups
-          return roles.every((role: string) => role === 'admin' || role === 'user')
+
+          // CRITICAL SECURITY FIX:
+          // Prevent public users from creating admin/editor accounts.
+          // Check if any restricted role is present
+          const hasRestrictedRole = roles.some((role: string) =>
+            ['admin', 'editor'].includes(role)
+          )
+
+          if (hasRestrictedRole) {
+            return false
+          }
         }
-        // Allow if no roles specified (will default to 'user')
+
+        // Allow if only 'user' role or no roles specified
         return true
       } catch (error) {
         console.error('Users create access error:', error)

@@ -15,6 +15,9 @@ export default async function GuestCheckoutPage() {
     }
   }
 
+  // Guest checkout is temporarily disabled
+  redirect('/login')
+
   return <GuestCheckoutClient />
 }
 
